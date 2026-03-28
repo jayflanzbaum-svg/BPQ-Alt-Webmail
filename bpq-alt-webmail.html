@@ -1,0 +1,1540 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BPQ-Alt-WebMail</title>
+<style>
+/* ── LOCAL FONTS ──────────────────────────────────────
+   Drop these woff2 files in a fonts/ subfolder next to
+   this HTML file (served from BPQ's HTML directory).
+   Without them the fallback chain kicks in automatically.
+   Download from: https://fontsource.org/fonts/jetbrains-mono
+                  https://fontsource.org/fonts/ibm-plex-sans
+─────────────────────────────────────────────────────── */
+@font-face {
+  font-family:'JetBrains Mono';
+  src: url('fonts/jbm-400.woff2') format('woff2');
+  font-weight:400; font-display:swap;
+}
+@font-face {
+  font-family:'JetBrains Mono';
+  src: url('fonts/jbm-500.woff2') format('woff2');
+  font-weight:500; font-display:swap;
+}
+@font-face {
+  font-family:'JetBrains Mono';
+  src: url('fonts/jbm-600.woff2') format('woff2');
+  font-weight:600; font-display:swap;
+}
+@font-face {
+  font-family:'IBM Plex Sans';
+  src: url('fonts/ibm-300.woff2') format('woff2');
+  font-weight:300; font-display:swap;
+}
+@font-face {
+  font-family:'IBM Plex Sans';
+  src: url('fonts/ibm-400.woff2') format('woff2');
+  font-weight:400; font-display:swap;
+}
+@font-face {
+  font-family:'IBM Plex Sans';
+  src: url('fonts/ibm-500.woff2') format('woff2');
+  font-weight:500; font-display:swap;
+}
+@font-face {
+  font-family:'IBM Plex Sans';
+  src: url('fonts/ibm-600.woff2') format('woff2');
+  font-weight:600; font-display:swap;
+}
+/* ── THEMES ── */
+:root {
+  --mono: 'JetBrains Mono', 'Cascadia Code', 'Consolas', 'Courier New', monospace;
+  --sans: 'IBM Plex Sans', 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+  --green:#00c98a; --green-dim:#009966; --amber:#f5a623; --red:#e05252; --blue:#4da6ff; --purple:#a78bfa;
+}
+body.dark {
+  --bg:#0d0f12; --bg2:#13161b; --bg3:#1a1e25;
+  --border:#2a2f3a; --border2:#363d4a;
+  --text:#d4dae8; --text2:#7b8499; --text3:#4a5066;
+  --accent:#00c98a; --accent-bg:#00c98a0a; --accent-border:#00c98a30;
+  --unread-dot:#4da6ff;
+}
+body.light {
+  --bg:#f4f5f7; --bg2:#ffffff; --bg3:#eef0f3;
+  --border:#dde0e6; --border2:#c4c9d4;
+  --text:#1a1d24; --text2:#555e70; --text3:#9098a8;
+  --accent:#006644; --accent-bg:#e6f4ee; --accent-border:#9dd6be;
+  --unread-dot:#2563eb;
+}
+* { box-sizing:border-box; margin:0; padding:0 }
+html,body { height:100%; overflow:hidden }
+body { font-family:var(--sans); font-size:1rem; background:var(--bg); color:var(--text); display:flex; flex-direction:column; transition:background .15s,color .15s }
+
+/* ── TOPBAR ── */
+.topbar { display:flex; align-items:center; gap:10px; padding:0 14px; height:42px; border-bottom:1px solid var(--border); background:var(--bg2); flex-shrink:0 }
+.logo { font-family:var(--mono); font-size:0.92rem; font-weight:600; color:var(--accent); letter-spacing:.08em; display:flex; align-items:center; gap:7px }
+.logo::before { content:''; width:7px; height:7px; border-radius:50%; background:var(--accent); animation:blink 2.5s ease-in-out infinite }
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:.3} }
+.top-call { font-family:var(--mono); font-size:0.85rem; color:var(--accent); background:var(--accent-bg); border:1px solid var(--accent-border); padding:2px 7px; border-radius:4px }
+.top-node { font-family:var(--mono); font-size:0.77rem; color:var(--text3) }
+.tspc { flex:1 }
+.tbtn { padding:3px 8px; background:transparent; border:1px solid var(--border2); border-radius:4px; color:var(--text3); font-family:var(--mono); font-size:0.77rem; cursor:pointer }
+.tbtn:hover { background:var(--bg3); color:var(--text) }
+#status-pill { font-family:var(--mono); font-size:0.77rem; padding:3px 8px; border-radius:4px; border:1px solid var(--border); background:var(--bg2); color:var(--text2) }
+#status-pill.ok  { color:var(--green);  border-color:var(--accent-border); background:var(--accent-bg) }
+#status-pill.err { color:var(--red);    border-color:#e0525230; background:#e0525208 }
+#status-pill.busy{ color:var(--amber);  border-color:#f5a62330; background:#f5a62308 }
+#refresh-lbl { font-family:var(--mono); font-size:0.77rem; color:var(--text3) }
+
+/* ── SETUP SCREEN ── */
+#setup-screen { position:fixed; inset:0; background:var(--bg); display:flex; align-items:center; justify-content:center; z-index:200; flex-direction:column; gap:0 }
+.setup-card { background:var(--bg2); border:1px solid var(--border2); border-radius:10px; padding:32px 36px; width:380px; max-width:94vw }
+.setup-title { font-family:var(--mono); font-size:1.08rem; font-weight:600; color:var(--accent); margin-bottom:4px }
+.setup-sub { font-size:0.92rem; color:var(--text3); margin-bottom:24px; font-family:var(--mono) }
+.setup-field { display:flex; flex-direction:column; gap:4px; margin-bottom:14px }
+.setup-lbl { font-family:var(--mono); font-size:0.77rem; color:var(--text3); text-transform:uppercase; letter-spacing:.1em }
+.setup-in { padding:8px 11px; background:var(--bg); border:1px solid var(--border2); border-radius:5px; color:var(--text); font-family:var(--mono); font-size:0.92rem; outline:none; width:100% }
+.setup-in:focus { border-color:var(--accent) }
+.setup-go { width:100%; padding:10px; background:var(--accent); border:none; border-radius:5px; color:#fff; font-family:var(--mono); font-size:0.92rem; font-weight:700; cursor:pointer; margin-top:6px }
+.setup-go:hover { opacity:.9 }
+.setup-hint { font-family:var(--mono); font-size:0.77rem; color:var(--text3); text-align:center; margin-top:12px; line-height:1.6 }
+
+/* ── CFG BAR (collapsed by default, toggled) ── */
+#cfg-bar { display:none; align-items:center; gap:8px; padding:5px 14px; background:#f5a62306; border-bottom:1px solid #f5a62320; flex-shrink:0; flex-wrap:wrap }
+#cfg-bar.open { display:flex }
+#cfg-bar label { font-family:var(--mono); font-size:0.77rem; color:var(--text3); text-transform:uppercase; letter-spacing:.1em }
+.cfg-in { padding:3px 7px; background:var(--bg); border:1px solid var(--border2); border-radius:4px; color:var(--text); font-family:var(--mono); font-size:0.85rem; outline:none }
+.cfg-in:focus { border-color:var(--green-dim) }
+.cfg-go { padding:3px 10px; background:var(--green-dim); border:none; border-radius:4px; color:#fff; font-family:var(--mono); font-size:0.85rem; font-weight:700; cursor:pointer }
+
+/* ── MAIN ── */
+.main { display:flex; flex:1; overflow:hidden }
+
+/* ── SIDEBAR ── */
+.sidebar { width:210px; flex-shrink:0; border-right:1px solid var(--border); background:var(--bg2); display:flex; flex-direction:column; overflow-y:auto; overflow-x:hidden }
+.cmp-wrap { padding:11px 10px 7px; flex-shrink:0 }
+.cmp-btn { width:100%; padding:7px 0; background:transparent; border:1px solid var(--green-dim); border-radius:5px; color:var(--accent); font-family:var(--mono); font-size:0.85rem; font-weight:600; cursor:pointer }
+.cmp-btn:hover { background:var(--accent-bg) }
+.fldr-sep { padding:10px 12px 3px; font-family:var(--mono); font-size:0.69rem; font-weight:600; letter-spacing:.15em; color:var(--text3); text-transform:uppercase; flex-shrink:0 }
+.fldr { display:flex; align-items:center; gap:6px; padding:7px 12px; font-size:0.92rem; color:var(--text2); cursor:pointer; border-left:2px solid transparent; user-select:none; flex-shrink:0 }
+.fldr:hover { background:var(--bg3); color:var(--text) }
+.fldr.active { color:var(--accent); background:var(--accent-bg); border-left-color:var(--accent) }
+.fldr-ico { font-size:0.77rem; width:13px; text-align:center; flex-shrink:0 }
+.fldr-lbl { flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis }
+.fldr-bdg { font-family:var(--mono); font-size:0.69rem; padding:1px 4px; border-radius:3px; background:#4da6ff20; color:var(--blue); flex-shrink:0 }
+
+/* subfilters */
+.sf-wrap { overflow:hidden; max-height:0; transition:max-height .2s ease }
+.sf-wrap.open { max-height:800px }
+.sf { display:flex; align-items:center; gap:0; padding:5px 10px 5px 26px; font-size:0.85rem; font-family:var(--mono); color:var(--text3); cursor:pointer; border-left:2px solid transparent; user-select:none }
+.sf:hover { background:var(--bg3); color:var(--text2) }
+.sf.active { color:var(--accent); background:var(--accent-bg); border-left-color:var(--accent) }
+.sf-lbl { flex:1 }
+.sf-count { font-size:0.77rem; color:var(--text3); margin-right:4px }
+.sf-unread { width:6px; height:6px; border-radius:50%; background:var(--unread-dot); flex-shrink:0; opacity:0 }
+.sf-unread.on { opacity:1 }
+
+.sidebar-footer { margin-top:auto; padding:10px 12px; border-top:1px solid var(--border); font-family:var(--mono); font-size:0.77rem; color:var(--text3); line-height:1.9; flex-shrink:0 }
+.sidebar-footer span { color:var(--text2) }
+
+/* resize handles */
+.rh { width:4px; cursor:col-resize; background:transparent; flex-shrink:0 }
+.rh:hover, .rh.drag { background:var(--accent) }
+
+/* ── LIST PANE ── */
+.list-pane { width:300px; flex-shrink:0; border-right:1px solid var(--border); display:flex; flex-direction:column; min-width:160px }
+.list-hd { padding:8px 12px 7px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; flex-shrink:0 }
+.list-title { font-family:var(--mono); font-size:0.85rem; font-weight:600; color:var(--text); text-transform:uppercase; letter-spacing:.1em }
+.list-count { font-family:var(--mono); font-size:0.77rem; color:var(--text3) }
+#star-filter-btn { color:var(--text3) }
+#star-filter-btn.on { color:var(--amber); filter:drop-shadow(0 0 4px var(--amber)) }
+.srch-wrap { padding:6px 8px; border-bottom:1px solid var(--border); flex-shrink:0 }
+.srch-in { width:100%; padding:5px 8px; background:var(--bg); border:1px solid var(--border); border-radius:4px; color:var(--text); font-family:var(--mono); font-size:0.85rem; outline:none }
+.srch-in::placeholder { color:var(--text3) }
+.list-body { flex:1; overflow-y:auto }
+.list-body::-webkit-scrollbar { width:3px }
+.list-body::-webkit-scrollbar-thumb { background:var(--border2); border-radius:2px }
+
+.mrow { padding:10px 12px 9px; border-bottom:1px solid var(--border); cursor:pointer; border-left:2px solid transparent; position:relative; display:flex; align-items:flex-start; gap:8px }
+.mrow:hover { background:var(--bg3) }
+.mrow.active { background:var(--bg3); border-left-color:var(--accent) }
+.mrow.selected { background:var(--accent-bg); border-left-color:var(--accent) }
+.mrow.starred { border-left-color:var(--amber) }
+.mrow.starred.active { border-left-color:var(--amber) }
+.mrow.unread .mr-from { color:var(--text) }
+.mrow.unread::after { content:''; position:absolute; top:12px; right:10px; width:6px; height:6px; border-radius:50%; background:var(--unread-dot) }
+.mrow.selected::after, .mrow.starred::after { display:none }
+.mrow-cb { width:14px; height:14px; margin-top:3px; flex-shrink:0; accent-color:var(--accent); cursor:pointer; opacity:0; transition:opacity .1s }
+.mrow:hover .mrow-cb, .mrow.selected .mrow-cb { opacity:1 }
+.mrow-body { flex:1; min-width:0 }
+.mr-top { display:flex; justify-content:space-between; align-items:baseline; margin-bottom:3px }
+.mr-from { font-family:var(--mono); font-size:0.92rem; font-weight:600; color:var(--text2) }
+.mr-from.sys { color:var(--amber) }
+.mr-from.pers { color:var(--blue) }
+.mr-date { font-family:var(--mono); font-size:0.77rem; color:var(--text3); display:flex; align-items:center; gap:5px }
+.star-btn { background:none; border:none; cursor:pointer; padding:0; font-size:0.85rem; line-height:1; opacity:0.25; transition:opacity .15s, transform .15s }
+.star-btn:hover { opacity:0.7; transform:scale(1.2) }
+.star-btn.on { opacity:1; filter:drop-shadow(0 0 3px var(--amber)) }
+.mr-subj { font-size:0.92rem; color:var(--text); margin-bottom:3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis }
+.mr-meta { font-family:var(--mono); font-size:0.77rem; color:var(--text3); white-space:nowrap; overflow:hidden; text-overflow:ellipsis }
+/* starred rule label in subject line */
+.rule-tag { display:inline-block; font-family:var(--mono); font-size:0.69rem; font-weight:700; padding:1px 4px; border-radius:2px; margin-right:4px; background:#f5a62320; color:var(--amber); border:1px solid #f5a62340; vertical-align:middle }
+.tb { display:inline-block; font-family:var(--mono); font-size:0.69rem; font-weight:700; padding:1px 4px; border-radius:2px; margin-right:3px; vertical-align:middle }
+.tb-B { background:#00e5a012; color:var(--green);   border:1px solid #00e5a030 }
+.tb-P { background:#4da6ff12; color:var(--blue);    border:1px solid #4da6ff30 }
+.tb-N { background:#a78bfa12; color:var(--purple);  border:1px solid #a78bfa30 }
+.tb-X { background:#7b849920; color:var(--text2);   border:1px solid #7b849930 }
+.list-empty   { padding:28px 16px; text-align:center; font-family:var(--mono); font-size:0.85rem; color:var(--text3); line-height:1.8 }
+.list-loading { padding:20px; text-align:center; font-family:var(--mono); font-size:0.85rem; color:var(--amber) }
+/* bulk kill bar */
+.bulk-bar { display:none; align-items:center; gap:8px; padding:6px 10px; border-top:1px solid var(--border); background:var(--bg2); flex-shrink:0 }
+.bulk-bar.open { display:flex }
+.bulk-lbl { font-family:var(--mono); font-size:0.77rem; color:var(--text2); flex:1 }
+.bulk-kill-btn { padding:4px 12px; background:var(--red); border:none; border-radius:4px; color:#fff; font-family:var(--mono); font-size:0.77rem; font-weight:600; cursor:pointer }
+.bulk-kill-btn:hover { opacity:.85 }
+.bulk-clear-btn { padding:4px 10px; background:transparent; border:1px solid var(--border2); border-radius:4px; color:var(--text3); font-family:var(--mono); font-size:0.77rem; cursor:pointer }
+.bulk-clear-btn:hover { background:var(--bg3); color:var(--text) }
+/* rules modal */
+.rules-modal { background:var(--bg2); border:1px solid var(--border2); border-radius:8px; width:560px; max-width:96vw; display:flex; flex-direction:column; max-height:90vh }
+.rules-list { padding:10px 14px; flex:1; overflow-y:auto; display:flex; flex-direction:column; gap:6px }
+.rule-row { display:flex; align-items:center; gap:8px; padding:8px 10px; background:var(--bg3); border-radius:5px; border:1px solid var(--border) }
+.rule-row-fields { display:flex; gap:6px; flex:1; flex-wrap:wrap }
+.rule-sel { padding:4px 7px; background:var(--bg); border:1px solid var(--border2); border-radius:4px; color:var(--text); font-family:var(--mono); font-size:0.77rem; outline:none }
+.rule-in { padding:4px 7px; background:var(--bg); border:1px solid var(--border2); border-radius:4px; color:var(--text); font-family:var(--mono); font-size:0.77rem; outline:none; width:130px }
+.rule-in:focus, .rule-sel:focus { border-color:var(--accent) }
+.rule-del { background:none; border:none; color:var(--text3); cursor:pointer; font-size:1rem; padding:0 3px; flex-shrink:0 }
+.rule-del:hover { color:var(--red) }
+.rule-label-in { padding:4px 7px; background:var(--bg); border:1px solid var(--border2); border-radius:4px; color:var(--amber); font-family:var(--mono); font-size:0.77rem; outline:none; width:90px }
+.rule-label-in:focus { border-color:var(--amber) }
+.rules-add-btn { padding:5px 14px; background:transparent; border:1px solid var(--green-dim); border-radius:4px; color:var(--accent); font-family:var(--mono); font-size:0.77rem; cursor:pointer; margin:8px 14px 4px }
+.rules-add-btn:hover { background:var(--accent-bg) }
+.rules-hint { padding:4px 14px 10px; font-family:var(--mono); font-size:0.69rem; color:var(--text3); line-height:1.7 }
+
+/* ── READER ── */
+.reader { flex:1; display:flex; flex-direction:column; min-width:200px }
+.reader-empty { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; color:var(--text3) }
+.reader-empty-ico { font-size:2.31rem; opacity:.18 }
+.reader-empty-txt { font-family:var(--mono); font-size:0.85rem }
+#rv { display:none; flex-direction:column; flex:1; min-height:0 }
+.rv-hd { padding:14px 20px 12px; border-bottom:1px solid var(--border); background:var(--bg2); flex-shrink:0 }
+.rv-subj { font-size:1.15rem; font-weight:500; color:var(--text); margin-bottom:10px; line-height:1.3 }
+.rv-fields { display:flex; flex-wrap:wrap; gap:0 18px }
+.rv-f { font-family:var(--mono); font-size:0.85rem; margin-bottom:3px }
+.rv-k { color:var(--text3); margin-right:4px }
+.rv-v { color:var(--text2) }
+.rv-v.call { color:var(--accent); font-weight:600 }
+.rv-tb { padding:6px 20px; border-bottom:1px solid var(--border); background:var(--bg2); display:flex; gap:5px; flex-shrink:0; align-items:center }
+.btn { padding:5px 11px; border:1px solid var(--border2); border-radius:4px; background:transparent; color:var(--text2); font-family:var(--mono); font-size:0.85rem; cursor:pointer }
+.btn:hover { background:var(--bg3); color:var(--text) }
+.btn.primary { color:var(--blue); border-color:#4da6ff30 }
+.btn.primary:hover { background:#4da6ff12 }
+.btn.danger { color:var(--red); border-color:#e0525230 }
+.btn.danger:hover { background:#e0525210; border-color:var(--red) }
+.btn:disabled { opacity:.3; cursor:not-allowed }
+.btn-sp { flex:1 }
+.rv-body { flex:1; padding:20px 24px; overflow-y:auto; font-family:var(--mono); font-size:1rem; line-height:1.8; color:var(--text); white-space:pre-wrap; word-break:break-word }
+.rv-body::-webkit-scrollbar { width:4px }
+.rv-body::-webkit-scrollbar-thumb { background:var(--border2); border-radius:2px }
+
+/* ── OVERLAYS ── */
+.overlay { position:fixed; inset:0; background:rgba(0,0,0,.6); display:none; align-items:center; justify-content:center; z-index:100 }
+.overlay.open { display:flex }
+.modal { background:var(--bg2); border:1px solid var(--border2); border-radius:8px; width:520px; max-width:96vw; display:flex; flex-direction:column }
+.modal-hd { padding:12px 16px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center }
+.modal-ttl { font-family:var(--mono); font-size:0.85rem; font-weight:600; color:var(--text); text-transform:uppercase; letter-spacing:.1em }
+.modal-x { background:none; border:none; color:var(--text3); cursor:pointer; font-size:1.38rem; line-height:1; padding:0 3px }
+.modal-x:hover { color:var(--text) }
+.modal-bd { padding:14px 16px; display:flex; flex-direction:column; gap:10px }
+.field { display:flex; flex-direction:column; gap:3px }
+.field-lbl { font-family:var(--mono); font-size:0.77rem; color:var(--text3); text-transform:uppercase; letter-spacing:.1em }
+.field-in { padding:7px 10px; background:var(--bg); border:1px solid var(--border); border-radius:4px; color:var(--text); font-family:var(--mono); font-size:0.92rem; outline:none; width:100% }
+.field-in:focus { border-color:var(--green-dim) }
+.field-ta { padding:8px 10px; background:var(--bg); border:1px solid var(--border); border-radius:4px; color:var(--text); font-family:var(--mono); font-size:0.92rem; outline:none; width:100%; resize:vertical; min-height:130px; line-height:1.6 }
+.field-ta:focus { border-color:var(--green-dim) }
+.modal-ft { padding:10px 16px; border-top:1px solid var(--border); display:flex; justify-content:space-between; align-items:center }
+.modal-hint { font-family:var(--mono); font-size:0.77rem; color:var(--text3) }
+.send-btn { padding:7px 20px; background:var(--green-dim); border:none; border-radius:4px; color:#fff; font-family:var(--mono); font-size:0.92rem; font-weight:700; cursor:pointer }
+.send-btn:hover { background:var(--green) }
+.del-box { background:var(--bg2); border:1px solid var(--border2); border-radius:8px; padding:22px 26px; max-width:360px; width:90% }
+.del-ttl { font-family:var(--mono); font-size:0.92rem; font-weight:600; color:var(--red); margin-bottom:10px }
+.del-msg { font-size:1rem; color:var(--text2); margin-bottom:18px; line-height:1.5 }
+.del-msg strong { color:var(--text) }
+.del-btns { display:flex; gap:8px; justify-content:flex-end }
+.toast { position:fixed; bottom:16px; right:16px; padding:8px 14px; border-radius:5px; font-family:var(--mono); font-size:0.85rem; font-weight:500; z-index:300; opacity:0; transform:translateY(36px); transition:all .2s; pointer-events:none }
+.toast.show { opacity:1; transform:translateY(0) }
+.toast.ok   { background:var(--accent-bg); border:1px solid var(--accent-border); color:var(--accent) }
+.toast.err  { background:#e0525215; border:1px solid #e0525240; color:var(--red) }
+.toast.info { background:#4da6ff15; border:1px solid #4da6ff40; color:var(--blue) }
+</style>
+</head>
+<body class="dark">
+
+<!-- FIRST-RUN SETUP SCREEN -->
+<div id="setup-screen" style="display:none">
+  <div class="setup-card">
+    <div class="setup-title">📻 BPQ-Alt-WebMail</div>
+    <div class="setup-sub">First-time setup — takes 10 seconds</div>
+    <div class="setup-field">
+      <span class="setup-lbl">Your Callsign</span>
+      <input class="setup-in" id="su-call" placeholder="N4SFL" autocomplete="off" spellcheck="false">
+    </div>
+    <div class="setup-field">
+      <span class="setup-lbl">BPQ Host</span>
+      <input class="setup-in" id="su-host" value="127.0.0.1">
+    </div>
+    <div class="setup-field">
+      <span class="setup-lbl">BPQ Port</span>
+      <input class="setup-in" id="su-port" value="8010">
+    </div>
+    <button class="setup-go" onclick="completeSetup()">Connect to Node ▶</button>
+    <div class="setup-hint">Session key is auto-detected.<br>You can change these settings later via the ⚙ button.</div>
+  </div>
+</div>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="logo">BPQ-ALT-WEBMAIL</div>
+  <span style="font-family:var(--mono);font-size:0.69rem;color:var(--text3);margin-left:-6px">v0.1.0</span>
+  <div class="top-call" id="top-call">—</div>
+  <span class="top-node" id="top-node">—</span>
+  <div class="tspc"></div>
+  <span id="refresh-lbl"></span>
+  <button class="tbtn" onclick="silentRefresh()">↻</button>
+  <button class="tbtn" id="theme-btn" onclick="toggleTheme()">☀</button>
+  <!-- font size controls -->
+  <button class="tbtn" onclick="adjustFont(-1)" title="Decrease font size">A-</button>
+  <button class="tbtn" id="font-lbl" onclick="resetFont()" title="Reset font size">13px</button>
+  <button class="tbtn" onclick="adjustFont(1)" title="Increase font size">A+</button>
+  <button class="tbtn" onclick="document.getElementById('cfg-bar').classList.toggle('open')" title="Settings">⚙</button>
+  <button class="tbtn" onclick="openRules()" title="Star rules">★ Rules</button>
+  <div id="status-pill">● connecting</div>
+</div>
+
+<!-- CFG BAR (hidden until ⚙ pressed) -->
+<div id="cfg-bar">
+  <label>Host</label><input class="cfg-in" id="cfg-host" value="127.0.0.1" style="width:110px">
+  <label>Port</label><input class="cfg-in" id="cfg-port" value="8010" style="width:50px">
+  <label>Callsign</label><input class="cfg-in" id="cfg-call" value="" style="width:80px">
+  <label>Session key</label><input class="cfg-in" id="cfg-key" value="" style="width:100px" placeholder="auto-detect">
+  <button class="cfg-go" onclick="applyConfig()">APPLY</button>
+  <button class="cfg-go" style="background:#555" onclick="clearSetup()">Reset Setup</button>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+  <div class="sidebar" id="sidebar">
+    <div class="cmp-wrap"><button class="cmp-btn" onclick="openCompose()">+ NEW MESSAGE</button></div>
+    <div class="fldr-sep">Folders</div>
+
+    <div class="fldr" id="fldr-ALL" onclick="loadFolder('ALL','All Messages')">
+      <span class="fldr-ico">◈</span><span class="fldr-lbl">All Messages</span>
+    </div>
+
+    <div class="fldr active" id="fldr-Personal" onclick="activatePersonal()">
+      <span class="fldr-ico">✉</span><span class="fldr-lbl">Personal</span>
+      <span class="fldr-bdg" id="bdg-Personal" style="display:none"></span>
+    </div>
+    <div class="sf-wrap open" id="sf-pers-wrap"></div>
+
+    <div class="fldr" id="fldr-Bulls" onclick="activateBulletins()">
+      <span class="fldr-ico">◉</span><span class="fldr-lbl">Bulletins</span>
+    </div>
+    <div class="sf-wrap" id="sf-bulls-wrap"></div>
+
+    <div class="fldr" id="fldr-NTS"    onclick="loadFolder('NTS','NTS Traffic')"><span class="fldr-ico">⊕</span><span class="fldr-lbl">NTS Traffic</span></div>
+    <div class="fldr" id="fldr-Mine"   onclick="loadFolder('Mine','Mine')"><span class="fldr-ico">◎</span><span class="fldr-lbl">Mine</span></div>
+    <div class="fldr" id="fldr-MySent" onclick="loadFolder('MySent','My Sent')"><span class="fldr-ico">▲</span><span class="fldr-lbl">My Sent</span></div>
+    <div class="fldr" id="fldr-MyRxed" onclick="loadFolder('MyRxed','My Received')"><span class="fldr-ico">▼</span><span class="fldr-lbl">My Received</span></div>
+
+    <div class="sidebar-footer">
+      <div>Node: <span id="si-node">—</span></div>
+      <div>QTH: <span id="si-qth">—</span></div>
+      <div>Msgs: <span id="si-count">—</span></div>
+    </div>
+  </div>
+
+  <div class="rh" id="rh1"></div>
+
+  <div class="list-pane" id="list-pane">
+    <div class="list-hd">
+      <span class="list-title" id="list-title">Personal</span>
+      <button id="star-filter-btn" onclick="toggleStarFilter()" title="Filter by starred"
+        style="background:none;border:none;cursor:pointer;font-size:0.92rem;color:var(--text3);padding:0 4px;line-height:1;transition:color .15s">★</button>
+      <span class="list-count" id="list-count">—</span>
+    </div>
+    <div class="srch-wrap">
+      <input class="srch-in" id="srch" placeholder="filter messages…" oninput="filterList()">
+    </div>
+    <div class="list-body" id="list-body">
+      <div class="list-loading">● connecting…</div>
+    </div>
+    <div class="bulk-bar" id="bulk-bar">
+      <span class="bulk-lbl" id="bulk-lbl">0 selected</span>
+      <button class="bulk-clear-btn" onclick="clearSelection()">Clear</button>
+      <button class="bulk-kill-btn" onclick="confirmBulkKill()">✕ Kill Selected</button>
+    </div>
+  </div>
+
+  <div class="rh" id="rh2"></div>
+
+  <div class="reader" id="reader-pane">
+    <div class="reader-empty" id="reader-empty">
+      <div class="reader-empty-ico">📻</div>
+      <div class="reader-empty-txt">select a message</div>
+    </div>
+    <div id="rv">
+      <div class="rv-hd">
+        <div class="rv-subj" id="rv-subj"></div>
+        <div class="rv-fields">
+          <span class="rv-f"><span class="rv-k">FROM</span><span class="rv-v call" id="rv-from"></span></span>
+          <span class="rv-f"><span class="rv-k">TO</span><span class="rv-v" id="rv-to"></span></span>
+          <span class="rv-f"><span class="rv-k">DATE</span><span class="rv-v" id="rv-date"></span></span>
+          <span class="rv-f"><span class="rv-k">TYPE</span><span class="rv-v" id="rv-type"></span></span>
+          <span class="rv-f"><span class="rv-k">MSG#</span><span class="rv-v" id="rv-num"></span></span>
+          <span class="rv-f"><span class="rv-k">BID</span><span class="rv-v" id="rv-bid"></span></span>
+          <span class="rv-f"><span class="rv-k">SIZE</span><span class="rv-v" id="rv-size"></span></span>
+        </div>
+      </div>
+      <div class="rv-tb">
+        <button class="btn primary" onclick="doReply()">↩ Reply</button>
+        <button class="btn" onclick="doForward()">→ Forward</button>
+        <button class="btn" onclick="doDownload()">⤓ Save</button>
+        <button class="btn" onclick="doPrev()">← Prev</button>
+        <button class="btn" onclick="doNext()">Next →</button>
+        <div class="btn-sp"></div>
+        <button class="btn danger" id="btn-kill" onclick="confirmKill()">✕ Kill</button>
+      </div>
+      <div class="rv-body" id="rv-body"></div>
+    </div>
+  </div>
+</div>
+
+<!-- KILL CONFIRM -->
+<div class="overlay" id="del-ov">
+  <div class="del-box">
+    <div class="del-ttl">✕ Kill Message</div>
+    <div class="del-msg" id="del-msg"></div>
+    <div class="del-btns">
+      <button class="btn" onclick="closeKill()">Cancel</button>
+      <button class="btn danger" id="del-yes" onclick="doKill()">Kill Message</button>
+    </div>
+  </div>
+</div>
+
+<!-- COMPOSE -->
+<div class="overlay" id="cmp-ov">
+  <div class="modal">
+    <div class="modal-hd"><span class="modal-ttl" id="cmp-ttl">New Message</span><button class="modal-x" onclick="closeCompose()">×</button></div>
+    <div class="modal-bd">
+      <div class="field"><span class="field-lbl">To (callsign)</span><input class="field-in" id="cmp-to" placeholder="K1AJD"></div>
+      <div class="field"><span class="field-lbl">Subject</span><input class="field-in" id="cmp-subj" placeholder="subject line"></div>
+      <div class="field"><span class="field-lbl">Message</span><textarea class="field-ta" id="cmp-body" placeholder="message text…"></textarea></div>
+    </div>
+    <div class="modal-ft"><span class="modal-hint" id="cmp-status"></span><button class="send-btn" id="cmp-send" onclick="doSend()">SEND ▶</button></div>
+  </div>
+</div>
+
+<!-- STAR RULES -->
+<div class="overlay" id="rules-ov">
+  <div class="rules-modal">
+    <div class="modal-hd">
+      <span class="modal-ttl">★ Star Rules</span>
+      <button class="modal-x" onclick="closeRules()">×</button>
+    </div>
+    <div class="rules-list" id="rules-list"></div>
+    <button class="rules-add-btn" onclick="addRule()">+ Add Rule</button>
+    <div class="rules-hint">
+      Each rule stars any message matching ALL its conditions.<br>
+      Field: FROM · TO · SUBJECT · TYPE &nbsp;|&nbsp; Match: contains · starts with · equals · is<br>
+      Label appears as a tag in the subject line. Leave blank for no label.
+    </div>
+    <div class="modal-ft">
+      <span class="modal-hint" id="rules-status"></span>
+      <button class="send-btn" onclick="saveRules()">Save Rules</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════════════════
+//  CONFIG & PERSISTENT STORAGE
+// ═══════════════════════════════════════════════════
+const LS = {
+  get: k => { try { return localStorage.getItem(k); } catch(_){ return null; } },
+  set: (k,v) => { try { localStorage.setItem(k,v); } catch(_){} },
+  del: k => { try { localStorage.removeItem(k); } catch(_){} },
+  getJ: k => { try { return JSON.parse(localStorage.getItem(k)||'null'); } catch(_){ return null; } },
+  setJ: (k,v) => { try { localStorage.setItem(k,JSON.stringify(v)); } catch(_){} }
+};
+
+let CFG = {
+  host:      LS.get('bpq_host')     || '127.0.0.1',
+  port:      LS.get('bpq_port')     || '8010',
+  key:       LS.get('bpq_key')      || '',
+  callsign:  LS.get('bpq_call')     || '',
+};
+
+function saveCFG() {
+  LS.set('bpq_host', CFG.host);
+  LS.set('bpq_port', CFG.port);
+  LS.set('bpq_key',  CFG.key);
+  LS.set('bpq_call', CFG.callsign);
+}
+
+// ═══════════════════════════════════════════════════
+//  STAR RULES ENGINE
+//
+//  A rule is: { field, match, value, label }
+//    field: 'from' | 'to' | 'subject' | 'type'
+//    match: 'contains' | 'startswith' | 'equals' | 'is'
+//    value: string to test against (case-insensitive)
+//    label: short tag shown in subject line (optional)
+//
+//  Built-in rules are always active and cannot be deleted.
+//  User rules are stored in localStorage.
+// ═══════════════════════════════════════════════════
+// Built-in rules — each entry is an array of conditions that must ALL match (AND logic).
+// User rules (single condition each) are stored in localStorage.
+const BUILTIN_RULES = [
+  {
+    conditions: [
+      { field:'from',    match:'is',         value:'SYSTEM'   },
+      { field:'subject', match:'startswith', value:'New User' },
+    ],
+    label:   'NEW USER',
+    builtin: true,
+  },
+];
+
+function loadUserRules() {
+  // Legacy single-condition format: {field, match, value, label}
+  // Wrap in conditions array for uniform handling
+  return (LS.getJ('bpq_rules') || []).map(r =>
+    r.conditions ? r : { conditions:[{field:r.field,match:r.match,value:r.value}], label:r.label }
+  );
+}
+function saveUserRules(rules) {
+  LS.setJ('bpq_rules', rules.filter(r=>!r.builtin));
+}
+
+function allRules() {
+  return [...BUILTIN_RULES, ...loadUserRules()];
+}
+
+// Test all conditions in a rule (AND logic)
+function ruleMatches(rule, msg) {
+  const conditions = rule.conditions || [{ field:rule.field, match:rule.match, value:rule.value }];
+  return conditions.every(cond => conditionMatches(cond, msg));
+}
+
+function conditionMatches(cond, msg) {
+  const fieldMap = {
+    from:    () => (persFromKey(msg)||'').toUpperCase(),
+    to:      () => (msg.to||'').toUpperCase(),
+    subject: () => (msg.subject||'').toUpperCase(),
+    type:    () => (msg.type||'').toUpperCase(),
+  };
+  const haystack = (fieldMap[cond.field] || (()=>''))();
+  const needle   = (cond.value||'').toUpperCase();
+  if (!needle) return false;
+  switch(cond.match) {
+    case 'contains':   return haystack.includes(needle);
+    case 'startswith': return haystack.startsWith(needle);
+    case 'equals':
+    case 'is':         return haystack === needle;
+    default:           return false;
+  }
+}
+
+// Return { starred: bool, labels: string[] } for a message
+function evalRules(msg) {
+  const matched = allRules().filter(r => ruleMatches(r, msg));
+  return {
+    starred: matched.length > 0,
+    labels:  matched.map(r=>r.label).filter(Boolean),
+  };
+}
+
+// ── RULES MODAL ────────────────────────────────────
+// draftRules always stored/edited in flat format: {field,match,value,label}
+// loadUserRules() may return wrapped format — unwrap for editing
+let draftRules = [];
+
+function flattenRule(r) {
+  // If wrapped in conditions array, extract first condition for editing
+  if (r.conditions) {
+    const c = r.conditions[0] || {};
+    return { field: c.field||'from', match: c.match||'contains', value: c.value||'', label: r.label||'' };
+  }
+  return { field: r.field||'from', match: r.match||'contains', value: r.value||'', label: r.label||'' };
+}
+
+function openRules() {
+  draftRules = loadUserRules().map(flattenRule);
+  renderRulesModal();
+  document.getElementById('rules-ov').classList.add('open');
+}
+function closeRules() { document.getElementById('rules-ov').classList.remove('open'); }
+
+function renderRulesModal() {
+  const list = document.getElementById('rules-list');
+  const builtinHtml = BUILTIN_RULES.map(r=>{
+    const condStr = r.conditions
+      ? r.conditions.map(c=>`${esc(c.field)} ${esc(c.match)} "${esc(c.value)}"`).join(' AND ')
+      : `${esc(r.field)} ${esc(r.match)} "${esc(r.value)}"`;
+    return `<div class="rule-row" style="opacity:.6">
+      <div class="rule-row-fields">
+        <span style="font-family:var(--mono);font-size:0.77rem;color:var(--amber)">★ Built-in:</span>
+        <span style="font-family:var(--mono);font-size:0.77rem;color:var(--text2)">
+          ${condStr}
+          ${r.label?`→ <span style="color:var(--amber)">${esc(r.label)}</span>`:''}
+        </span>
+      </div>
+    </div>`;
+  }).join('');
+
+  const userHtml = draftRules.length ? draftRules.map((r,i)=>`
+    <div class="rule-row">
+      <div class="rule-row-fields">
+        <select class="rule-sel" onchange="draftRules[${i}].field=this.value">
+          ${['from','to','subject','type'].map(f=>`<option value="${f}"${r.field===f?' selected':''}>${f.toUpperCase()}</option>`).join('')}
+        </select>
+        <select class="rule-sel" onchange="draftRules[${i}].match=this.value">
+          ${['contains','startswith','equals'].map(m=>`<option value="${m}"${r.match===m?' selected':''}>${m}</option>`).join('')}
+        </select>
+        <input class="rule-in" value="${esc(r.value||'')}" placeholder="value…"
+          oninput="draftRules[${i}].value=this.value">
+        <input class="rule-label-in" value="${esc(r.label||'')}" placeholder="label (opt)"
+          oninput="draftRules[${i}].label=this.value">
+      </div>
+      <button class="rule-del" onclick="removeRule(${i})" title="Remove rule">✕</button>
+    </div>`).join('')
+    : '<div style="font-family:var(--mono);font-size:0.77rem;color:var(--text3);padding:8px 2px">No custom rules yet — click + Add Rule below</div>';
+
+  list.innerHTML = builtinHtml + userHtml;
+}
+
+function addRule() {
+  draftRules.push({ field:'from', match:'contains', value:'', label:'' });
+  renderRulesModal();
+  // Focus the new value input
+  const inputs = document.querySelectorAll('#rules-list .rule-in');
+  if (inputs.length) inputs[inputs.length-1].focus();
+}
+function removeRule(i) {
+  draftRules.splice(i,1);
+  renderRulesModal();
+}
+function saveRules() {
+  // Validate — skip empty rules
+  const valid = draftRules.filter(r => r.value && r.value.trim());
+  saveUserRules(valid);
+  closeRules();
+  renderList(getFiltered());
+  toast('Rules saved','ok');
+}
+
+document.getElementById('rules-ov').addEventListener('click',e=>{if(e.target===e.currentTarget)closeRules();});
+
+// ── KILLED SET ─────────────────────────────────────
+let killedSet = new Set(LS.getJ('bpq_killed')||[]);
+function saveKilled() { LS.setJ('bpq_killed',[...killedSet].slice(-500)); }
+
+// ── BODY CACHE (FIFO 30) ───────────────────────────
+const BODY_MAX=30, bodyOrder=[];
+function cacheBody(msg,body) {
+  msg.body=body; bodyOrder.push(msg.num);
+  if (bodyOrder.length>BODY_MAX) {
+    const old=allMsgs.find(m=>m.num===bodyOrder.shift());
+    if (old&&old.num!==activeNum) old.body=null;
+  }
+}
+
+// ── READ TRACKING ──────────────────────────────────
+// Track which message numbers have been opened this session
+// Simple Set — no persistence needed, resets on reload which is fine
+let readSet = new Set();
+
+// ── STATE ──────────────────────────────────────────
+let allMsgs=[], activeNum=null, killTarget=null;
+let activeFolder='Personal', persFilter='ALL', bullFilter='ALL';
+
+// ═══════════════════════════════════════════════════
+//  THEME
+// ═══════════════════════════════════════════════════
+let isDark = LS.get('bpq_theme') !== 'light';
+function applyTheme() {
+  document.body.className = isDark ? 'dark' : 'light';
+  document.getElementById('theme-btn').textContent = isDark ? '☀' : '🌙';
+  LS.set('bpq_theme', isDark ? 'dark' : 'light');
+}
+function toggleTheme() { isDark=!isDark; applyTheme(); }
+
+// ═══════════════════════════════════════════════════
+//  FONT SIZE
+// ═══════════════════════════════════════════════════
+let fontSize = parseInt(LS.get('bpq_font')||'13');
+function applyFont() {
+  document.documentElement.style.fontSize = fontSize + 'px';
+  document.getElementById('font-lbl').textContent = fontSize + 'px';
+  LS.set('bpq_font', fontSize);
+}
+function adjustFont(d) { fontSize = Math.min(20, Math.max(10, fontSize+d)); applyFont(); }
+function resetFont()   { fontSize=13; applyFont(); }
+
+// ═══════════════════════════════════════════════════
+//  COLUMN RESIZE
+// ═══════════════════════════════════════════════════
+function initResize(handleId, targetId, minW) {
+  const h=document.getElementById(handleId), t=document.getElementById(targetId);
+  let sx,sw;
+  h.addEventListener('mousedown',e=>{
+    sx=e.clientX; sw=t.offsetWidth; h.classList.add('drag');
+    const mv=e=>{t.style.width=Math.max(minW,sw+(e.clientX-sx))+'px';};
+    const up=()=>{h.classList.remove('drag');document.removeEventListener('mousemove',mv);document.removeEventListener('mouseup',up);};
+    document.addEventListener('mousemove',mv); document.addEventListener('mouseup',up);
+    e.preventDefault();
+  });
+}
+
+// ═══════════════════════════════════════════════════
+//  FIRST-RUN SETUP
+// ═══════════════════════════════════════════════════
+function showSetup() {
+  document.getElementById('setup-screen').style.display='flex';
+}
+function hideSetup() {
+  document.getElementById('setup-screen').style.display='none';
+}
+function completeSetup() {
+  const call = document.getElementById('su-call').value.trim().toUpperCase();
+  if (!call) { document.getElementById('su-call').focus(); return; }
+  CFG.callsign = call;
+  CFG.host     = document.getElementById('su-host').value.trim() || '127.0.0.1';
+  CFG.port     = document.getElementById('su-port').value.trim() || '8010';
+  CFG.key      = '';
+  LS.set('bpq_setup_done','1');
+  saveCFG();
+  hideSetup();
+  syncTopbar();
+  connectAndLoad();
+}
+function clearSetup() {
+  LS.del('bpq_setup_done'); LS.del('bpq_call');
+  location.reload();
+}
+function applyConfig() {
+  CFG.host     = document.getElementById('cfg-host').value.trim();
+  CFG.port     = document.getElementById('cfg-port').value.trim();
+  CFG.callsign = document.getElementById('cfg-call').value.trim().toUpperCase() || CFG.callsign;
+  CFG.key      = document.getElementById('cfg-key').value.trim();
+  saveCFG();
+  syncTopbar();
+  connectAndLoad();
+}
+function syncTopbar() {
+  document.getElementById('top-call').textContent = CFG.callsign || '—';
+  document.getElementById('top-node').textContent = `${CFG.host}:${CFG.port}`;
+  document.getElementById('si-node').textContent  = CFG.callsign || '—';
+  document.getElementById('si-qth').textContent   = 'Delray Beach FL';
+  // Sync cfg bar fields
+  document.getElementById('cfg-host').value = CFG.host;
+  document.getElementById('cfg-port').value = CFG.port;
+  document.getElementById('cfg-call').value = CFG.callsign;
+  document.getElementById('cfg-key').value  = CFG.key;
+}
+
+// ═══════════════════════════════════════════════════
+//  BPQ URLS & FETCH
+// ═══════════════════════════════════════════════════
+const FOLDER_PATHS = {
+  ALL:      k=>`/WebMail/WMALL?${k}`,
+  Personal: k=>`/WebMail/WMtoMe?${k}`,  // BPQ pre-filters to messages TO you
+  Bulls:    k=>`/WebMail/WMB?${k}`,
+  NTS:      k=>`/WebMail/WMT?${k}`,
+  Mine:     k=>`/WebMail/WMMine?${k}`,
+  MySent:   k=>`/WebMail/WMfromMe?${k}`,
+  MyRxed:   k=>`/WebMail/WMtoMe?${k}`,
+};
+function base()      { return `http://${CFG.host}:${CFG.port}`; }
+function msgUrl(n)   { return `${base()}/WebMail/WM?${CFG.key}&${n}`; }
+function killUrl(n)  { return `${base()}/WebMail/WMDel/${n}?${CFG.key}`; }
+function replyUrl(n) { return `${base()}/WebMail/Reply/${n}?${CFG.key}`; }
+function nextUrl()   { return `${base()}/WebMail/WMNext?${CFG.key}`; }
+function prevUrl()   { return `${base()}/WebMail/WMPrev?${CFG.key}`; }
+
+async function bpqGet(url) {
+  const r=await fetch(url,{credentials:'include'});
+  if (!r.ok) throw new Error(`HTTP ${r.status}`);
+  return r.text();
+}
+
+async function autoDetectKey() {
+  for (const url of [`${base()}/`,`${base()}/WebMail/WMALL`]) {
+    try {
+      const html=await(await fetch(url,{credentials:'include'})).text();
+      const m=html.match(/\/WebMail\/[A-Za-z]+\?([A-Z0-9]{6,12})/i);
+      if (m?.[1]) return m[1];
+    } catch(_){}
+  }
+  return null;
+}
+
+// ═══════════════════════════════════════════════════
+//  PARSE LIST
+//  Row after </a>: " date type size to via from subject"
+//  Some rows have blank via (double-space) — handle by
+//  checking if p[4] looks like a callsign/keyword or
+//  if subject starts at p[5] vs p[6].
+// ═══════════════════════════════════════════════════
+function looksLikeCallOrKeyword(s) {
+  // Callsigns / keywords in the via/to columns: letters+digits+/, or WW, USA, etc.
+  return s && /^[A-Z0-9#\/]+$/i.test(s) && s.length <= 12;
+}
+
+function parseList(html) {
+  const doc=new DOMParser().parseFromString(html,'text/html');
+  const pre=doc.querySelector('pre');
+  if (!pre) return [];
+  const msgs=[];
+  pre.querySelectorAll('a').forEach(a=>{
+    const href=a.getAttribute('href')||'';
+    const nm=href.match(/[?&](\d+)$/)||href.match(/WM\?[^&]*[&;](\d+)/);
+    if (!nm) return;
+    const num=nm[1];
+    let raw=''; let node=a.nextSibling;
+    while(node&&node.nodeType===3){raw+=node.textContent;node=node.nextSibling;}
+    const trimmed=raw.trim();
+    if(!trimmed) return;
+    const p=trimmed.split(/\s+/);
+    // Skip echoed message number if present
+    const off = /^\d+$/.test(p[0]) ? 1 : 0;
+    const date=p[off]||'', type=p[off+1]||'', size=p[off+2]||'';
+    let to=p[off+3]||'', via=p[off+4]||'', from=p[off+5]||'';
+    let subject=p.slice(off+6).join(' ').trim()||'(no subject)';
+
+    // BPQ list columns: date type size to @via from subject
+    // Some senders (SYSTEM, RMS, etc.) have no @via, so the column
+    // that should be @via contains the FROM callsign instead, shifting
+    // everything left by one. Detect this when via looks like a sender
+    // callsign/keyword (no @, all caps, no dot) AND from looks like a
+    // subject word (lowercase or mixed, or subject words bleed in).
+    // Reliable signal: via is a known system sender OR from doesn't look
+    // like a callsign (callsigns are all-caps alphanumeric, 3-7 chars).
+    const looksLikeCallsign = s => /^[A-Z0-9]{3,7}(-\d{1,2})?$/.test(s);
+    const looksLikeSender   = s => /^[A-Z0-9@]{2,12}$/i.test(s) && !s.includes(' ');
+
+    if (via && !via.startsWith('@') && looksLikeSender(via) && !looksLikeCallsign(from)) {
+      // via is actually the FROM field, from is the first subject word
+      from    = via;
+      subject = [p[off+5]||'', ...p.slice(off+6)].join(' ').trim() || '(no subject)';
+      via     = '';
+    } else if (via && via.startsWith('@')) {
+      // @SYSTEM style — strip the @ to get sender name
+      from    = via.replace('@','');
+      subject = [p[off+5]||'', ...p.slice(off+6)].join(' ').trim() || '(no subject)';
+      via     = '';
+    }
+
+    if(killedSet.has(num)) return;
+    if(type&&type.toUpperCase().endsWith('K')) return;
+    msgs.push({num,date,type,size,to,via,from,subject,body:null});
+  });
+  return msgs;
+}
+
+function parseBody(html) {
+  if(!html.includes('id="txt"')&&html.includes('href=/WebMail/WM?')) return null;
+  const doc=new DOMParser().parseFromString(html,'text/html');
+  const ta=doc.getElementById('txt');
+  if(ta&&ta.textContent.trim().length>5) return ta.textContent;
+  for(const t of doc.querySelectorAll('textarea'))
+    if(t.textContent.trim().length>5) return t.textContent;
+  const pre=doc.querySelector('pre');
+  if(pre&&!pre.querySelector('a')) return pre.textContent;
+  return null;
+}
+
+// ═══════════════════════════════════════════════════
+//  SUBFILTER BUILDERS
+// ═══════════════════════════════════════════════════
+
+// Count messages per group key, and count unread (not in readSet)
+function buildSubfilters(wrapId, msgs, keyFn, activeVal, onClickFn, pinFirst) {
+  const counts={}, unreads={};
+  for(const m of msgs) {
+    const k=keyFn(m)||'?';
+    counts[k]=(counts[k]||0)+1;
+    if(!readSet.has(m.num)) unreads[k]=(unreads[k]||0)+1;
+  }
+  const allCount=msgs.length;
+  const allUnread=msgs.filter(m=>!readSet.has(m.num)).length;
+
+  // Sort keys: pinFirst at top, then alpha
+  let keys=Object.keys(counts).sort();
+  if(pinFirst) {
+    keys=[pinFirst,...keys.filter(k=>k!==pinFirst)];
+  }
+  keys=['ALL',...keys];
+
+  const wrap=document.getElementById(wrapId);
+  wrap.innerHTML=keys.map(k=>{
+    const cnt = k==='ALL' ? allCount : (counts[k]||0);
+    const unr = k==='ALL' ? allUnread : (unreads[k]||0);
+    const isActive = activeVal===k;
+    return `<div class="sf${isActive?' active':''}" onclick="${onClickFn}('${esc(k)}')">
+      <span class="sf-lbl">${esc(k)}</span>
+      <span class="sf-count">(${cnt})</span>
+      <span class="sf-unread${unr>0?' on':''}"></span>
+    </div>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════════════
+//  LAZY HEADER FETCH FOR PERSONAL FOLDER
+//
+//  The BPQ list row columns are unreliable for the FROM
+//  field (forwarded messages, column shifts, etc).
+//  Instead we fetch each message body and read the real
+//  "From:" line from the BPQ header block, which always
+//  appears at the top of the textarea in this format:
+//
+//    From: WC9P
+//    To: N4SFL
+//    Type/Status: PF
+//    Date/Time: ...
+//    Bid: ...
+//    Title: ...
+//
+//  We fetch up to 600 chars which is always enough for
+//  the header. Results cached on msg.hdrFrom so we only
+//  fetch once per message per session.
+// ═══════════════════════════════════════════════════
+let headerFetchAbort = null; // AbortController to cancel in-flight fetches on folder switch
+
+function extractHdrFrom(bodyText) {
+  // Match "From: CALLSIGN" at start of body (may have @domain suffix)
+  const m = bodyText.match(/^From:\s*([^\r\n]+)/mi);
+  if (!m) return null;
+  return baseCall(m[1].trim());
+}
+
+async function fetchMsgHeader(msg) {
+  if (msg.hdrFrom !== undefined) return;
+  if (baseCall(msg.from) === 'SYSTEM') { msg.hdrFrom = 'SYSTEM'; return; }
+  try {
+    let r = await fetch(msgUrl(msg.num), { credentials:'include', signal: headerFetchAbort?.signal });
+    // On 404 the session key probably rotated — re-detect and retry once
+    if (r.status === 404) {
+      const newKey = await autoDetectKey();
+      if (newKey && newKey !== CFG.key) {
+        CFG.key = newKey; saveCFG();
+        document.getElementById('cfg-key').value = newKey;
+      }
+      r = await fetch(msgUrl(msg.num), { credentials:'include', signal: headerFetchAbort?.signal });
+    }
+    if (!r.ok) return;
+    const html = await r.text();
+    const body = parseBody(html);
+    msg.hdrFrom = (body ? extractHdrFrom(body) : null) || baseCall(msg.from);
+  } catch(_) {
+    msg.hdrFrom = baseCall(msg.from);
+  }
+}
+
+// Fetch headers for all personal messages in background, rebuilding
+// filters as each one comes in. Rate-limited to avoid hammering BPQ.
+async function lazyFetchPersonalHeaders(msgs) {
+  // Cancel any previous run
+  if (headerFetchAbort) headerFetchAbort.abort();
+  headerFetchAbort = new AbortController();
+
+  // Process in small batches to avoid flooding BPQ
+  const BATCH = 3, DELAY_MS = 300;
+  for (let i = 0; i < msgs.length; i += BATCH) {
+    if (headerFetchAbort.signal.aborted) return;
+    const batch = msgs.slice(i, i + BATCH);
+    await Promise.all(batch.map(m => fetchMsgHeader(m)));
+    // After each batch, rebuild filters and re-render list
+    if (activeFolder === 'Personal') {
+      buildPersFilters(allMsgs);
+      const f = getFiltered();
+      renderList(f);
+      updateListCount(f);
+    }
+    if (i + BATCH < msgs.length) {
+      await new Promise(r => setTimeout(r, DELAY_MS));
+    }
+  }
+}
+
+// Extract clean base callsign — strips @domain suffix
+function baseCall(s) {
+  if (!s) return '?';
+  return (s.split('@')[0].trim().toUpperCase()) || '?';
+}
+
+// Use hdrFrom (from body) when available, else fall back to list row from.
+// Special case: if the raw list row from field is SYSTEM, trust it immediately
+// without waiting for the header fetch — SYSTEM is always correct in the row.
+function persFromKey(m) {
+  if (m.hdrFrom !== undefined) return m.hdrFrom;
+  const raw = baseCall(m.from);
+  if (raw === 'SYSTEM') return 'SYSTEM';
+  return raw;
+}
+
+function buildPersFilters(msgs) {
+  const hasSystem = msgs.some(m => persFromKey(m)==='SYSTEM');
+  buildSubfilters('sf-pers-wrap', msgs, persFromKey, persFilter, 'setPersFilter', hasSystem ? 'SYSTEM' : null);
+}
+function buildBullFilters(msgs) {
+  buildSubfilters('sf-bulls-wrap', msgs, m=>m.to, bullFilter, 'setBullFilter', null);
+}
+
+function setPersFilter(f) {
+  persFilter=f;
+  buildPersFilters(allMsgs);
+  const label = f==='ALL' ? 'Personal' : `Personal · ${f}`;
+  document.getElementById('list-title').textContent=label;
+  const filtered=getFiltered();
+  renderList(filtered);
+  updateListCount(filtered);
+  if(filtered.length>0) openMsg(filtered[0].num);
+}
+function setBullFilter(f) {
+  bullFilter=f;
+  buildBullFilters(allMsgs);
+  const label = f==='ALL' ? 'Bulletins' : `Bulletins · ${f}`;
+  document.getElementById('list-title').textContent=label;
+  const filtered=getFiltered();
+  renderList(filtered);
+  updateListCount(filtered);
+  if(filtered.length>0) openMsg(filtered[0].num);
+}
+
+// ═══════════════════════════════════════════════════
+//  FILTERING
+// ═══════════════════════════════════════════════════
+function getFiltered() {
+  let msgs=allMsgs;
+  if(activeFolder==='Personal'&&persFilter!=='ALL') msgs=msgs.filter(m=>persFromKey(m)===persFilter);
+  if(activeFolder==='Bulls'&&bullFilter!=='ALL') msgs=msgs.filter(m=>m.to===bullFilter);
+  if(starFilterOn) msgs=msgs.filter(m=>{ const {starred}=evalRules(m); return starred||manualStars.has(m.num); });
+  const q=document.getElementById('srch').value.toLowerCase();
+  if(q) msgs=msgs.filter(m=>[m.from,m.to,m.subject,m.type,m.num,m.via].some(v=>(v||'').toLowerCase().includes(q)));
+  return msgs;
+}
+function updateListCount(filtered) {
+  document.getElementById('list-count').textContent =
+    filtered.length<allMsgs.length ? `${filtered.length}/${allMsgs.length}` : `${allMsgs.length}`;
+  document.getElementById('si-count').textContent=allMsgs.length;
+}
+function filterList() {
+  const f=getFiltered(); renderList(f); updateListCount(f);
+}
+
+// Sort personal: SYSTEM floats to top
+// No auto-sort by starred — preserve natural message order
+function sortPersonal(msgs) { return [...msgs]; }
+
+// ── STAR FILTER ────────────────────────────────────
+let starFilterOn = false;
+
+function toggleStarFilter() {
+  starFilterOn = !starFilterOn;
+  const btn = document.getElementById('star-filter-btn');
+  btn.classList.toggle('on', starFilterOn);
+  btn.title = starFilterOn ? 'Showing starred only — click to show all' : 'Filter by starred';
+  const f = getFiltered(); renderList(f); updateListCount(f);
+  if (f.length > 0 && (!activeNum || !f.find(m=>m.num===activeNum))) openMsg(f[0].num);
+}
+
+// ═══════════════════════════════════════════════════
+//  FOLDER LOADING
+// ═══════════════════════════════════════════════════
+function activatePersonal() {
+  document.getElementById('sf-pers-wrap').classList.add('open');
+  document.getElementById('sf-bulls-wrap').classList.remove('open');
+  loadFolder('Personal','Personal');
+}
+function activateBulletins() {
+  document.getElementById('sf-bulls-wrap').classList.add('open');
+  document.getElementById('sf-pers-wrap').classList.remove('open');
+  loadFolder('Bulls','Bulletins');
+}
+
+async function loadFolder(folder, label) {
+  activeFolder=folder; activeNum=null;
+  document.querySelectorAll('.fldr').forEach(f=>f.classList.remove('active'));
+  const fEl=document.getElementById(`fldr-${folder}`);
+  if(fEl) fEl.classList.add('active');
+  if(folder!=='Personal') document.getElementById('sf-pers-wrap').classList.remove('open');
+  if(folder!=='Bulls')    document.getElementById('sf-bulls-wrap').classList.remove('open');
+  document.getElementById('list-title').textContent=label||folder;
+  document.getElementById('list-count').textContent='…';
+  document.getElementById('list-body').innerHTML='<div class="list-loading">loading…</div>';
+  document.getElementById('srch').value='';
+  selectedNums.clear(); updateBulkBar();
+  starFilterOn = false;
+  const sfb = document.getElementById('star-filter-btn');
+  if (sfb) sfb.classList.remove('on');
+  showEmpty(); setStatus('busy','⏳ loading');
+
+  try {
+    let html=await bpqGet(base()+FOLDER_PATHS[folder](CFG.key));
+    // Key expired? Re-detect
+    if(!html.includes('href=/WebMail/WM?')) {
+      const k=await autoDetectKey();
+      if(k&&k!==CFG.key){ CFG.key=k; saveCFG(); document.getElementById('cfg-key').value=k; toast('Session key refreshed','info'); }
+      html=await bpqGet(base()+FOLDER_PATHS[folder](CFG.key));
+    }
+    let msgs=parseList(html);
+
+    // Personal: BPQ's WMtoMe endpoint already filters to messages addressed to us.
+    // We still sort so SYSTEM floats to top.
+    if(folder==='Personal') {
+      msgs=sortPersonal(msgs);
+      persFilter='ALL';
+      buildPersFilters(msgs);
+      document.getElementById('sf-pers-wrap').classList.add('open');
+      // Kick off background header fetch to get accurate From fields
+      // Don't await — runs silently and rebuilds filters as it goes
+      lazyFetchPersonalHeaders(msgs);
+    }
+    if(folder==='Bulls') {
+      bullFilter='ALL';
+      buildBullFilters(msgs);
+      document.getElementById('sf-bulls-wrap').classList.add('open');
+    }
+
+    allMsgs=msgs;
+    const filtered=getFiltered();
+    renderList(filtered);
+    updateListCount(filtered);
+    setStatus('ok',`● ${msgs.length} msgs`);
+
+    // Auto-open first message
+    if(filtered.length>0) openMsg(filtered[0].num);
+
+  } catch(e) {
+    setStatus('err','✕ offline');
+    document.getElementById('list-body').innerHTML=
+      `<div class="list-empty">Cannot reach BPQ at<br><strong>${CFG.host}:${CFG.port}</strong><br><br>Check ⚙ settings.</div>`;
+    toast('Cannot reach BPQ node','err');
+  }
+}
+
+// ═══════════════════════════════════════════════════
+//  RENDER LIST
+// ═══════════════════════════════════════════════════
+function tcls(t) {
+  if(!t) return 'tb tb-X';
+  const c=t[0].toUpperCase();
+  if(c==='B') return 'tb tb-B';
+  if(c==='P') return 'tb tb-P';
+  if(c==='N') return 'tb tb-N';
+  return 'tb tb-X';
+}
+function renderList(msgs) {
+  const el=document.getElementById('list-body');
+  if(!msgs.length){ el.innerHTML='<div class="list-empty">No messages</div>'; return; }
+  el.innerHTML=msgs.map(m=>{
+    const isP=m.type&&m.type[0]==='P';
+    const displayFrom=persFromKey(m);
+    const isSysNewUser = displayFrom==='SYSTEM' && m.subject.toLowerCase().startsWith('new user');
+    const fromCls=isSysNewUser?'mr-from sys':isP?'mr-from pers':'mr-from';
+    const isRead=readSet.has(m.num);
+    const isSel=selectedNums.has(m.num);
+    const {starred, labels}=evalRules(m);
+    const starredManually=manualStars.has(m.num);
+    const isStarred=starred||starredManually;
+    const tagHtml=labels.map(l=>`<span class="rule-tag">${esc(l)}</span>`).join('');
+    return `<div class="mrow${activeNum===m.num?' active':''}${!isRead?' unread':''}${isSel?' selected':''}${isStarred?' starred':''}" onclick="handleRowClick(event,'${esc(m.num)}')">
+      <input type="checkbox" class="mrow-cb" ${isSel?'checked':''} onclick="toggleSelect(event,'${esc(m.num)}')">
+      <div class="mrow-body">
+        <div class="mr-top">
+          <span class="${fromCls}">${esc(displayFrom)}</span>
+          <span class="mr-date">
+            <button class="star-btn${isStarred?' on':''}" onclick="toggleManualStar(event,'${esc(m.num)}')" title="${isStarred?'Unstar':'Star'}">★</button>
+            ${esc(m.date)}
+          </span>
+        </div>
+        <div class="mr-subj">${tagHtml}<span class="${tcls(m.type)}">${esc(m.type)}</span>${esc(m.subject)}</div>
+        <div class="mr-meta">#${esc(m.num)} · to:${esc(m.to)}${m.via&&m.via!==m.to?` @${esc(m.via)}`:''} · ${esc(m.size)}b</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════════════
+//  OPEN MESSAGE
+// ═══════════════════════════════════════════════════
+async function openMsg(num) {
+  activeNum=num;
+  const msg=allMsgs.find(m=>m.num===num);
+  if(!msg) return;
+
+  // Mark read and re-render to remove unread dot
+  const wasUnread=!readSet.has(num);
+  readSet.add(num);
+  if(wasUnread) {
+    // Re-render subfilters to update unread dots/counts
+    if(activeFolder==='Personal') buildPersFilters(allMsgs);
+    if(activeFolder==='Bulls')    buildBullFilters(allMsgs);
+  }
+
+  const filtered=getFiltered();
+  renderList(filtered);
+
+  showEmpty(false);
+  document.getElementById('rv-subj').textContent=msg.subject;
+  document.getElementById('rv-from').textContent=persFromKey(msg);
+  document.getElementById('rv-to').textContent=msg.to+(msg.via&&msg.via!==msg.to?` @${msg.via}`:'');
+  document.getElementById('rv-date').textContent=msg.date;
+  document.getElementById('rv-type').textContent=msg.type;
+  document.getElementById('rv-num').textContent=`#${msg.num}`;
+  document.getElementById('rv-bid').textContent='—';
+  document.getElementById('rv-size').textContent=`${msg.size} bytes`;
+  document.getElementById('rv-body').textContent='Loading…';
+  document.getElementById('btn-kill').disabled=false;
+
+  try {
+    if(!msg.body) {
+      const html=await bpqGet(msgUrl(num));
+      const body=parseBody(html);
+      if(body&&body.trim().length>5) {
+        cacheBody(msg,body);
+        // Backfill hdrFrom for free — we now have the real header
+        if(msg.hdrFrom===undefined) {
+          const hf=extractHdrFrom(body);
+          if(hf) {
+            msg.hdrFrom=hf;
+            if(activeFolder==='Personal'){ buildPersFilters(allMsgs); renderList(getFiltered()); }
+          }
+        }
+      } else {
+        msg.body=`[Could not extract body — DEBUG first 400 chars]\n${html.substring(0,400)}\n\nURL: ${msgUrl(num)}`;
+      }
+    }
+    const bidM=msg.body.match(/^Bid:\s*(.+)$/mi);
+    if(bidM) document.getElementById('rv-bid').textContent=bidM[1].trim();
+    document.getElementById('rv-body').textContent=msg.body;
+  } catch(e) {
+    document.getElementById('rv-body').textContent=`Network error: ${e.message}\nURL: ${msgUrl(num)}`;
+    toast('Could not load message','err');
+  }
+}
+
+function showEmpty(show=true) {
+  document.getElementById('reader-empty').style.display=show?'flex':'none';
+  const rv=document.getElementById('rv');
+  rv.style.display=show?'none':'flex';
+  if(!show) rv.style.flexDirection='column';
+}
+
+// ═══════════════════════════════════════════════════
+//  SELECTION
+// ═══════════════════════════════════════════════════
+let selectedNums = new Set();
+// Manual stars — persisted in localStorage, separate from rule-based stars
+let manualStars = new Set(LS.getJ('bpq_stars')||[]);
+function saveStars() { LS.setJ('bpq_stars',[...manualStars].slice(-1000)); }
+
+function toggleManualStar(e, num) {
+  e.stopPropagation();
+  if (manualStars.has(num)) manualStars.delete(num);
+  else manualStars.add(num);
+  saveStars();
+  renderList(getFiltered());
+}
+
+function handleRowClick(e, num) {
+  // Clicking the checkbox is handled by toggleSelect — don't double-fire
+  if (e.target.classList.contains('mrow-cb')) return;
+  openMsg(num);
+}
+
+function toggleSelect(e, num) {
+  e.stopPropagation();
+  if (selectedNums.has(num)) selectedNums.delete(num);
+  else selectedNums.add(num);
+  updateBulkBar();
+  renderList(getFiltered());
+}
+
+function clearSelection() {
+  selectedNums.clear();
+  updateBulkBar();
+  renderList(getFiltered());
+}
+
+function updateBulkBar() {
+  const bar = document.getElementById('bulk-bar');
+  const lbl = document.getElementById('bulk-lbl');
+  const n = selectedNums.size;
+  if (n > 0) {
+    bar.classList.add('open');
+    lbl.textContent = `${n} message${n>1?'s':''} selected`;
+  } else {
+    bar.classList.remove('open');
+  }
+}
+
+// ═══════════════════════════════════════════════════
+//  KILL (single + bulk)
+// ═══════════════════════════════════════════════════
+function confirmKill() {
+  if (!activeNum) return;
+  const msg = allMsgs.find(m=>m.num===activeNum);
+  killTarget = activeNum;
+  document.getElementById('del-msg').innerHTML=
+    `Kill <strong>#${esc(msg?.num)}</strong> from <strong>${esc(msg?.from)}</strong>?<br>
+     <span style="font-family:var(--mono);font-size:0.85rem;color:var(--text3)">${esc(msg?.subject)}</span>`;
+  document.getElementById('del-yes').textContent='Kill Message';
+  document.getElementById('del-ov').classList.add('open');
+}
+
+function confirmBulkKill() {
+  if (!selectedNums.size) return;
+  killTarget = null; // signals bulk mode
+  document.getElementById('del-msg').innerHTML=
+    `Kill <strong>${selectedNums.size} messages</strong>?<br>
+     <span style="font-family:var(--mono);font-size:0.85rem;color:var(--text3)">This cannot be undone.</span>`;
+  document.getElementById('del-yes').textContent=`Kill ${selectedNums.size} Messages`;
+  document.getElementById('del-ov').classList.add('open');
+}
+
+function closeKill() { document.getElementById('del-ov').classList.remove('open'); killTarget=null; }
+
+async function doKill() {
+  const btn = document.getElementById('del-yes');
+  btn.disabled=true;
+
+  const isBulk = killTarget===null && selectedNums.size>0;
+  const toKill = isBulk ? [...selectedNums] : [killTarget];
+  if (!toKill.length || toKill[0]===null) { closeKill(); btn.disabled=false; return; }
+
+  btn.textContent = `Killing ${toKill.length}…`;
+
+  // Find next message to open after killing (before we remove anything)
+  let nextNum = null;
+  if (!isBulk) {
+    const filtered = getFiltered();
+    const idx = filtered.findIndex(m=>m.num===killTarget);
+    // Try next, then previous
+    const candidate = filtered[idx+1] || filtered[idx-1];
+    if (candidate) nextNum = candidate.num;
+  }
+
+  // Kill all targets — fire requests concurrently
+  const results = await Promise.allSettled(toKill.map(n => bpqGet(killUrl(n))));
+  const killed = toKill.filter((_,i)=>results[i].status==='fulfilled');
+  const failed = toKill.length - killed.length;
+
+  // Remove killed from state
+  for (const n of killed) {
+    killedSet.add(n);
+    allMsgs = allMsgs.filter(m=>m.num!==n);
+  }
+  saveKilled();
+
+  // Clear selection
+  selectedNums.clear();
+  updateBulkBar();
+
+  // Update filters and list
+  if(activeFolder==='Personal') buildPersFilters(allMsgs);
+  if(activeFolder==='Bulls')    buildBullFilters(allMsgs);
+  const f=getFiltered(); renderList(f); updateListCount(f);
+
+  // Auto-advance to next message after single kill
+  if (!isBulk && nextNum && allMsgs.find(m=>m.num===nextNum)) {
+    openMsg(nextNum);
+  } else if (isBulk || !nextNum) {
+    showEmpty(true); activeNum=null;
+  }
+
+  if (failed>0) toast(`${killed.length} killed, ${failed} failed`,'err');
+  else toast(`${killed.length} message${killed.length>1?'s':''} killed`,'ok');
+
+  closeKill(); btn.disabled=false;
+}
+
+// ═══════════════════════════════════════════════════
+//  NAVIGATION
+// ═══════════════════════════════════════════════════
+async function doNext() {
+  try {
+    const html=await bpqGet(nextUrl()); const body=parseBody(html);
+    const n=html.match(/Message\s+(\d+)/i);
+    if(n){ if(!allMsgs.find(m=>m.num===n[1])) allMsgs.unshift({num:n[1],date:'—',type:'—',size:'—',to:'—',via:'',from:'—',subject:'(next)',body}); openMsg(n[1]); }
+  } catch(e){ toast('Navigation error','err'); }
+}
+async function doPrev() {
+  try {
+    const html=await bpqGet(prevUrl()); const body=parseBody(html);
+    const n=html.match(/Message\s+(\d+)/i);
+    if(n){ if(!allMsgs.find(m=>m.num===n[1])) allMsgs.unshift({num:n[1],date:'—',type:'—',size:'—',to:'—',via:'',from:'—',subject:'(prev)',body}); openMsg(n[1]); }
+  } catch(e){ toast('Navigation error','err'); }
+}
+
+// ═══════════════════════════════════════════════════
+//  COMPOSE / REPLY / SEND / DOWNLOAD
+// ═══════════════════════════════════════════════════
+function doReply(){ if(activeNum) window.open(replyUrl(activeNum),'_self'); }
+function openCompose(to='',subj='',body=''){
+  document.getElementById('cmp-to').value=to;
+  document.getElementById('cmp-subj').value=subj;
+  document.getElementById('cmp-body').value=body||`\n\n73 de ${CFG.callsign||'N4SFL'}`;
+  document.getElementById('cmp-ttl').textContent=to?'Forward':'New Message';
+  document.getElementById('cmp-status').textContent='';
+  document.getElementById('cmp-ov').classList.add('open');
+  setTimeout(()=>document.getElementById(to?'cmp-body':'cmp-to').focus(),60);
+}
+function closeCompose(){ document.getElementById('cmp-ov').classList.remove('open'); }
+function doForward(){
+  const msg=allMsgs.find(m=>m.num===activeNum); if(!msg)return;
+  openCompose('',`FWD: ${msg.subject}`,`--- Fwd #${msg.num} from ${msg.from} ---\n${msg.body||''}`);
+}
+async function doSend(){
+  const to=document.getElementById('cmp-to').value.trim().toUpperCase();
+  const subj=document.getElementById('cmp-subj').value.trim();
+  const body=document.getElementById('cmp-body').value.trim();
+  const st=document.getElementById('cmp-status');
+  if(!to||!subj||!body){st.style.color='var(--red)';st.textContent='Fill in all fields';return;}
+  st.style.color='var(--amber)';st.textContent='Sending…';
+  document.getElementById('cmp-send').disabled=true;
+  try {
+    const r=await fetch(`${base()}/WebMail/WMSend?${CFG.key}`,{method:'POST',credentials:'include',
+      headers:{'Content-Type':'application/x-www-form-urlencoded'},
+      body:new URLSearchParams({To:to,Subject:subj,Body:body}).toString()});
+    if(r.ok){closeCompose();toast(`Sent to ${to}`,'ok');}
+    else throw new Error(r.status);
+  } catch(e){
+    st.style.color='var(--text2)';st.textContent='Opening BPQ send window…';
+    setTimeout(()=>{closeCompose();window.open(`${base()}/WebMail/WMSend?${CFG.key}`,'_blank','width=720,height=500,scrollbars=yes');},500);
+  }
+  document.getElementById('cmp-send').disabled=false;
+}
+function doDownload(){
+  const msg=allMsgs.find(m=>m.num===activeNum);
+  if(!msg?.body){toast('Load message first','info');return;}
+  const txt=`Msg#: ${msg.num}\nDate: ${msg.date}\nType: ${msg.type}\nFrom: ${msg.from}\nTo:   ${msg.to}\nSubj: ${msg.subject}\n\n${msg.body}`;
+  Object.assign(document.createElement('a'),{
+    href:URL.createObjectURL(new Blob([txt],{type:'text/plain'})),
+    download:`bpq-${msg.num}-${msg.from}.txt`
+  }).click();
+  toast('Saved','ok');
+}
+
+// ═══════════════════════════════════════════════════
+//  AUTO-REFRESH
+// ═══════════════════════════════════════════════════
+const REFRESH_MS=5*60*1000;
+let refreshTimer=null, lastRefresh=null;
+function startRefresh(){ stopRefresh(); refreshTimer=setInterval(silentRefresh,REFRESH_MS); }
+function stopRefresh(){ if(refreshTimer){clearInterval(refreshTimer);refreshTimer=null;} }
+setInterval(()=>{
+  const el=document.getElementById('refresh-lbl');
+  if(!el||!lastRefresh) return;
+  const m=Math.round((Date.now()-lastRefresh)/60000);
+  el.textContent=m<1?'just refreshed':`${m}m ago`;
+},60000);
+
+async function silentRefresh(){
+  if(!CFG.key) return;
+  try {
+    const k=await autoDetectKey();
+    if(k&&k!==CFG.key){CFG.key=k;saveCFG();document.getElementById('cfg-key').value=k;toast('Session key refreshed','info');}
+    let fresh=parseList(await(await fetch(base()+FOLDER_PATHS[activeFolder](CFG.key),{credentials:'include'})).text());
+    if(activeFolder==='Personal') fresh=sortPersonal(fresh);
+    const oldNums=new Set(allMsgs.map(m=>m.num));
+    const freshNums=new Set(fresh.map(m=>m.num));
+    const added=fresh.filter(m=>!oldNums.has(m.num));
+    const removed=allMsgs.filter(m=>!freshNums.has(m.num)&&!killedSet.has(m.num));
+    if(!added.length&&!removed.length){lastRefresh=new Date();return;}
+    for(const m of added) allMsgs.unshift(m);
+    for(const m of removed) allMsgs=allMsgs.filter(x=>x.num!==m.num);
+    if(activeFolder==='Personal') buildPersFilters(allMsgs);
+    if(activeFolder==='Bulls') buildBullFilters(allMsgs);
+    const f=getFiltered(); renderList(f); updateListCount(f);
+    lastRefresh=new Date();
+    if(added.length) toast(`${added.length} new message${added.length>1?'s':''}`, 'info');
+  }catch(_){}
+}
+document.addEventListener('visibilitychange',()=>{
+  if(document.hidden) stopRefresh();
+  else { silentRefresh(); startRefresh(); }
+});
+
+// ═══════════════════════════════════════════════════
+//  UTILS
+// ═══════════════════════════════════════════════════
+function setStatus(cls,txt){const p=document.getElementById('status-pill');p.className=cls;p.textContent=txt;}
+let toastT;
+function toast(msg,type='ok'){
+  const t=document.getElementById('toast');t.textContent=msg;t.className=`toast ${type} show`;
+  clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('show'),3000);
+}
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+document.getElementById('del-ov').addEventListener('click',e=>{if(e.target===e.currentTarget)closeKill();});
+document.getElementById('cmp-ov').addEventListener('click',e=>{if(e.target===e.currentTarget)closeCompose();});
+
+// ═══════════════════════════════════════════════════
+//  BOOT
+// ═══════════════════════════════════════════════════
+async function connectAndLoad(){
+  setStatus('busy','⏳ connecting');
+  if(!CFG.key){
+    const k=await autoDetectKey();
+    if(k){CFG.key=k;saveCFG();document.getElementById('cfg-key').value=k;toast(`Key: ${k}`,'ok');}
+    else{
+      setStatus('err','✕ no key');
+      document.getElementById('list-body').innerHTML=
+        `<div class="list-empty">Could not detect session key.<br><br>Log into BPQ-Alt-WebMail first, then click ⚙ and paste the token from the URL into Session key.</div>`;
+      return;
+    }
+  }
+  await loadFolder('Personal','Personal');
+  lastRefresh=new Date();
+  document.getElementById('refresh-lbl').textContent='just refreshed';
+  startRefresh();
+}
+
+async function init(){
+  // Clear old-format rules that had SYSTEM and New User as separate rules
+  // (they're now a single AND built-in rule and shouldn't be in user storage)
+  const storedRules = LS.getJ('bpq_rules') || [];
+  const hasOldBuiltins = storedRules.some(r =>
+    (r.field==='from' && r.value==='SYSTEM') ||
+    (r.field==='subject' && r.value==='New User')
+  );
+  if (hasOldBuiltins) {
+    const cleaned = storedRules.filter(r =>
+      !(r.field==='from' && r.value==='SYSTEM') &&
+      !(r.field==='subject' && r.value==='New User')
+    );
+    LS.setJ('bpq_rules', cleaned);
+  }
+  applyTheme();
+  applyFont();
+  initResize('rh1','sidebar',140);
+  initResize('rh2','list-pane',160);
+  syncTopbar();
+
+  // Show setup screen on first run
+  if(!LS.get('bpq_setup_done') || !CFG.callsign){
+    showSetup();
+    return;
+  }
+  connectAndLoad();
+}
+window.addEventListener('load',init);
+</script>
+</body>
+</html>
