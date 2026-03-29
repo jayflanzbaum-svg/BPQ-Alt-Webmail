@@ -52,7 +52,7 @@ A modern, single-file webmail interface for [BPQ32](https://www.cantab.net/users
 
 ### Quick Start — BPQ32 (Windows)
 
-1. Download `bpq-alt-webmail.html` from the [latest release](https://github.com/jayflanzbaum-svg/bpq-alt-webmail/releases/latest)
+1. Download `bpq-alt-webmail.html` from the [latest release](https://github.com/jayflanzbaum-svg/BPQ-Alt-Webmail/releases/latest)
 2. Copy it to your BPQ HTML directory:
    `C:\Users\<you>\AppData\Roaming\BPQ32\HTML\`
 3. Open in your browser: `http://127.0.0.1:8010/bpq-alt-webmail.html`
@@ -70,7 +70,7 @@ BPQ-Alt-WebMail works on LinBPQ without any changes — the web server and WebMa
 3. Download and copy the file:
    ```
    wget -O ~/linbpq/HTML/bpq-alt-webmail.html \
-     https://github.com/jayflanzbaum-svg/bpq-alt-webmail/releases/latest/download/bpq-alt-webmail.html
+     https://github.com/jayflanzbaum-svg/BPQ-Alt-Webmail/releases/latest/download/bpq-alt-webmail.html
    ```
 4. Open in a browser — from the Pi itself:
    `http://127.0.0.1:8010/bpq-alt-webmail.html`
