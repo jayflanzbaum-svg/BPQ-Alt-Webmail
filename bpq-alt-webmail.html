@@ -300,7 +300,7 @@ body { font-family:var(--sans); font-size:1rem; background:var(--bg); color:var(
 <!-- TOPBAR -->
 <div class="topbar">
   <div class="logo">BPQ-ALT-WEBMAIL</div>
-  <span style="font-family:var(--mono);font-size:0.69rem;color:var(--text3);margin-left:-6px">v1.2.0</span>
+  <span style="font-family:var(--mono);font-size:0.69rem;color:var(--text3);margin-left:-6px">v1.2.1</span>
   <div class="top-call" id="top-call">—</div>
   <span class="top-node" id="top-node">—</span>
   <div class="tspc"></div>
@@ -1439,7 +1439,7 @@ function doForward(){
   const sig = CFG.signature || `73 de ${CFG.callsign||'N4SFL'}`;
   openCompose('',`FWD: ${msg.subject}`,`\n\n${sig}\n\n--- Fwd #${msg.num} from ${msg.from} ---\n${msg.body||''}`,'Forward');
 }
-async function doSend(){
+function doSend(){
   const to=document.getElementById('cmp-to').value.trim().toUpperCase();
   const subj=document.getElementById('cmp-subj').value.trim();
   const msg=document.getElementById('cmp-body').value.trim();
@@ -1448,17 +1448,22 @@ async function doSend(){
   if(!to||!subj||!msg){st.style.color='var(--red)';st.textContent='Fill in all fields';return;}
   st.style.color='var(--amber)';st.textContent='Sending…';
   document.getElementById('cmp-send').disabled=true;
-  try {
-    const fd=new FormData();
-    fd.append('To',to); fd.append('Subj',subj); fd.append('Type',type); fd.append('Msg',msg); fd.append('Send','Send');
-    const r=await fetch(`${base()}/WebMail/EMSave?${CFG.key}`,{method:'POST',credentials:'include',body:fd});
-    if(r.ok){closeCompose();toast(`Sent to ${to}`,'ok');}
-    else throw new Error(r.status);
-  } catch(e){
-    st.style.color='var(--text2)';st.textContent='Opening BPQ send window…';
-    setTimeout(()=>{closeCompose();window.open(`${base()}/WebMail/NewMsg?${CFG.key}`,'_blank','width=720,height=500,scrollbars=yes');},500);
-  }
-  document.getElementById('cmp-send').disabled=false;
+  /* Submit via a real hidden form + iframe to match exactly what BPQ expects */
+  let ifr=document.getElementById('send-ifr');
+  if(!ifr){ifr=document.createElement('iframe');ifr.id='send-ifr';ifr.name='send-ifr';ifr.style.display='none';document.body.appendChild(ifr);}
+  const f=document.createElement('form');
+  f.method='POST'; f.action=`${base()}/WebMail/EMSave?${CFG.key}`; f.target='send-ifr';
+  f.enctype='multipart/form-data'; f.style.display='none';
+  const fields={To:to,Subj:subj,Type:type,BID:'',Msg:msg,Send:'Send'};
+  for(const[k,v]of Object.entries(fields)){const inp=document.createElement('input');inp.type='hidden';inp.name=k;inp.value=v;f.appendChild(inp);}
+  document.body.appendChild(f);
+  ifr.onload=function(){
+    closeCompose();toast(`Sent to ${to}`,'ok');
+    document.getElementById('cmp-send').disabled=false;
+    f.remove();
+  };
+  f.submit();
+  setTimeout(()=>{document.getElementById('cmp-send').disabled=false;},5000);
 }
 function doDownload(){
   const msg=allMsgs.find(m=>m.num===activeNum);
