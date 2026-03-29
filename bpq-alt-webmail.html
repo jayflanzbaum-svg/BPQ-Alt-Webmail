@@ -980,24 +980,29 @@ async function fetchMsgHeader(msg) {
 // Fetch headers for all personal messages in background, rebuilding
 // filters as each one comes in. Rate-limited to avoid hammering BPQ.
 async function lazyFetchPersonalHeaders(msgs) {
-  // Cancel any previous run
   if (headerFetchAbort) headerFetchAbort.abort();
   headerFetchAbort = new AbortController();
 
-  // Process in small batches to avoid flooding BPQ
-  const BATCH = 3, DELAY_MS = 300;
-  for (let i = 0; i < msgs.length; i += BATCH) {
+  // Fetch one at a time with generous delay — LinBPQ's web server
+  // crashes if too many simultaneous requests are made.
+  // Cap at 50 most recent messages to avoid overwhelming the node.
+  const MAX_FETCH = 50;
+  const DELAY_MS  = 600;
+
+  const toFetch = msgs
+    .filter(m => m.hdrFrom === undefined && baseCall(m.from) !== 'SYSTEM')
+    .slice(0, MAX_FETCH);
+
+  for (let i = 0; i < toFetch.length; i++) {
     if (headerFetchAbort.signal.aborted) return;
-    const batch = msgs.slice(i, i + BATCH);
-    await Promise.all(batch.map(m => fetchMsgHeader(m)));
-    // After each batch, rebuild filters and re-render list
+    await fetchMsgHeader(toFetch[i]);
     if (activeFolder === 'Personal') {
       buildPersFilters(allMsgs);
       const f = getFiltered();
       renderList(f);
       updateListCount(f);
     }
-    if (i + BATCH < msgs.length) {
+    if (i < toFetch.length - 1) {
       await new Promise(r => setTimeout(r, DELAY_MS));
     }
   }
