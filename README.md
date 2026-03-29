@@ -126,6 +126,12 @@ Click **⚙** in the topbar to access settings:
 - **Host / Port** — defaults to `127.0.0.1:8010`
 - **Callsign** — used to filter the Personal inbox
 - **Session key** — leave blank for auto-detection
+- **Signature** — multi-line field appended to replies, forwards, and new messages. Supports line breaks so you can format it like:
+  ```
+  73
+  Jason, N8FLA
+  BPQ Node: N4SFL-8
+  ```
 
 Click **Reset Setup** to clear all settings and run first-time setup again.
 
