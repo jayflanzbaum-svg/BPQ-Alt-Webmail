@@ -205,6 +205,11 @@ body { font-family:var(--sans); font-size:1rem; background:var(--bg); color:var(
 .rule-in:focus, .rule-sel:focus { border-color:var(--accent) }
 .rule-del { background:none; border:none; color:var(--text3); cursor:pointer; font-size:1rem; padding:0 3px; flex-shrink:0 }
 .rule-del:hover { color:var(--red) }
+.rule-edit { background:none; border:none; color:var(--text3); cursor:pointer; font-size:0.77rem; padding:2px 6px; font-family:var(--mono); flex-shrink:0 }
+.rule-edit:hover { color:var(--accent) }
+.rule-summary { font-family:var(--mono); font-size:0.77rem; color:var(--text2); flex:1 }
+.rule-summary b { color:var(--text); font-weight:600 }
+.rule-actions { display:flex; gap:4px; align-items:center; flex-shrink:0 }
 .rule-label-in { padding:4px 7px; background:var(--bg); border:1px solid var(--border2); border-radius:4px; color:var(--amber); font-family:var(--mono); font-size:0.77rem; outline:none; width:90px }
 .rule-label-in:focus { border-color:var(--amber) }
 .rules-add-btn { padding:5px 14px; background:transparent; border:1px solid var(--green-dim); border-radius:4px; color:var(--accent); font-family:var(--mono); font-size:0.77rem; cursor:pointer; margin:8px 14px 4px }
@@ -317,6 +322,7 @@ body { font-family:var(--sans); font-size:1rem; background:var(--bg); color:var(
   <label>Port</label><input class="cfg-in" id="cfg-port" value="8010" style="width:50px">
   <label>Callsign</label><input class="cfg-in" id="cfg-call" value="" style="width:80px">
   <label>Session key</label><input class="cfg-in" id="cfg-key" value="" style="width:100px" placeholder="auto-detect">
+  <label>Signature</label><input class="cfg-in" id="cfg-sig" value="" style="width:200px" placeholder="73 de CALLSIGN">
   <button class="cfg-go" onclick="applyConfig()">APPLY</button>
   <button class="cfg-go" style="background:#555" onclick="clearSetup()">Reset Setup</button>
 </div>
@@ -475,6 +481,7 @@ let CFG = {
   port:      LS.get('bpq_port')     || '8010',
   key:       LS.get('bpq_key')      || '',
   callsign:  LS.get('bpq_call')     || '',
+  signature: LS.get('bpq_sig')      || '',
 };
 
 function saveCFG() {
@@ -482,6 +489,7 @@ function saveCFG() {
   LS.set('bpq_port', CFG.port);
   LS.set('bpq_key',  CFG.key);
   LS.set('bpq_call', CFG.callsign);
+  LS.set('bpq_sig',  CFG.signature);
 }
 
 // ═══════════════════════════════════════════════════
@@ -559,7 +567,7 @@ function evalRules(msg) {
 }
 
 // ── RULES MODAL ────────────────────────────────────
-// draftRules always stored/edited in flat format: {field,match,value,label}
+// draftRules always stored/edited in flat format: {field,match,value,label,editing}
 // loadUserRules() may return wrapped format — unwrap for editing
 let draftRules = [];
 
@@ -567,9 +575,16 @@ function flattenRule(r) {
   // If wrapped in conditions array, extract first condition for editing
   if (r.conditions) {
     const c = r.conditions[0] || {};
-    return { field: c.field||'from', match: c.match||'contains', value: c.value||'', label: r.label||'' };
+    return { field: c.field||'from', match: c.match||'contains', value: c.value||'', label: r.label||'', editing: false };
   }
-  return { field: r.field||'from', match: r.match||'contains', value: r.value||'', label: r.label||'' };
+  return { field: r.field||'from', match: r.match||'contains', value: r.value||'', label: r.label||'', editing: false };
+}
+
+function editRule(i) {
+  draftRules[i].editing = true;
+  renderRulesModal();
+  const inputs = document.querySelectorAll('#rules-list .rule-in');
+  if (inputs.length) inputs[inputs.length-1].focus();
 }
 
 function openRules() {
@@ -596,29 +611,43 @@ function renderRulesModal() {
     </div>`;
   }).join('');
 
-  const userHtml = draftRules.length ? draftRules.map((r,i)=>`
-    <div class="rule-row">
-      <div class="rule-row-fields">
-        <select class="rule-sel" onchange="draftRules[${i}].field=this.value">
-          ${['from','to','subject','type'].map(f=>`<option value="${f}"${r.field===f?' selected':''}>${f.toUpperCase()}</option>`).join('')}
-        </select>
-        <select class="rule-sel" onchange="draftRules[${i}].match=this.value">
-          ${['contains','startswith','equals'].map(m=>`<option value="${m}"${r.match===m?' selected':''}>${m}</option>`).join('')}
-        </select>
-        <input class="rule-in" value="${esc(r.value||'')}" placeholder="value…"
-          oninput="draftRules[${i}].value=this.value">
-        <input class="rule-label-in" value="${esc(r.label||'')}" placeholder="label (opt)"
-          oninput="draftRules[${i}].label=this.value">
+  const userHtml = draftRules.length ? draftRules.map((r,i)=>{
+    if (r.editing) {
+      return `<div class="rule-row">
+        <div class="rule-row-fields">
+          <select class="rule-sel" onchange="draftRules[${i}].field=this.value">
+            ${['from','to','subject','type'].map(f=>`<option value="${f}"${r.field===f?' selected':''}>${f.toUpperCase()}</option>`).join('')}
+          </select>
+          <select class="rule-sel" onchange="draftRules[${i}].match=this.value">
+            ${['contains','startswith','equals'].map(m=>`<option value="${m}"${r.match===m?' selected':''}>${m}</option>`).join('')}
+          </select>
+          <input class="rule-in" value="${esc(r.value||'')}" placeholder="value…"
+            oninput="draftRules[${i}].value=this.value">
+          <input class="rule-label-in" value="${esc(r.label||'')}" placeholder="label (opt)"
+            oninput="draftRules[${i}].label=this.value">
+        </div>
+        <button class="rule-del" onclick="removeRule(${i})" title="Delete rule">✕</button>
+      </div>`;
+    }
+    // Summary view — readable text with Edit and Delete buttons
+    const matchLabel = {contains:'contains',startswith:'starts with',equals:'equals'}[r.match]||r.match;
+    return `<div class="rule-row">
+      <span class="rule-summary">
+        ★ If <b>${esc(r.field.toUpperCase())}</b> ${esc(matchLabel)} "<b>${esc(r.value)}</b>"${r.label?` → <span style="color:var(--amber)">${esc(r.label)}</span>`:''}
+      </span>
+      <div class="rule-actions">
+        <button class="rule-edit" onclick="editRule(${i})" title="Edit rule">Edit</button>
+        <button class="rule-del" onclick="removeRule(${i})" title="Delete rule">✕</button>
       </div>
-      <button class="rule-del" onclick="removeRule(${i})" title="Remove rule">✕</button>
-    </div>`).join('')
+    </div>`;
+  }).join('')
     : '<div style="font-family:var(--mono);font-size:0.77rem;color:var(--text3);padding:8px 2px">No custom rules yet — click + Add Rule below</div>';
 
   list.innerHTML = builtinHtml + userHtml;
 }
 
 function addRule() {
-  draftRules.push({ field:'from', match:'contains', value:'', label:'' });
+  draftRules.push({ field:'from', match:'contains', value:'', label:'', editing: true });
   renderRulesModal();
   // Focus the new value input
   const inputs = document.querySelectorAll('#rules-list .rule-in');
@@ -727,10 +756,11 @@ function clearSetup() {
   location.reload();
 }
 function applyConfig() {
-  CFG.host     = document.getElementById('cfg-host').value.trim();
-  CFG.port     = document.getElementById('cfg-port').value.trim();
-  CFG.callsign = document.getElementById('cfg-call').value.trim().toUpperCase() || CFG.callsign;
-  CFG.key      = document.getElementById('cfg-key').value.trim();
+  CFG.host      = document.getElementById('cfg-host').value.trim();
+  CFG.port      = document.getElementById('cfg-port').value.trim();
+  CFG.callsign  = document.getElementById('cfg-call').value.trim().toUpperCase() || CFG.callsign;
+  CFG.key       = document.getElementById('cfg-key').value.trim();
+  CFG.signature = document.getElementById('cfg-sig').value;
   saveCFG();
   syncTopbar();
   connectAndLoad();
@@ -745,6 +775,7 @@ function syncTopbar() {
   document.getElementById('cfg-port').value = CFG.port;
   document.getElementById('cfg-call').value = CFG.callsign;
   document.getElementById('cfg-key').value  = CFG.key;
+  document.getElementById('cfg-sig').value  = CFG.signature;
 }
 
 // ═══════════════════════════════════════════════════
@@ -1389,7 +1420,8 @@ function doReply(){ if(activeNum) window.open(replyUrl(activeNum),'_self'); }
 function openCompose(to='',subj='',body=''){
   document.getElementById('cmp-to').value=to;
   document.getElementById('cmp-subj').value=subj;
-  document.getElementById('cmp-body').value=body||`\n\n73 de ${CFG.callsign||'N4SFL'}`;
+  const sig = CFG.signature || `73 de ${CFG.callsign||'N4SFL'}`;
+  document.getElementById('cmp-body').value=body||`\n\n${sig}`;
   document.getElementById('cmp-ttl').textContent=to?'Forward':'New Message';
   document.getElementById('cmp-status').textContent='';
   document.getElementById('cmp-ov').classList.add('open');
@@ -1398,7 +1430,8 @@ function openCompose(to='',subj='',body=''){
 function closeCompose(){ document.getElementById('cmp-ov').classList.remove('open'); }
 function doForward(){
   const msg=allMsgs.find(m=>m.num===activeNum); if(!msg)return;
-  openCompose('',`FWD: ${msg.subject}`,`--- Fwd #${msg.num} from ${msg.from} ---\n${msg.body||''}`);
+  const sig = CFG.signature || `73 de ${CFG.callsign||'N4SFL'}`;
+  openCompose('',`FWD: ${msg.subject}`,`\n\n${sig}\n\n--- Fwd #${msg.num} from ${msg.from} ---\n${msg.body||''}`);
 }
 async function doSend(){
   const to=document.getElementById('cmp-to').value.trim().toUpperCase();
