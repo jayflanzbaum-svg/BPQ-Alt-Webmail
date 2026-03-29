@@ -435,6 +435,7 @@ body { font-family:var(--sans); font-size:1rem; background:var(--bg); color:var(
     <div class="modal-bd">
       <div class="field"><span class="field-lbl">To (callsign)</span><input class="field-in" id="cmp-to" placeholder="K1AJD"></div>
       <div class="field"><span class="field-lbl">Subject</span><input class="field-in" id="cmp-subj" placeholder="subject line"></div>
+      <div class="field"><span class="field-lbl">Type</span><select class="field-in" id="cmp-type" style="width:auto"><option value="P">P – Personal</option><option value="B">B – Bulletin</option><option value="T">T – NTS Traffic</option></select></div>
       <div class="field"><span class="field-lbl">Message</span><textarea class="field-ta" id="cmp-body" placeholder="message text…"></textarea></div>
     </div>
     <div class="modal-ft"><span class="modal-hint" id="cmp-status"></span><button class="send-btn" id="cmp-send" onclick="doSend()">SEND ▶</button></div>
@@ -1441,20 +1442,21 @@ function doForward(){
 async function doSend(){
   const to=document.getElementById('cmp-to').value.trim().toUpperCase();
   const subj=document.getElementById('cmp-subj').value.trim();
-  const body=document.getElementById('cmp-body').value.trim();
+  const msg=document.getElementById('cmp-body').value.trim();
+  const type=document.getElementById('cmp-type').value;
   const st=document.getElementById('cmp-status');
-  if(!to||!subj||!body){st.style.color='var(--red)';st.textContent='Fill in all fields';return;}
+  if(!to||!subj||!msg){st.style.color='var(--red)';st.textContent='Fill in all fields';return;}
   st.style.color='var(--amber)';st.textContent='Sending…';
   document.getElementById('cmp-send').disabled=true;
   try {
-    const r=await fetch(`${base()}/WebMail/WMSend?${CFG.key}`,{method:'POST',credentials:'include',
-      headers:{'Content-Type':'application/x-www-form-urlencoded'},
-      body:new URLSearchParams({To:to,Subject:subj,Body:body}).toString()});
+    const fd=new FormData();
+    fd.append('To',to); fd.append('Subj',subj); fd.append('Type',type); fd.append('Msg',msg); fd.append('Send','Send');
+    const r=await fetch(`${base()}/WebMail/EMSave?${CFG.key}`,{method:'POST',credentials:'include',body:fd});
     if(r.ok){closeCompose();toast(`Sent to ${to}`,'ok');}
     else throw new Error(r.status);
   } catch(e){
     st.style.color='var(--text2)';st.textContent='Opening BPQ send window…';
-    setTimeout(()=>{closeCompose();window.open(`${base()}/WebMail/WMSend?${CFG.key}`,'_blank','width=720,height=500,scrollbars=yes');},500);
+    setTimeout(()=>{closeCompose();window.open(`${base()}/WebMail/NewMsg?${CFG.key}`,'_blank','width=720,height=500,scrollbars=yes');},500);
   }
   document.getElementById('cmp-send').disabled=false;
 }
