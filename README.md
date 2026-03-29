@@ -152,7 +152,7 @@ Please test against at least one real BPQ node before submitting. The BPQ messag
 ## Credits
 
 Developed by **N4SFL** (Jason) — [Boca Bearings](https://bocabearings.com) / Delray Beach, FL  
-Node: `WB4MOZ.#SFL.FL.USA.NOAM`  
+Node: `N4SFL.#SFL.FL.USA.NOAM`  
 GitHub: [jayflanzbaum-svg](https://github.com/jayflanzbaum-svg)
 
 BPQ32 by John Wiseman G8BPQ — [cantab.net/users/john.wiseman](https://www.cantab.net/users/john.wiseman/Documents/BPQ32%20Documents.htm)
