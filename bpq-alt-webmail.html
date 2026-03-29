@@ -1131,9 +1131,17 @@ async function loadFolder(folder, label) {
     }
     let msgs=parseList(html);
 
-    // Personal: BPQ's WMtoMe endpoint already filters to messages addressed to us.
-    // We still sort so SYSTEM floats to top.
+    // Personal: filter to only P-type messages addressed to us.
+    // WMtoMe should handle this but some LinBPQ versions return mixed types.
     if(folder==='Personal') {
+      const myCall=(CFG.callsign||'').toUpperCase();
+      msgs = msgs.filter(m => {
+        const t = (m.type||'').toUpperCase();
+        if (!t.startsWith('P')) return false;
+        if (myCall && m.to && !m.to.toUpperCase().includes(myCall)) return false;
+        return true;
+      });
+
       msgs=sortPersonal(msgs);
       persFilter='ALL';
       buildPersFilters(msgs);
