@@ -60,12 +60,26 @@ body.dark {
   --accent:#00c98a; --accent-bg:#00c98a0a; --accent-border:#00c98a30;
   --unread-dot:#4da6ff;
 }
+body.dark-hc {
+  --bg:#000000; --bg2:#0a0a0a; --bg3:#141414;
+  --border:#333333; --border2:#444444;
+  --text:#ffffff; --text2:#cccccc; --text3:#999999;
+  --accent:#00e5a0; --accent-bg:#00e5a015; --accent-border:#00e5a050;
+  --unread-dot:#66b3ff;
+}
 body.light {
   --bg:#f4f5f7; --bg2:#ffffff; --bg3:#eef0f3;
   --border:#dde0e6; --border2:#c4c9d4;
   --text:#1a1d24; --text2:#555e70; --text3:#9098a8;
   --accent:#006644; --accent-bg:#e6f4ee; --accent-border:#9dd6be;
   --unread-dot:#2563eb;
+}
+body.light-hc {
+  --bg:#ffffff; --bg2:#f8f8f8; --bg3:#eeeeee;
+  --border:#bbbbbb; --border2:#888888;
+  --text:#000000; --text2:#222222; --text3:#555555;
+  --accent:#005500; --accent-bg:#e0f0e0; --accent-border:#88bb88;
+  --unread-dot:#0044cc;
 }
 * { box-sizing:border-box; margin:0; padding:0 }
 html,body { height:100%; overflow:hidden }
@@ -695,13 +709,26 @@ let activeFolder='Personal', persFilter='ALL', bullFilter='ALL';
 // ═══════════════════════════════════════════════════
 //  THEME
 // ═══════════════════════════════════════════════════
-let isDark = LS.get('bpq_theme') !== 'light';
+const THEMES = [
+  { key:'dark',     label:'Dark',           icon:'☀' },
+  { key:'dark-hc',  label:'Dark Hi-Contrast', icon:'☀+' },
+  { key:'light',    label:'Light',          icon:'🌙' },
+  { key:'light-hc', label:'Light Hi-Contrast', icon:'🌙+' },
+];
+let themeIdx = Math.max(0, THEMES.findIndex(t => t.key === (LS.get('bpq_theme')||'dark')));
+
 function applyTheme() {
-  document.body.className = isDark ? 'dark' : 'light';
-  document.getElementById('theme-btn').textContent = isDark ? '☀' : '🌙';
-  LS.set('bpq_theme', isDark ? 'dark' : 'light');
+  const t = THEMES[themeIdx];
+  document.body.className = t.key;
+  const btn = document.getElementById('theme-btn');
+  if (btn) { btn.textContent = t.icon; btn.title = `Theme: ${t.label} — click to cycle`; }
+  LS.set('bpq_theme', t.key);
 }
-function toggleTheme() { isDark=!isDark; applyTheme(); }
+function toggleTheme() {
+  themeIdx = (themeIdx + 1) % THEMES.length;
+  applyTheme();
+  toast(`Theme: ${THEMES[themeIdx === 0 ? THEMES.length-1 : themeIdx-1].label}`, 'info');
+}
 
 // ═══════════════════════════════════════════════════
 //  FONT SIZE
