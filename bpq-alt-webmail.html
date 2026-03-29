@@ -1416,13 +1416,18 @@ async function doPrev() {
 // ═══════════════════════════════════════════════════
 //  COMPOSE / REPLY / SEND / DOWNLOAD
 // ═══════════════════════════════════════════════════
-function doReply(){ if(activeNum) window.open(replyUrl(activeNum),'_self'); }
-function openCompose(to='',subj='',body=''){
+function doReply(){
+  const msg=allMsgs.find(m=>m.num===activeNum); if(!msg)return;
+  const sig = CFG.signature || `73 de ${CFG.callsign||'N4SFL'}`;
+  const re=msg.subject.replace(/^RE:\s*/i,'');
+  openCompose(msg.from,`RE: ${re}`,`\n\n${sig}\n\n--- #${msg.num} from ${msg.from} ---\n${msg.body||''}`,'Reply');
+}
+function openCompose(to='',subj='',body='',title=''){
   document.getElementById('cmp-to').value=to;
   document.getElementById('cmp-subj').value=subj;
   const sig = CFG.signature || `73 de ${CFG.callsign||'N4SFL'}`;
   document.getElementById('cmp-body').value=body||`\n\n${sig}`;
-  document.getElementById('cmp-ttl').textContent=to?'Forward':'New Message';
+  document.getElementById('cmp-ttl').textContent=title||(to?'Forward':'New Message');
   document.getElementById('cmp-status').textContent='';
   document.getElementById('cmp-ov').classList.add('open');
   setTimeout(()=>document.getElementById(to?'cmp-body':'cmp-to').focus(),60);
@@ -1431,7 +1436,7 @@ function closeCompose(){ document.getElementById('cmp-ov').classList.remove('ope
 function doForward(){
   const msg=allMsgs.find(m=>m.num===activeNum); if(!msg)return;
   const sig = CFG.signature || `73 de ${CFG.callsign||'N4SFL'}`;
-  openCompose('',`FWD: ${msg.subject}`,`\n\n${sig}\n\n--- Fwd #${msg.num} from ${msg.from} ---\n${msg.body||''}`);
+  openCompose('',`FWD: ${msg.subject}`,`\n\n${sig}\n\n--- Fwd #${msg.num} from ${msg.from} ---\n${msg.body||''}`,'Forward');
 }
 async function doSend(){
   const to=document.getElementById('cmp-to').value.trim().toUpperCase();
