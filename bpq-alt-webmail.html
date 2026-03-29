@@ -336,7 +336,7 @@ body { font-family:var(--sans); font-size:1rem; background:var(--bg); color:var(
   <label>Port</label><input class="cfg-in" id="cfg-port" value="8010" style="width:50px">
   <label>Callsign</label><input class="cfg-in" id="cfg-call" value="" style="width:80px">
   <label>Session key</label><input class="cfg-in" id="cfg-key" value="" style="width:100px" placeholder="auto-detect">
-  <label>Signature</label><input class="cfg-in" id="cfg-sig" value="" style="width:200px" placeholder="73 de CALLSIGN">
+  <label>Signature</label><textarea class="cfg-in" id="cfg-sig" style="width:200px;height:54px;resize:vertical" placeholder="73 de CALLSIGN"></textarea>
   <button class="cfg-go" onclick="applyConfig()">APPLY</button>
   <button class="cfg-go" style="background:#555" onclick="clearSetup()">Reset Setup</button>
 </div>
