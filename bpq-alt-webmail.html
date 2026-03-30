@@ -306,6 +306,14 @@ body { font-family:var(--sans); font-size:1rem; background:var(--bg); color:var(
       <span class="setup-lbl">BPQ Port</span>
       <input class="setup-in" id="su-port" value="8010">
     </div>
+    <div class="setup-field">
+      <span class="setup-lbl">BPQ Username (if login required)</span>
+      <input class="setup-in" id="su-user" placeholder="leave blank if no login required">
+    </div>
+    <div class="setup-field">
+      <span class="setup-lbl">BPQ Password (if login required)</span>
+      <input class="setup-in" id="su-pass" type="password" placeholder="leave blank if no login required">
+    </div>
     <button class="setup-go" onclick="completeSetup()">Connect to Node ▶</button>
     <div class="setup-hint">Session key is auto-detected.<br>You can change these settings later via the ⚙ button.</div>
   </div>
@@ -314,7 +322,7 @@ body { font-family:var(--sans); font-size:1rem; background:var(--bg); color:var(
 <!-- TOPBAR -->
 <div class="topbar">
   <div class="logo">BPQ-ALT-WEBMAIL</div>
-  <span style="font-family:var(--mono);font-size:0.69rem;color:var(--text3);margin-left:-6px">v1.2.2</span>
+  <span style="font-family:var(--mono);font-size:0.69rem;color:var(--text3);margin-left:-6px">v1.2.3</span>
   <div class="top-call" id="top-call">—</div>
   <span class="top-node" id="top-node">—</span>
   <div class="tspc"></div>
@@ -334,6 +342,8 @@ body { font-family:var(--sans); font-size:1rem; background:var(--bg); color:var(
 <div id="cfg-bar">
   <label>Host</label><input class="cfg-in" id="cfg-host" value="127.0.0.1" style="width:110px">
   <label>Port</label><input class="cfg-in" id="cfg-port" value="8010" style="width:50px">
+  <label>Username</label><input class="cfg-in" id="cfg-user" style="width:80px" placeholder="sysop">
+  <label>Password</label><input class="cfg-in" id="cfg-pass" type="password" style="width:80px" placeholder="password">
   <label>Callsign</label><input class="cfg-in" id="cfg-call" value="" style="width:80px">
   <label>Session key</label><input class="cfg-in" id="cfg-key" value="" style="width:100px" placeholder="auto-detect">
   <label>Signature</label><textarea class="cfg-in" id="cfg-sig" style="width:200px;height:54px;resize:vertical" placeholder="73 de CALLSIGN"></textarea>
@@ -497,6 +507,8 @@ let CFG = {
   key:       LS.get('bpq_key')      || '',
   callsign:  LS.get('bpq_call')     || '',
   signature: LS.get('bpq_sig')      || '',
+  username:  LS.get('bpq_user')     || '',
+  password:  LS.get('bpq_pass')     || '',
 };
 
 function saveCFG() {
@@ -505,6 +517,8 @@ function saveCFG() {
   LS.set('bpq_key',  CFG.key);
   LS.set('bpq_call', CFG.callsign);
   LS.set('bpq_sig',  CFG.signature);
+  LS.set('bpq_user', CFG.username);
+  LS.set('bpq_pass', CFG.password);
 }
 
 // ═══════════════════════════════════════════════════
@@ -766,12 +780,25 @@ function showSetup() {
 function hideSetup() {
   document.getElementById('setup-screen').style.display='none';
 }
+function parseHostInput(hostRaw, portRaw) {
+  let host = hostRaw.trim().replace(/^https?:\/\//i, '');
+  let port = portRaw.trim();
+  if (host.includes(':')) {
+    const parts = host.split(':');
+    host = parts[0];
+    if (!port || port === '8010') port = parts[1];
+  }
+  return { host, port: port || '8010' };
+}
 function completeSetup() {
   const call = document.getElementById('su-call').value.trim().toUpperCase();
   if (!call) { document.getElementById('su-call').focus(); return; }
   CFG.callsign = call;
-  CFG.host     = document.getElementById('su-host').value.trim() || '127.0.0.1';
-  CFG.port     = document.getElementById('su-port').value.trim() || '8010';
+  const parsed = parseHostInput(document.getElementById('su-host').value, document.getElementById('su-port').value);
+  CFG.host     = parsed.host;
+  CFG.port     = parsed.port;
+  CFG.username = document.getElementById('su-user').value.trim();
+  CFG.password = document.getElementById('su-pass').value;
   CFG.key      = '';
   LS.set('bpq_setup_done','1');
   saveCFG();
@@ -784,11 +811,14 @@ function clearSetup() {
   location.reload();
 }
 function applyConfig() {
-  CFG.host      = document.getElementById('cfg-host').value.trim();
-  CFG.port      = document.getElementById('cfg-port').value.trim();
+  const parsed  = parseHostInput(document.getElementById('cfg-host').value, document.getElementById('cfg-port').value);
+  CFG.host      = parsed.host;
+  CFG.port      = parsed.port;
   CFG.callsign  = document.getElementById('cfg-call').value.trim().toUpperCase() || CFG.callsign;
   CFG.key       = document.getElementById('cfg-key').value.trim();
   CFG.signature = document.getElementById('cfg-sig').value;
+  CFG.username  = document.getElementById('cfg-user').value.trim();
+  CFG.password  = document.getElementById('cfg-pass').value;
   saveCFG();
   syncTopbar();
   connectAndLoad();
@@ -804,6 +834,8 @@ function syncTopbar() {
   document.getElementById('cfg-call').value = CFG.callsign;
   document.getElementById('cfg-key').value  = CFG.key;
   document.getElementById('cfg-sig').value  = CFG.signature;
+  document.getElementById('cfg-user').value = CFG.username;
+  document.getElementById('cfg-pass').value = CFG.password;
 }
 
 // ═══════════════════════════════════════════════════
@@ -818,7 +850,10 @@ const FOLDER_PATHS = {
   MySent:   k=>`/WebMail/WMfromMe?${k}`,
   MyRxed:   k=>`/WebMail/WMtoMe?${k}`,
 };
-function base()      { return `http://${CFG.host}:${CFG.port}`; }
+function base() {
+  const auth = CFG.username ? `${encodeURIComponent(CFG.username)}:${encodeURIComponent(CFG.password)}@` : '';
+  return `http://${auth}${CFG.host}:${CFG.port}`;
+}
 function msgUrl(n)   { return `${base()}/WebMail/WM?${CFG.key}&${n}`; }
 function killUrl(n)  { return `${base()}/WebMail/WMDel/${n}?${CFG.key}`; }
 function replyUrl(n) { return `${base()}/WebMail/Reply/${n}?${CFG.key}`; }
@@ -826,15 +861,17 @@ function nextUrl()   { return `${base()}/WebMail/WMNext?${CFG.key}`; }
 function prevUrl()   { return `${base()}/WebMail/WMPrev?${CFG.key}`; }
 
 async function bpqGet(url) {
-  const r=await fetch(url,{credentials:'include'});
+  const headers = CFG.username ? { 'Authorization': 'Basic ' + btoa(CFG.username + ':' + CFG.password) } : {};
+  const r=await fetch(url,{credentials:'include', headers});
   if (!r.ok) throw new Error(`HTTP ${r.status}`);
   return r.text();
 }
 
 async function autoDetectKey() {
+  const headers = CFG.username ? { 'Authorization': 'Basic ' + btoa(CFG.username + ':' + CFG.password) } : {};
   for (const url of [`${base()}/`,`${base()}/WebMail/WMALL`]) {
     try {
-      const html=await(await fetch(url,{credentials:'include'})).text();
+      const html=await(await fetch(url,{credentials:'include', headers})).text();
       const m=html.match(/\/WebMail\/[A-Za-z]+\?([A-Z0-9]{6,12})/i);
       if (m?.[1]) return m[1];
     } catch(_){}

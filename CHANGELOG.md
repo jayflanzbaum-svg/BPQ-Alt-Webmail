@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.2.3 — 2026-03-30
+
+### Added
+- HTTP Basic Auth support — username/password fields in setup screen and settings bar
+- `parseHostInput` helper — host field now accepts `192.168.1.1:8008` or `http://192.168.1.1` formats
+- Authorization header sent with all BPQ fetch requests when credentials are configured
+
 ## v1.2.2 — 2026-03-29
 
 ### Fixed
