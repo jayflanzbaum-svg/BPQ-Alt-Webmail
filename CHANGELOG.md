@@ -1,5 +1,13 @@
 # Changelog
 
+## v1.2.4 — 2026-03-30
+
+### Fixed
+- Sidebar subfilter scrolling for long bulletin/personal lists (credit: HB9DHG)
+
+### Added
+- QTH as a user setting in setup screen and ⚙ Settings
+
 ## v1.2.3 — 2026-03-30
 
 ### Added

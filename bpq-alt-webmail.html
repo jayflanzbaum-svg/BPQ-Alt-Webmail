@@ -139,8 +139,10 @@ body { font-family:var(--sans); font-size:1rem; background:var(--bg); color:var(
 .fldr-bdg { font-family:var(--mono); font-size:0.69rem; padding:1px 4px; border-radius:3px; background:#4da6ff20; color:var(--blue); flex-shrink:0 }
 
 /* subfilters */
-.sf-wrap { overflow:hidden; max-height:0; transition:max-height .2s ease }
-.sf-wrap.open { max-height:800px }
+.sf-wrap { overflow-y:auto; overflow-x:hidden; max-height:0; transition:max-height .2s ease }
+.sf-wrap.open { max-height:450px; border-bottom:1px solid var(--border) }
+.sf-wrap::-webkit-scrollbar { width:4px }
+.sf-wrap::-webkit-scrollbar-thumb { background:var(--accent); border-radius:10px }
 .sf { display:flex; align-items:center; gap:0; padding:5px 10px 5px 26px; font-size:0.85rem; font-family:var(--mono); color:var(--text3); cursor:pointer; border-left:2px solid transparent; user-select:none }
 .sf:hover { background:var(--bg3); color:var(--text2) }
 .sf.active { color:var(--accent); background:var(--accent-bg); border-left-color:var(--accent) }
@@ -299,6 +301,10 @@ body { font-family:var(--sans); font-size:1rem; background:var(--bg); color:var(
       <input class="setup-in" id="su-call" placeholder="N4SFL" autocomplete="off" spellcheck="false">
     </div>
     <div class="setup-field">
+      <span class="setup-lbl">QTH (optional)</span>
+      <input class="setup-in" id="su-qth" placeholder="City, State or Grid Square">
+    </div>
+    <div class="setup-field">
       <span class="setup-lbl">BPQ Host</span>
       <input class="setup-in" id="su-host" value="127.0.0.1">
     </div>
@@ -322,7 +328,7 @@ body { font-family:var(--sans); font-size:1rem; background:var(--bg); color:var(
 <!-- TOPBAR -->
 <div class="topbar">
   <div class="logo">BPQ-ALT-WEBMAIL</div>
-  <span style="font-family:var(--mono);font-size:0.69rem;color:var(--text3);margin-left:-6px">v1.2.3</span>
+  <span style="font-family:var(--mono);font-size:0.69rem;color:var(--text3);margin-left:-6px">v1.2.4</span>
   <div class="top-call" id="top-call">—</div>
   <span class="top-node" id="top-node">—</span>
   <div class="tspc"></div>
@@ -345,6 +351,7 @@ body { font-family:var(--sans); font-size:1rem; background:var(--bg); color:var(
   <label>Username</label><input class="cfg-in" id="cfg-user" style="width:80px" placeholder="sysop">
   <label>Password</label><input class="cfg-in" id="cfg-pass" type="password" style="width:80px" placeholder="password">
   <label>Callsign</label><input class="cfg-in" id="cfg-call" value="" style="width:80px">
+  <label>QTH</label><input class="cfg-in" id="cfg-qth" style="width:120px" placeholder="City, State">
   <label>Session key</label><input class="cfg-in" id="cfg-key" value="" style="width:100px" placeholder="auto-detect">
   <label>Signature</label><textarea class="cfg-in" id="cfg-sig" style="width:200px;height:54px;resize:vertical" placeholder="73 de CALLSIGN"></textarea>
   <button class="cfg-go" onclick="applyConfig()">APPLY</button>
@@ -509,6 +516,7 @@ let CFG = {
   signature: LS.get('bpq_sig')      || '',
   username:  LS.get('bpq_user')     || '',
   password:  LS.get('bpq_pass')     || '',
+  qth:       LS.get('bpq_qth')      || '',
 };
 
 function saveCFG() {
@@ -519,6 +527,7 @@ function saveCFG() {
   LS.set('bpq_sig',  CFG.signature);
   LS.set('bpq_user', CFG.username);
   LS.set('bpq_pass', CFG.password);
+  LS.set('bpq_qth',  CFG.qth);
 }
 
 // ═══════════════════════════════════════════════════
@@ -797,6 +806,7 @@ function completeSetup() {
   const parsed = parseHostInput(document.getElementById('su-host').value, document.getElementById('su-port').value);
   CFG.host     = parsed.host;
   CFG.port     = parsed.port;
+  CFG.qth      = document.getElementById('su-qth').value.trim();
   CFG.username = document.getElementById('su-user').value.trim();
   CFG.password = document.getElementById('su-pass').value;
   CFG.key      = '';
@@ -819,6 +829,7 @@ function applyConfig() {
   CFG.signature = document.getElementById('cfg-sig').value;
   CFG.username  = document.getElementById('cfg-user').value.trim();
   CFG.password  = document.getElementById('cfg-pass').value;
+  CFG.qth       = document.getElementById('cfg-qth').value.trim();
   saveCFG();
   syncTopbar();
   connectAndLoad();
@@ -827,7 +838,7 @@ function syncTopbar() {
   document.getElementById('top-call').textContent = CFG.callsign || '—';
   document.getElementById('top-node').textContent = `${CFG.host}:${CFG.port}`;
   document.getElementById('si-node').textContent  = CFG.callsign || '—';
-  document.getElementById('si-qth').textContent   = 'Delray Beach FL';
+  document.getElementById('si-qth').textContent   = CFG.qth || '—';
   // Sync cfg bar fields
   document.getElementById('cfg-host').value = CFG.host;
   document.getElementById('cfg-port').value = CFG.port;
@@ -836,6 +847,7 @@ function syncTopbar() {
   document.getElementById('cfg-sig').value  = CFG.signature;
   document.getElementById('cfg-user').value = CFG.username;
   document.getElementById('cfg-pass').value = CFG.password;
+  document.getElementById('cfg-qth').value  = CFG.qth;
 }
 
 // ═══════════════════════════════════════════════════
