@@ -328,7 +328,7 @@ body { font-family:var(--sans); font-size:1rem; background:var(--bg); color:var(
 <!-- TOPBAR -->
 <div class="topbar">
   <div class="logo">BPQ-ALT-WEBMAIL</div>
-  <span style="font-family:var(--mono);font-size:0.69rem;color:var(--text3);margin-left:-6px">v1.2.4</span>
+  <span style="font-family:var(--mono);font-size:0.69rem;color:var(--text3);margin-left:-6px">v1.2.5</span>
   <div class="top-call" id="top-call">—</div>
   <span class="top-node" id="top-node">—</span>
   <div class="tspc"></div>
@@ -863,8 +863,7 @@ const FOLDER_PATHS = {
   MyRxed:   k=>`/WebMail/WMtoMe?${k}`,
 };
 function base() {
-  const auth = CFG.username ? `${encodeURIComponent(CFG.username)}:${encodeURIComponent(CFG.password)}@` : '';
-  return `http://${auth}${CFG.host}:${CFG.port}`;
+  return `http://${CFG.host}:${CFG.port}`;
 }
 function msgUrl(n)   { return `${base()}/WebMail/WM?${CFG.key}&${n}`; }
 function killUrl(n)  { return `${base()}/WebMail/WMDel/${n}?${CFG.key}`; }
@@ -872,6 +871,9 @@ function replyUrl(n) { return `${base()}/WebMail/Reply/${n}?${CFG.key}`; }
 function nextUrl()   { return `${base()}/WebMail/WMNext?${CFG.key}`; }
 function prevUrl()   { return `${base()}/WebMail/WMPrev?${CFG.key}`; }
 
+// BPQ supports two auth methods:
+// 1. Basic Auth — handled here via the Authorization header
+// 2. Form-based session login (HTML login page) — not yet supported, future enhancement
 async function bpqGet(url) {
   const headers = CFG.username ? { 'Authorization': 'Basic ' + btoa(CFG.username + ':' + CFG.password) } : {};
   const r=await fetch(url,{credentials:'include', headers});

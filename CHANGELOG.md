@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.2.5 — 2026-03-31
+
+### Fixed
+- Auth URL fix — removed credentials from base URL, rely solely on Authorization header for Basic Auth (credit: N3MEL)
+- Added auth method comment documenting Basic Auth and future form-based login support
+
 ## v1.2.4 — 2026-03-30
 
 ### Fixed
