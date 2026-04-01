@@ -768,12 +768,16 @@ function resetFont()   { fontSize=13; applyFont(); }
 // ═══════════════════════════════════════════════════
 //  COLUMN RESIZE
 // ═══════════════════════════════════════════════════
-function initResize(handleId, targetId, minW) {
+function initResize(handleId, targetId, minW, storageKey) {
   const h=document.getElementById(handleId), t=document.getElementById(targetId);
   let sx,sw;
   h.addEventListener('mousedown',e=>{
     sx=e.clientX; sw=t.offsetWidth; h.classList.add('drag');
-    const mv=e=>{t.style.width=Math.max(minW,sw+(e.clientX-sx))+'px';};
+    const mv=e=>{
+      const w = Math.max(minW, sw+(e.clientX-sx));
+      t.style.width=w+'px';
+      if (storageKey) LS.set(storageKey, w);
+    };
     const up=()=>{h.classList.remove('drag');document.removeEventListener('mousemove',mv);document.removeEventListener('mouseup',up);};
     document.addEventListener('mousemove',mv); document.addEventListener('mouseup',up);
     e.preventDefault();
@@ -1659,8 +1663,14 @@ async function init(){
   }
   applyTheme();
   applyFont();
-  initResize('rh1','sidebar',140);
-  initResize('rh2','list-pane',160);
+  initResize('rh1','sidebar',140,'bpq_sb_width');
+  initResize('rh2','list-pane',160,'bpq_lp_width');
+
+  // Restore saved column widths
+  const sbW = LS.get('bpq_sb_width');
+  const lpW = LS.get('bpq_lp_width');
+  if (sbW) document.getElementById('sidebar').style.width = sbW + 'px';
+  if (lpW) document.getElementById('list-pane').style.width = lpW + 'px';
   syncTopbar();
 
   // Show setup screen on first run
