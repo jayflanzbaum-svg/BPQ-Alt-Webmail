@@ -271,7 +271,7 @@ body { font-family:var(--sans); font-size:1rem; background:var(--bg); color:var(
 .field-lbl { font-family:var(--mono); font-size:0.77rem; color:var(--text3); text-transform:uppercase; letter-spacing:.1em }
 .field-in { padding:7px 10px; background:var(--bg); border:1px solid var(--border); border-radius:4px; color:var(--text); font-family:var(--mono); font-size:0.92rem; outline:none; width:100% }
 .field-in:focus { border-color:var(--green-dim) }
-.field-ta { padding:8px 10px; background:var(--bg); border:1px solid var(--border); border-radius:4px; color:var(--text); font-family:var(--mono); font-size:0.92rem; outline:none; width:100%; resize:vertical; min-height:130px; line-height:1.6 }
+.field-ta { padding:8px 10px; background:var(--bg); border:1px solid var(--border); border-radius:4px; color:var(--text); font-family:var(--mono); font-size:0.92rem; outline:none; width:100%; resize:vertical; min-height:520px; line-height:1.6 }
 .field-ta:focus { border-color:var(--green-dim) }
 .modal-ft { padding:10px 16px; border-top:1px solid var(--border); display:flex; justify-content:space-between; align-items:center }
 .modal-hint { font-family:var(--mono); font-size:0.77rem; color:var(--text3) }
@@ -1367,6 +1367,7 @@ function showEmpty(show=true) {
 //  SELECTION
 // ═══════════════════════════════════════════════════
 let selectedNums = new Set();
+let lastSelectedNum = null;  // track last clicked for shift-range select
 // Manual stars — persisted in localStorage, separate from rule-based stars
 let manualStars = new Set(LS.getJ('bpq_stars')||[]);
 function saveStars() { LS.setJ('bpq_stars',[...manualStars].slice(-1000)); }
@@ -1387,10 +1388,29 @@ function handleRowClick(e, num) {
 
 function toggleSelect(e, num) {
   e.stopPropagation();
+  const filtered = getFiltered();
+  const nums = filtered.map(m => m.num);
+
+  // Shift-click: select range between last clicked and current
+  if (e.shiftKey && lastSelectedNum !== null && lastSelectedNum !== num) {
+    const idxA = nums.indexOf(lastSelectedNum);
+    const idxB = nums.indexOf(num);
+    if (idxA !== -1 && idxB !== -1) {
+      const lo = Math.min(idxA, idxB);
+      const hi = Math.max(idxA, idxB);
+      for (let i = lo; i <= hi; i++) selectedNums.add(nums[i]);
+      updateBulkBar();
+      renderList(filtered);
+      return;
+    }
+  }
+
+  // Normal click: toggle single message
   if (selectedNums.has(num)) selectedNums.delete(num);
   else selectedNums.add(num);
+  lastSelectedNum = num;
   updateBulkBar();
-  renderList(getFiltered());
+  renderList(filtered);
 }
 
 function clearSelection() {
