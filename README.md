@@ -13,6 +13,7 @@ A modern, single-file webmail interface for [BPQ32](https://www.cantab.net/users
 - **Draggable column widths** — drag the dividers between panes
 - **Auto-refresh** — polls BPQ every 5 minutes, shows new messages silently
 - **Session key auto-detection** — no manual token entry needed; detects and recovers from key rotation automatically
+- **Remote access with login** — automatically handles BPQ's form-based login page when accessing remotely with USER= password set. Enter your BPQ username/password in settings and the app logs in for you
 
 ### Folders
 - All Messages, Personal (inbox), Bulletins, NTS Traffic, Mine, My Sent, My Received

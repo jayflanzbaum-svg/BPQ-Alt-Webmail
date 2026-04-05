@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.4.0 — 2026-04-05
+
+### Added
+- Form-based login support — when BPQ has `USER=` password set and serves an HTML login page (common for remote/non-local access), the app now detects the login form automatically, submits credentials, and extracts the session key. This fixes the "Could not detect session key" error for remote users.
+- Improved error message when key detection fails — now suggests checking username/password in settings
+- All fetch calls now consistently include auth headers (fixes remote access for header fetch and silent refresh)
+
 ## v1.3.1 — 2026-04-05
 
 ### Fixed
