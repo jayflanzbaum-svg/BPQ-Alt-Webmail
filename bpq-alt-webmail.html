@@ -328,7 +328,7 @@ body { font-family:var(--sans); font-size:1rem; background:var(--bg); color:var(
 <!-- TOPBAR -->
 <div class="topbar">
   <div class="logo">BPQ-ALT-WEBMAIL</div>
-  <span style="font-family:var(--mono);font-size:0.69rem;color:var(--text3);margin-left:-6px">v1.2.5</span>
+  <span style="font-family:var(--mono);font-size:0.69rem;color:var(--text3);margin-left:-6px">v1.3.0</span>
   <div class="top-call" id="top-call">—</div>
   <span class="top-node" id="top-node">—</span>
   <div class="tspc"></div>
@@ -441,6 +441,7 @@ body { font-family:var(--sans); font-size:1rem; background:var(--bg); color:var(
         <button class="btn" onclick="doNext()">Next →</button>
         <div class="btn-sp"></div>
         <button class="btn danger" id="btn-kill" onclick="confirmKill()">✕ Kill</button>
+        <button class="btn danger" id="btn-reject" onclick="confirmReject()">⊘ Reject</button>
       </div>
       <div class="rv-body" id="rv-body"></div>
     </div>
@@ -456,6 +457,15 @@ body { font-family:var(--sans); font-size:1rem; background:var(--bg); color:var(
       <button class="btn" onclick="closeKill()">Cancel</button>
       <button class="btn danger" id="del-yes" onclick="doKill()">Kill Message</button>
     </div>
+  </div>
+</div>
+
+<!-- REJECT CONFIRM -->
+<div class="overlay" id="rej-ov">
+  <div class="del-box">
+    <div class="del-ttl">⊘ Reject Filter</div>
+    <div class="del-msg" id="rej-msg"></div>
+    <div class="del-btns" id="rej-btns"></div>
   </div>
 </div>
 
@@ -1509,6 +1519,101 @@ async function doKill() {
   else toast(`${killed.length} message${killed.length>1?'s':''} killed`,'ok');
 
   closeKill(); btn.disabled=false;
+}
+
+// ═══════════════════════════════════════════════════
+//  REJECT FILTER
+// ═══════════════════════════════════════════════════
+function confirmReject() {
+  if (!activeNum) return;
+  const msg = allMsgs.find(m=>m.num===activeNum);
+  if (!msg) return;
+  const isBull = activeFolder==='Bulls';
+  const fromCall = (msg.hdrFrom || msg.from || '').split('@')[0].trim().toUpperCase();
+  const toAddr = (msg.to || '').trim().toUpperCase();
+
+  let html = `Add a reject filter so future messages are automatically rejected.<br><br>`;
+  html += `<strong>FROM:</strong> ${esc(fromCall)}<br>`;
+  if (isBull) html += `<strong>TO:</strong> ${esc(toAddr)}<br>`;
+
+  document.getElementById('rej-msg').innerHTML = html;
+
+  let btns = `<button class="btn" onclick="closeReject()">Cancel</button>`;
+  btns += `<button class="btn danger" onclick="doReject('from','${esc(fromCall)}')">Reject FROM ${esc(fromCall)}</button>`;
+  if (isBull && toAddr) {
+    btns += `<button class="btn danger" onclick="doReject('to','${esc(toAddr)}')">Reject TO ${esc(toAddr)}</button>`;
+  }
+  document.getElementById('rej-btns').innerHTML = btns;
+  document.getElementById('rej-ov').classList.add('open');
+}
+
+function closeReject() { document.getElementById('rej-ov').classList.remove('open'); }
+
+async function doReject(field, value) {
+  const btns = document.getElementById('rej-btns');
+  btns.querySelectorAll('button').forEach(b=>b.disabled=true);
+
+  try {
+    // Step 1: GET the Mail config page to read all current form values
+    const confHtml = await bpqGet(`${base()}/Mail/Conf?${CFG.key}`);
+
+    // Extract the Mail management session key from the page links
+    const keyMatch = confHtml.match(/\/Mail\/\w+\?(M[A-F0-9]{12})/i);
+    const mailKey = keyMatch ? keyMatch[1] : CFG.key;
+
+    // Parse the config page into a DOM
+    const doc = new DOMParser().parseFromString(confHtml, 'text/html');
+    const form = doc.querySelector('form');
+    if (!form) throw new Error('Could not read BPQ config page');
+
+    // Collect all form fields
+    const formData = new URLSearchParams();
+    for (const el of form.elements) {
+      if (!el.name) continue;
+      if (el.type === 'checkbox') {
+        if (el.checked) formData.append(el.name, 'on');
+      } else if (el.type === 'radio') {
+        if (el.checked) formData.append(el.name, el.value);
+      } else if (el.type === 'submit') {
+        // skip submit buttons except Save
+      } else {
+        formData.append(el.name, el.value);
+      }
+    }
+    // Add the Save button
+    formData.append('Save', 'Save');
+
+    // Step 2: Append the new reject entry to the appropriate field
+    const fieldName = field === 'from' ? 'Rfrom' : 'Rto';
+    const current = formData.get(fieldName) || '';
+    const entries = current.split('\n').map(s=>s.trim()).filter(Boolean);
+
+    if (entries.map(e=>e.toUpperCase()).includes(value.toUpperCase())) {
+      toast(`${value} is already in the reject list`, 'info');
+      closeReject();
+      return;
+    }
+    entries.push(value);
+    formData.set(fieldName, entries.join('\n'));
+
+    // Step 3: POST the complete form back to BPQ
+    const headers = CFG.username ? { 'Authorization': 'Basic ' + btoa(CFG.username + ':' + CFG.password) } : {};
+    headers['Content-Type'] = 'application/x-www-form-urlencoded';
+
+    const r = await fetch(`${base()}/Mail/Config?${mailKey}`, {
+      method: 'POST',
+      credentials: 'include',
+      headers,
+      body: formData.toString()
+    });
+
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    toast(`Reject ${field.toUpperCase()} "${value}" added`, 'ok');
+  } catch(e) {
+    toast(`Reject failed: ${e.message}`, 'err');
+  }
+
+  closeReject();
 }
 
 // ═══════════════════════════════════════════════════
