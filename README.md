@@ -30,6 +30,7 @@ A modern, single-file webmail interface for [BPQ32](https://www.cantab.net/users
 - FROM, TO, DATE, TYPE, MSG#, BID, SIZE in header
 - Reply, Forward, Save (.txt download), Prev/Next navigation
 - **Kill** — marks message deleted in BPQ; killed messages hidden immediately and persist across reloads
+- **Reject filter** — block future messages by FROM callsign or TO category directly from the message you're reading. Writes the entry into BPQ's native Mail config reject list (same as the Reject From / Reject To fields on the Configuration page) — no need to leave the webmail interface
 
 ### Star Rules
 - Built-in rule: stars SYSTEM messages with subject starting "New User" (new user notifications)

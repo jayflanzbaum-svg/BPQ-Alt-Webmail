@@ -1,5 +1,17 @@
 # Changelog
 
+## v1.3.1 — 2026-04-05
+
+### Fixed
+- Reject filter now works — was silently failing because the WebMail session key is not valid for the Mail config page. Fixed by establishing a proper Mail management session via `/Mail/Header`, using CRLF line endings for textarea fields, and reading textarea content correctly from the parsed DOM.
+
+## v1.3.0 — 2026-04-04
+
+### Added
+- Reject filter — block unwanted messages by FROM callsign or TO category directly from the message reader. Adds entries to BPQ's native Reject From / Reject To config fields.
+- Larger compose textarea for new messages
+- Shift-click range selection for multi-select
+
 ## v1.2.5 — 2026-04-01
 
 ### Fixed
