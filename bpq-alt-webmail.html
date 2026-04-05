@@ -1554,17 +1554,28 @@ async function doReject(field, value) {
   btns.querySelectorAll('button').forEach(b=>b.disabled=true);
 
   try {
-    // Step 1: GET the Mail config page to read all current form values
-    const confHtml = await bpqGet(`${base()}/Mail/Conf?${CFG.key}`);
+    const authHdr = CFG.username ? { 'Authorization': 'Basic ' + btoa(CFG.username + ':' + CFG.password) } : {};
 
-    // Extract the Mail management session key from the page links
-    const keyMatch = confHtml.match(/\/Mail\/\w+\?(M[A-F0-9]{12})/i);
-    const mailKey = keyMatch ? keyMatch[1] : CFG.key;
+    // Step 1: Establish a Mail management session by hitting the Mail header page
+    const headerHtml = await bpqGet(`${base()}/Mail/Header`);
+    const mailKeyMatch = headerHtml.match(/\/Mail\/\w+\?(M[A-F0-9]{12})/i);
+    if (!mailKeyMatch) throw new Error('Could not establish Mail management session — check sysop credentials');
+    const mailKey = mailKeyMatch[1];
+
+    // Step 2: GET the config page with the valid mail session key
+    const confHtml = await bpqGet(`${base()}/Mail/Conf?${mailKey}`);
+    if (confHtml.includes('Session had been lost')) throw new Error('Mail session expired — try again');
 
     // Parse the config page into a DOM
     const doc = new DOMParser().parseFromString(confHtml, 'text/html');
     const form = doc.querySelector('form');
     if (!form) throw new Error('Could not read BPQ config page');
+
+    // Get the form's action URL (BPQ may use a specific POST endpoint)
+    const formAction = form.getAttribute('action') || '';
+    const postUrl = formAction
+      ? `${base()}${formAction.startsWith('/') ? '' : '/'}${formAction}`
+      : `${base()}/Mail/Conf?${mailKey}`;
 
     // Collect all form fields
     const formData = new URLSearchParams();
@@ -1575,17 +1586,18 @@ async function doReject(field, value) {
       } else if (el.type === 'radio') {
         if (el.checked) formData.append(el.name, el.value);
       } else if (el.type === 'submit') {
-        // skip submit buttons except Save
+        // skip submit buttons
+      } else if (el.tagName === 'TEXTAREA') {
+        formData.append(el.name, el.textContent || '');
       } else {
         formData.append(el.name, el.value);
       }
     }
-    // Add the Save button
     formData.append('Save', 'Save');
 
-    // Step 2: Append the new reject entry to the appropriate field
+    // Step 3: Append the new reject entry to the appropriate field
     const fieldName = field === 'from' ? 'Rfrom' : 'Rto';
-    const current = formData.get(fieldName) || '';
+    const current = (formData.get(fieldName) || '').replace(/\r\n/g, '\n');
     const entries = current.split('\n').map(s=>s.trim()).filter(Boolean);
 
     if (entries.map(e=>e.toUpperCase()).includes(value.toUpperCase())) {
@@ -1594,13 +1606,12 @@ async function doReject(field, value) {
       return;
     }
     entries.push(value);
-    formData.set(fieldName, entries.join('\n'));
+    // Use CRLF line endings — BPQ's web server expects Windows-style line breaks
+    formData.set(fieldName, entries.join('\r\n'));
 
-    // Step 3: POST the complete form back to BPQ
-    const headers = CFG.username ? { 'Authorization': 'Basic ' + btoa(CFG.username + ':' + CFG.password) } : {};
-    headers['Content-Type'] = 'application/x-www-form-urlencoded';
-
-    const r = await fetch(`${base()}/Mail/Config?${mailKey}`, {
+    // Step 4: POST the complete form back to BPQ with the mail session key
+    const headers = {...authHdr, 'Content-Type': 'application/x-www-form-urlencoded'};
+    const r = await fetch(postUrl, {
       method: 'POST',
       credentials: 'include',
       headers,
@@ -1608,6 +1619,8 @@ async function doReject(field, value) {
     });
 
     if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    const respText = await r.text();
+    if (respText.includes('Session had been lost')) throw new Error('Mail session expired during save');
     toast(`Reject ${field.toUpperCase()} "${value}" added`, 'ok');
   } catch(e) {
     toast(`Reject failed: ${e.message}`, 'err');
