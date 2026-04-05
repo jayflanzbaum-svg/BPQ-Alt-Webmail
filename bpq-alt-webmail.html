@@ -886,21 +886,84 @@ function nextUrl()   { return `${base()}/WebMail/WMNext?${CFG.key}`; }
 function prevUrl()   { return `${base()}/WebMail/WMPrev?${CFG.key}`; }
 
 // BPQ supports two auth methods:
-// 1. Basic Auth — handled here via the Authorization header
-// 2. Form-based session login (HTML login page) — not yet supported, future enhancement
-async function bpqGet(url) {
-  const headers = CFG.username ? { 'Authorization': 'Basic ' + btoa(CFG.username + ':' + CFG.password) } : {};
-  const r=await fetch(url,{credentials:'include', headers});
-  if (!r.ok) throw new Error(`HTTP ${r.status}`);
+// 1. Basic Auth — Authorization header (grey browser popup style)
+// 2. Form-based session login — BPQ serves an HTML login page when USER= password is set
+//    and the request comes from a non-local IP. We detect the login form, submit credentials,
+//    and extract the session key from the post-login redirect.
+
+function authHeaders() {
+  return CFG.username ? { 'Authorization': 'Basic ' + btoa(CFG.username + ':' + CFG.password) } : {};
+}
+
+// Detect if HTML is a BPQ login form (contains a password input + form POST, no WebMail links)
+function isLoginPage(html) {
+  return html.includes('type=password') && !html.match(/\/WebMail\/[A-Za-z]+\?[A-Z0-9]{6,12}/i);
+}
+
+// Submit credentials to a BPQ login form and return the response HTML
+async function bpqFormLogin(loginHtml, originUrl) {
+  const doc = new DOMParser().parseFromString(loginHtml, 'text/html');
+  const form = doc.querySelector('form');
+  if (!form) throw new Error('Login page has no form');
+
+  // Build the POST URL from the form's action attribute
+  const action = form.getAttribute('action') || '';
+  const postUrl = action.startsWith('http') ? action
+    : `${base()}${action.startsWith('/') ? '' : '/'}${action}`;
+
+  // Collect all form fields and fill in credentials
+  const formData = new URLSearchParams();
+  for (const el of form.elements) {
+    if (!el.name) continue;
+    if (el.type === 'submit') continue;
+    if (el.type === 'password') {
+      formData.append(el.name, CFG.password || '');
+    } else if (el.name.toLowerCase().includes('user') || el.name.toLowerCase().includes('call')) {
+      formData.append(el.name, CFG.username || CFG.callsign || '');
+    } else {
+      formData.append(el.name, el.value);
+    }
+  }
+
+  const r = await fetch(postUrl, {
+    method: 'POST',
+    credentials: 'include',
+    headers: { ...authHeaders(), 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: formData.toString()
+  });
+
   return r.text();
 }
 
+async function bpqGet(url) {
+  const r = await fetch(url, { credentials:'include', headers: authHeaders() });
+  if (!r.ok) throw new Error(`HTTP ${r.status}`);
+  let html = await r.text();
+
+  // If BPQ returned a login form instead of the requested page, log in and retry
+  if (isLoginPage(html) && (CFG.username || CFG.password)) {
+    const postLoginHtml = await bpqFormLogin(html, url);
+    // After login, BPQ may return the requested content or a page with session links
+    if (!isLoginPage(postLoginHtml)) {
+      // Check if the post-login response has a session key — if so, update our key
+      const km = postLoginHtml.match(/\/WebMail\/[A-Za-z]+\?([A-Z0-9]{6,12})/i);
+      if (km?.[1] && km[1] !== CFG.key) {
+        CFG.key = km[1]; saveCFG();
+        try { document.getElementById('cfg-key').value = km[1]; } catch(_){}
+      }
+      return postLoginHtml;
+    }
+    // If still a login page after submitting, credentials are wrong
+    throw new Error('Login failed — check username/password in settings');
+  }
+  return html;
+}
+
 async function autoDetectKey() {
-  const headers = CFG.username ? { 'Authorization': 'Basic ' + btoa(CFG.username + ':' + CFG.password) } : {};
   for (const url of [`${base()}/`,`${base()}/WebMail/WMALL`]) {
     try {
-      const html=await(await fetch(url,{credentials:'include', headers})).text();
-      const m=html.match(/\/WebMail\/[A-Za-z]+\?([A-Z0-9]{6,12})/i);
+      const html = await bpqGet(url);
+      const m = html.match(/\/WebMail\/[A-Za-z]+\?([A-Z0-9]{6,12})/i);
       if (m?.[1]) return m[1];
     } catch(_){}
   }
@@ -1050,7 +1113,7 @@ async function fetchMsgHeader(msg) {
   if (msg.hdrFrom !== undefined) return;
   if (baseCall(msg.from) === 'SYSTEM') { msg.hdrFrom = 'SYSTEM'; return; }
   try {
-    let r = await fetch(msgUrl(msg.num), { credentials:'include', signal: headerFetchAbort?.signal });
+    let r = await fetch(msgUrl(msg.num), { credentials:'include', headers: authHeaders(), signal: headerFetchAbort?.signal });
     // On 404 the session key probably rotated — re-detect and retry once
     if (r.status === 404) {
       const newKey = await autoDetectKey();
@@ -1058,7 +1121,7 @@ async function fetchMsgHeader(msg) {
         CFG.key = newKey; saveCFG();
         document.getElementById('cfg-key').value = newKey;
       }
-      r = await fetch(msgUrl(msg.num), { credentials:'include', signal: headerFetchAbort?.signal });
+      r = await fetch(msgUrl(msg.num), { credentials:'include', headers: authHeaders(), signal: headerFetchAbort?.signal });
     }
     if (!r.ok) return;
     const html = await r.text();
@@ -1728,7 +1791,7 @@ async function silentRefresh(){
   try {
     const k=await autoDetectKey();
     if(k&&k!==CFG.key){CFG.key=k;saveCFG();document.getElementById('cfg-key').value=k;toast('Session key refreshed','info');}
-    let fresh=parseList(await(await fetch(base()+FOLDER_PATHS[activeFolder](CFG.key),{credentials:'include'})).text());
+    let fresh=parseList(await bpqGet(base()+FOLDER_PATHS[activeFolder](CFG.key)));
     if(activeFolder==='Personal') fresh=sortPersonal(fresh);
     const oldNums=new Set(allMsgs.map(m=>m.num));
     const freshNums=new Set(fresh.map(m=>m.num));
@@ -1774,7 +1837,7 @@ async function connectAndLoad(){
     else{
       setStatus('err','✕ no key');
       document.getElementById('list-body').innerHTML=
-        `<div class="list-empty">Could not detect session key.<br><br>Log into BPQ-Alt-WebMail first, then click ⚙ and paste the token from the URL into Session key.</div>`;
+        `<div class="list-empty">Could not detect session key.<br><br>If accessing remotely, make sure your BPQ username and password are entered in ⚙ Settings.<br><br>If that doesn't help, log into BPQ WebMail directly, then click ⚙ and paste the token from the URL into Session key.</div>`;
       return;
     }
   }
