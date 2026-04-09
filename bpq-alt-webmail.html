@@ -287,6 +287,96 @@ body { font-family:var(--sans); font-size:1rem; background:var(--bg); color:var(
 .toast.ok   { background:var(--accent-bg); border:1px solid var(--accent-border); color:var(--accent) }
 .toast.err  { background:#e0525215; border:1px solid #e0525240; color:var(--red) }
 .toast.info { background:#4da6ff15; border:1px solid #4da6ff40; color:var(--blue) }
+
+/* ── MOBILE BOTTOM NAV ── */
+.m-nav { display:none; height:56px; border-top:1px solid var(--border); background:var(--bg2); flex-shrink:0; padding-bottom:env(safe-area-inset-bottom,0) }
+.m-nav-item { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; color:var(--text3); cursor:pointer; font-family:var(--mono); font-size:0.62rem; letter-spacing:.05em; text-transform:uppercase; position:relative; background:none; border:none; -webkit-tap-highlight-color:transparent }
+.m-nav-item.active { color:var(--accent) }
+.m-nav-ico { font-size:1.15rem }
+.m-nav-badge { position:absolute; top:4px; right:calc(50% - 16px); min-width:16px; height:16px; border-radius:50%; background:var(--blue); font-size:0.54rem; display:flex; align-items:center; justify-content:center; color:#fff; font-weight:700; padding:0 3px }
+
+/* ── MOBILE FAB ── */
+.m-fab { display:none; position:fixed; bottom:72px; right:18px; width:52px; height:52px; border-radius:50%; background:var(--green-dim); border:none; color:#fff; font-size:1.5rem; align-items:center; justify-content:center; box-shadow:0 4px 16px rgba(0,201,138,.3); cursor:pointer; z-index:20; -webkit-tap-highlight-color:transparent }
+.m-fab:active { background:var(--green) }
+
+/* ── MOBILE BACK BUTTON (reader) ── */
+.rv-back { display:none; align-items:center; gap:6px; font-family:var(--mono); font-size:0.77rem; color:var(--accent); margin-bottom:10px; cursor:pointer; background:none; border:none; padding:0; -webkit-tap-highlight-color:transparent }
+
+/* ── MOBILE RESPONSIVE ── */
+@media (max-width: 768px) {
+  /* Hide desktop resize handles */
+  .rh { display:none !important }
+
+  /* Topbar compact */
+  .topbar { padding:0 10px; gap:6px; height:44px; flex-wrap:nowrap; overflow-x:auto }
+  .logo { font-size:0.77rem }
+  .top-node { display:none }
+  #refresh-lbl { display:none }
+  .tbtn { padding:4px 6px; font-size:0.69rem; min-width:28px; text-align:center }
+  #font-lbl { display:none }
+
+  /* Config bar stacks better */
+  #cfg-bar { padding:8px 10px; gap:6px }
+  #cfg-bar label { font-size:0.69rem }
+  .cfg-in { font-size:0.77rem; width:100% !important }
+  #cfg-bar { flex-direction:column; align-items:stretch }
+
+  /* Main layout: stack panels, show one at a time */
+  .main { flex-direction:column; position:relative }
+
+  .sidebar,
+  .list-pane,
+  .reader {
+    position:absolute; inset:0;
+    width:100% !important; height:100% !important;
+    border:none;
+    display:none;
+    flex-direction:column;
+    z-index:1;
+  }
+
+  /* Mobile view states — controlled by body[data-mv] */
+  body[data-mv="folders"] .sidebar  { display:flex }
+  body[data-mv="list"]    .list-pane { display:flex }
+  body[data-mv="reader"]  .reader   { display:flex }
+
+  /* Show bottom nav and FAB on mobile */
+  .m-nav { display:flex }
+  .m-fab { display:flex }
+
+  /* Show back button on mobile reader */
+  .rv-back { display:flex }
+
+  /* Sidebar adjustments */
+  .sidebar { overflow-y:auto }
+  .fldr { padding:12px 16px }
+  .sf { padding:10px 16px 10px 40px }
+  .cmp-wrap { display:none } /* replaced by FAB */
+
+  /* List pane full width */
+  .list-pane { border-right:none }
+  .mrow { padding:12px 16px }
+
+  /* Reader adjustments */
+  .rv-hd { padding:14px 16px 12px }
+  .rv-tb { padding:8px 16px; flex-wrap:wrap; gap:6px }
+  .rv-body { padding:16px; font-size:0.85rem }
+  .reader-empty { display:none !important }
+  .rv-fields { flex-direction:column; gap:3px }
+
+  /* Compose modal full screen on mobile */
+  .modal { width:100%; max-width:100%; height:100vh; border-radius:0; max-height:100vh }
+  .field-ta { min-height:300px }
+
+  /* Rules modal */
+  .rules-modal { width:100%; max-width:100%; border-radius:0 }
+
+  /* Toast above bottom nav */
+  .toast { bottom:72px }
+
+  /* Setup screen adjustments */
+  .setup-card { padding:24px 20px; width:100%; max-width:100%; border-radius:0 }
+}
 </style>
 </head>
 <body class="dark">
@@ -328,7 +418,7 @@ body { font-family:var(--sans); font-size:1rem; background:var(--bg); color:var(
 <!-- TOPBAR -->
 <div class="topbar">
   <div class="logo">BPQ-ALT-WEBMAIL</div>
-  <span style="font-family:var(--mono);font-size:0.69rem;color:var(--text3);margin-left:-6px">v1.4.0</span>
+  <span style="font-family:var(--mono);font-size:0.69rem;color:var(--text3);margin-left:-6px">v1.5.0</span>
   <div class="top-call" id="top-call">—</div>
   <span class="top-node" id="top-node">—</span>
   <div class="tspc"></div>
@@ -422,6 +512,7 @@ body { font-family:var(--sans); font-size:1rem; background:var(--bg); color:var(
     </div>
     <div id="rv">
       <div class="rv-hd">
+        <button class="rv-back" id="rv-back" onclick="mobileNav('list')">‹ Back to messages</button>
         <div class="rv-subj" id="rv-subj"></div>
         <div class="rv-fields">
           <span class="rv-f"><span class="rv-k">FROM</span><span class="rv-v call" id="rv-from"></span></span>
@@ -447,6 +538,23 @@ body { font-family:var(--sans); font-size:1rem; background:var(--bg); color:var(
     </div>
   </div>
 </div>
+
+<!-- MOBILE BOTTOM NAV -->
+<nav class="m-nav" id="m-nav">
+  <button class="m-nav-item active" id="mnav-folders" onclick="mobileNav('folders')">
+    <span class="m-nav-ico">✉</span><span>Folders</span>
+  </button>
+  <button class="m-nav-item" id="mnav-list" onclick="mobileNav('list')">
+    <span class="m-nav-ico">☰</span><span>Messages</span>
+    <span class="m-nav-badge" id="m-nav-badge" style="display:none"></span>
+  </button>
+  <button class="m-nav-item" id="mnav-settings" onclick="mobileNav('settings')">
+    <span class="m-nav-ico">⚙</span><span>Settings</span>
+  </button>
+</nav>
+
+<!-- MOBILE FAB (compose) -->
+<button class="m-fab" id="m-fab" onclick="openCompose()">+</button>
 
 <!-- KILL CONFIRM -->
 <div class="overlay" id="del-ov">
@@ -1195,7 +1303,8 @@ function setPersFilter(f) {
   const filtered=getFiltered();
   renderList(filtered);
   updateListCount(filtered);
-  if(filtered.length>0) openMsg(filtered[0].num);
+  if (isMobile) { mobileNav('list'); }
+  else if(filtered.length>0) openMsg(filtered[0].num);
 }
 function setBullFilter(f) {
   bullFilter=f;
@@ -1205,7 +1314,8 @@ function setBullFilter(f) {
   const filtered=getFiltered();
   renderList(filtered);
   updateListCount(filtered);
-  if(filtered.length>0) openMsg(filtered[0].num);
+  if (isMobile) { mobileNav('list'); }
+  else if(filtered.length>0) openMsg(filtered[0].num);
 }
 
 // ═══════════════════════════════════════════════════
@@ -1316,9 +1426,14 @@ async function loadFolder(folder, label) {
     renderList(filtered);
     updateListCount(filtered);
     setStatus('ok',`● ${msgs.length} msgs`);
+    updateMobileNavBadge();
 
-    // Auto-open first message
-    if(filtered.length>0) openMsg(filtered[0].num);
+    // On mobile, switch to list view (don't auto-open a message)
+    if (isMobile) {
+      mobileNav('list');
+    } else if(filtered.length>0) {
+      openMsg(filtered[0].num);
+    }
 
   } catch(e) {
     setStatus('err','✕ offline');
@@ -1378,6 +1493,9 @@ async function openMsg(num) {
   const msg=allMsgs.find(m=>m.num===num);
   if(!msg) return;
 
+  // On mobile, switch to reader view
+  if (isMobile) mobileNav('reader');
+
   // Mark read and re-render to remove unread dot
   const wasUnread=!readSet.has(num);
   readSet.add(num);
@@ -1385,6 +1503,7 @@ async function openMsg(num) {
     // Re-render subfilters to update unread dots/counts
     if(activeFolder==='Personal') buildPersFilters(allMsgs);
     if(activeFolder==='Bulls')    buildBullFilters(allMsgs);
+    updateMobileNavBadge();
   }
 
   const filtered=getFiltered();
@@ -1576,6 +1695,7 @@ async function doKill() {
     openMsg(nextNum);
   } else if (isBulk || !nextNum) {
     showEmpty(true); activeNum=null;
+    if (isMobile) mobileNav('list');
   }
 
   if (failed>0) toast(`${killed.length} killed, ${failed} failed`,'err');
@@ -1827,6 +1947,64 @@ document.getElementById('del-ov').addEventListener('click',e=>{if(e.target===e.c
 document.getElementById('cmp-ov').addEventListener('click',e=>{if(e.target===e.currentTarget)closeCompose();});
 
 // ═══════════════════════════════════════════════════
+//  MOBILE NAVIGATION
+// ═══════════════════════════════════════════════════
+let isMobile = false;
+let currentMobileView = 'folders';
+
+function checkMobile() {
+  isMobile = window.matchMedia('(max-width: 768px)').matches;
+  if (isMobile) {
+    if (!document.body.hasAttribute('data-mv')) {
+      document.body.setAttribute('data-mv', currentMobileView);
+    }
+  } else {
+    document.body.removeAttribute('data-mv');
+  }
+}
+
+function mobileNav(view) {
+  if (view === 'settings') {
+    document.getElementById('cfg-bar').classList.toggle('open');
+    return;
+  }
+  currentMobileView = view;
+  document.body.setAttribute('data-mv', view);
+
+  // Update bottom nav active state
+  document.querySelectorAll('.m-nav-item').forEach(el => el.classList.remove('active'));
+  if (view === 'folders') document.getElementById('mnav-folders').classList.add('active');
+  if (view === 'list')    document.getElementById('mnav-list').classList.add('active');
+  if (view === 'reader')  document.getElementById('mnav-list').classList.add('active');
+
+  // Hide FAB when reading a message
+  const fab = document.getElementById('m-fab');
+  if (fab) fab.style.display = (view === 'reader') ? 'none' : '';
+
+  // Update back button text
+  const backBtn = document.getElementById('rv-back');
+  if (backBtn) {
+    const title = document.getElementById('list-title');
+    backBtn.textContent = `‹ ${title ? title.textContent : 'Messages'}`;
+  }
+}
+
+// Update mobile nav badge with unread count
+function updateMobileNavBadge() {
+  const badge = document.getElementById('m-nav-badge');
+  if (!badge) return;
+  const unread = allMsgs.filter(m => !readSet.has(m.num)).length;
+  if (unread > 0) {
+    badge.textContent = unread > 99 ? '99+' : unread;
+    badge.style.display = '';
+  } else {
+    badge.style.display = 'none';
+  }
+}
+
+window.addEventListener('resize', checkMobile);
+
+// ═══════════════════════════════════════════════════
 //  BOOT
 // ═══════════════════════════════════════════════════
 async function connectAndLoad(){
@@ -1848,6 +2026,9 @@ async function connectAndLoad(){
 }
 
 async function init(){
+  // Detect mobile layout
+  checkMobile();
+
   // Clear old-format rules that had SYSTEM and New User as separate rules
   // (they're now a single AND built-in rule and shouldn't be in user storage)
   const storedRules = LS.getJ('bpq_rules') || [];

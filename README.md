@@ -7,10 +7,11 @@ A modern, single-file webmail interface for [BPQ32](https://www.cantab.net/users
 ## Features
 
 ### Interface
-- **Three-pane layout** — folder sidebar, message list, message reader
-- **Light and dark themes** — toggle with ☀/🌙 button, preference saved
+- **Three-pane layout** — folder sidebar, message list, message reader (desktop)
+- **Mobile responsive** — automatically adapts to phones and tablets with bottom navigation, full-screen stacked views, floating compose button, and touch-friendly sizing. Same single HTML file — no separate mobile version needed
+- **Light and dark themes** — toggle with ☀/🌙 button, preference saved. Four themes: Dark, Dark Hi-Contrast, Light, Light Hi-Contrast — all work on both desktop and mobile
 - **Adjustable font size** — A- / A+ buttons scale all text simultaneously
-- **Draggable column widths** — drag the dividers between panes
+- **Draggable column widths** — drag the dividers between panes (desktop)
 - **Auto-refresh** — polls BPQ every 5 minutes, shows new messages silently
 - **Session key auto-detection** — no manual token entry needed; detects and recovers from key rotation automatically
 - **Remote access with login** — automatically handles BPQ's form-based login page when accessing remotely with USER= password set. Enter your BPQ username/password in settings and the app logs in for you
@@ -144,6 +145,7 @@ Click **Reset Setup** to clear all settings and run first-time setup again.
 - BPQ32 v6.0.24 / v6.0.25 (Windows 10/11)
 - LinBPQ v6.0.24 / v6.0.25 (Raspberry Pi OS, Ubuntu)
 - Chrome 133, Edge 133, Firefox 134
+- Mobile: iOS Safari, Chrome for Android (responsive layout)
 
 > If you test on a platform not listed here and it works, please open an issue or PR to add it.
 

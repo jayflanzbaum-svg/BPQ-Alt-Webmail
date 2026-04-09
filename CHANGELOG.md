@@ -1,5 +1,25 @@
 # Changelog
 
+## v1.5.0 — 2026-04-09
+
+### Added
+- **Mobile responsive layout** — the same single HTML file now adapts automatically to phones and tablets (breakpoint at 768px)
+- Bottom navigation bar on mobile with Folders, Messages, and Settings tabs
+- Full-screen stacked views: Folders → Message List → Message Reader with back navigation
+- Floating compose button (FAB) on mobile replaces sidebar compose button
+- Mobile back button in message reader header to return to message list
+- Unread message count badge on mobile Messages tab
+- Touch-friendly sizing — larger tap targets for folders, subfilters, and message rows
+- Compose modal goes full-screen on mobile for easier typing
+- All four themes (Dark, Dark Hi-Contrast, Light, Light Hi-Contrast) fully supported on mobile
+- Config bar stacks vertically on mobile for usability
+- Safe area inset support for phones with notches/dynamic islands
+
+### Changed
+- On mobile, opening a folder navigates to the message list instead of auto-opening the first message
+- On mobile, kill with no next message returns to message list view
+- Subfilter clicks on mobile navigate to message list automatically
+
 ## v1.4.0 — 2026-04-05
 
 ### Added
