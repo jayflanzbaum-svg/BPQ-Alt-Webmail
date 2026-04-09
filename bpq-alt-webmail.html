@@ -302,6 +302,13 @@ body { font-family:var(--sans); font-size:1rem; background:var(--bg); color:var(
 /* ── MOBILE BACK BUTTON (reader) ── */
 .rv-back { display:none; align-items:center; gap:6px; font-family:var(--mono); font-size:0.77rem; color:var(--accent); margin-bottom:10px; cursor:pointer; background:none; border:none; padding:0; -webkit-tap-highlight-color:transparent }
 
+/* ── MOBILE COLLAPSIBLE HEADER SUMMARY ── */
+.rv-summary { display:none; cursor:pointer; font-family:var(--mono); font-size:0.77rem; color:var(--text2); padding:4px 0; -webkit-tap-highlight-color:transparent; align-items:center; gap:6px }
+.rv-sum-text { flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis }
+.rv-sum-text .sum-call { color:var(--accent); font-weight:600 }
+.rv-sum-text .sum-dim { color:var(--text3) }
+.rv-sum-chev { color:var(--text3); font-size:0.69rem; flex-shrink:0; transition:transform .15s }
+
 /* ── MOBILE RESPONSIVE ── */
 @media (max-width: 768px) {
   /* Hide desktop resize handles */
@@ -358,11 +365,15 @@ body { font-family:var(--sans); font-size:1rem; background:var(--bg); color:var(
   .mrow { padding:12px 16px }
 
   /* Reader adjustments */
-  .rv-hd { padding:14px 16px 12px }
-  .rv-tb { padding:8px 16px; flex-wrap:wrap; gap:6px }
-  .rv-body { padding:16px; font-size:0.85rem }
+  .rv-hd { padding:10px 16px 8px }
+  .rv-subj { font-size:1rem; margin-bottom:4px }
+  .rv-summary { display:flex }
+  .rv-fields { display:none; flex-direction:column; gap:2px; margin-top:6px; padding-top:6px; border-top:1px solid var(--border) }
+  .rv-fields.open { display:flex }
+  .rv-tb { padding:6px 12px; flex-wrap:wrap; gap:4px }
+  .rv-tb .btn { padding:5px 8px; font-size:0.77rem }
+  .rv-body { padding:12px 16px; font-size:0.85rem }
   .reader-empty { display:none !important }
-  .rv-fields { flex-direction:column; gap:3px }
 
   /* Compose modal full screen on mobile */
   .modal { width:100%; max-width:100%; height:100vh; border-radius:0; max-height:100vh }
@@ -514,7 +525,11 @@ body { font-family:var(--sans); font-size:1rem; background:var(--bg); color:var(
       <div class="rv-hd">
         <button class="rv-back" id="rv-back" onclick="mobileNav('list')">‹ Back to messages</button>
         <div class="rv-subj" id="rv-subj"></div>
-        <div class="rv-fields">
+        <div class="rv-summary" id="rv-summary" onclick="toggleMobileFields()">
+          <span class="rv-sum-text" id="rv-sum-text"></span>
+          <span class="rv-sum-chev" id="rv-sum-chev">▾</span>
+        </div>
+        <div class="rv-fields" id="rv-fields">
           <span class="rv-f"><span class="rv-k">FROM</span><span class="rv-v call" id="rv-from"></span></span>
           <span class="rv-f"><span class="rv-k">TO</span><span class="rv-v" id="rv-to"></span></span>
           <span class="rv-f"><span class="rv-k">DATE</span><span class="rv-v" id="rv-date"></span></span>
@@ -1518,6 +1533,7 @@ async function openMsg(num) {
   document.getElementById('rv-num').textContent=`#${msg.num}`;
   document.getElementById('rv-bid').textContent='—';
   document.getElementById('rv-size').textContent=`${msg.size} bytes`;
+  updateMobileSummary(msg);
   document.getElementById('rv-body').textContent='Loading…';
   document.getElementById('btn-kill').disabled=false;
 
@@ -2000,6 +2016,28 @@ function updateMobileNavBadge() {
   } else {
     badge.style.display = 'none';
   }
+}
+
+// Toggle expanded fields in mobile reader header
+function toggleMobileFields() {
+  const fields = document.getElementById('rv-fields');
+  const chev = document.getElementById('rv-sum-chev');
+  fields.classList.toggle('open');
+  chev.textContent = fields.classList.contains('open') ? '▴' : '▾';
+}
+
+// Populate the compact summary line for mobile reader
+function updateMobileSummary(msg) {
+  const sumText = document.getElementById('rv-sum-text');
+  if (!sumText) return;
+  const from = persFromKey(msg);
+  const to = (msg.to || '').split('@')[0];
+  sumText.innerHTML = `<span class="sum-call">${esc(from)}</span> → <span class="sum-call">${esc(to)}</span> <span class="sum-dim">· ${esc(msg.date)} · #${esc(msg.num)}</span>`;
+  // Reset to collapsed when opening a new message
+  const fields = document.getElementById('rv-fields');
+  const chev = document.getElementById('rv-sum-chev');
+  if (fields) fields.classList.remove('open');
+  if (chev) chev.textContent = '▾';
 }
 
 window.addEventListener('resize', checkMobile);
