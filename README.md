@@ -2,13 +2,19 @@
 
 A modern, single-file webmail interface for [BPQ32](https://www.cantab.net/users/john.wiseman/Documents/BPQMailChat.html) packet radio BBS nodes. Drop one HTML file into your BPQ HTML directory and open it in your browser.
 
-![BPQ-Alt-WebMail screenshot](screenshot.png)
+![BPQ-Alt-WebMail desktop screenshot](screenshot.png)
+
+### Mobile Layout
+
+The same single HTML file automatically adapts to phones and tablets — no separate app or download needed.
+
+![BPQ-Alt-WebMail mobile screenshot](screenshot-mobile.png)
 
 ## Features
 
 ### Interface
 - **Three-pane layout** — folder sidebar, message list, message reader (desktop)
-- **Mobile responsive** — automatically adapts to phones and tablets with bottom navigation, full-screen stacked views, floating compose button, and touch-friendly sizing. Same single HTML file — no separate mobile version needed
+- **Mobile responsive** — automatically adapts to phones and tablets (≤768px). Bottom navigation bar, full-screen stacked views (Folders → Messages → Reader), floating compose button, collapsible message headers, and touch-friendly sizing. Same single HTML file — no separate mobile version needed
 - **Light and dark themes** — toggle with ☀/🌙 button, preference saved. Four themes: Dark, Dark Hi-Contrast, Light, Light Hi-Contrast — all work on both desktop and mobile
 - **Adjustable font size** — A- / A+ buttons scale all text simultaneously
 - **Draggable column widths** — drag the dividers between panes (desktop)
