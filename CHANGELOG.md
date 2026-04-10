@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.5.1 — 2026-04-10
+
+### Changed
+- **Mobile settings is now a full-screen overlay** — tapping the gear icon opens a dedicated settings screen instead of toggling the config bar inline. Includes a close button header, version/callsign/status info row, and quick-action buttons (Refresh, Theme, Font, Rules) so all controls are accessible without the topbar.
+- Mobile topbar simplified — only the logo and gear button are visible; version label, callsign, node, status pill, theme/font/rules buttons, and refresh label are all hidden (moved into the settings overlay).
+- Mobile status pill in settings overlay stays in sync with the main status pill via MutationObserver.
+
 ## v1.5.0 — 2026-04-09
 
 ### Added
