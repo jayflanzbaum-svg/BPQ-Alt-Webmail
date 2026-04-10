@@ -1,16 +1,14 @@
 # Changelog
 
-## v1.5.3 — 2026-04-10
-
-### Fixed
-- **Duplicate "ALL Bulletins" subfilter** — when a bulletin's TO field was literally "ALL", it appeared twice in the sidebar because the synthetic "ALL" entry wasn't deduplicated against real categories (credit: HB9DHG)
-- **Settings bar stays open after Apply** — clicking Apply now automatically closes the settings panel (credit: HB9DHG)
-
 ## v1.5.2 — 2026-04-10
 
 ### Added
 - **Auto-detect host and port from URL** — when served from the BPQ HTML folder, the setup screen pre-populates host and port from the browser URL. `completeSetup()` also uses detected values if the host field is empty or still the default. (credit: K5DAT Lee)
 - Setup screen port hint clarifying HTTPPORT vs telnet port
+
+### Fixed
+- **Duplicate "ALL Bulletins" subfilter** — when a bulletin's TO field was literally "ALL", it appeared twice in the sidebar (credit: HB9DHG)
+- **Settings bar stays open after Apply** — clicking Apply now automatically closes the settings panel (credit: HB9DHG)
 
 ### Changed
 - Default port changed from 8010 to 8080 — 8010 is the telnet port, not the HTTP port (credit: K5DAT Lee)
