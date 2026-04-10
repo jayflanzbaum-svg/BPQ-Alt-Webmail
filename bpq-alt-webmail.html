@@ -254,7 +254,7 @@ body { font-family:var(--sans); font-size:1rem; background:var(--bg); color:var(
 .btn.danger:hover { background:#e0525210; border-color:var(--red) }
 .btn:disabled { opacity:.3; cursor:not-allowed }
 .btn-sp { flex:1 }
-.rv-body { flex:1; padding:20px 24px; overflow-y:auto; font-family:var(--mono); font-size:1rem; line-height:1.8; color:var(--text); white-space:pre-wrap; word-break:break-word }
+.rv-body { flex:1; padding:20px 24px; overflow-y:auto; font-family:var(--mono); font-size:1rem; line-height:var(--body-lh,1.6); color:var(--text); white-space:pre-wrap; word-break:break-word }
 .rv-body::-webkit-scrollbar { width:4px }
 .rv-body::-webkit-scrollbar-thumb { background:var(--border2); border-radius:2px }
 
@@ -450,7 +450,7 @@ body { font-family:var(--sans); font-size:1rem; background:var(--bg); color:var(
 <!-- TOPBAR -->
 <div class="topbar">
   <div class="logo">BPQ-ALT-WEBMAIL</div>
-  <span style="font-family:var(--mono);font-size:0.69rem;color:var(--text3);margin-left:-6px">v1.5.2</span>
+  <span style="font-family:var(--mono);font-size:0.69rem;color:var(--text3);margin-left:-6px">v1.5.3</span>
   <div class="top-call" id="top-call">—</div>
   <span class="top-node" id="top-node">—</span>
   <div class="tspc"></div>
@@ -461,6 +461,7 @@ body { font-family:var(--sans); font-size:1rem; background:var(--bg); color:var(
   <button class="tbtn" onclick="adjustFont(-1)" title="Decrease font size">A-</button>
   <button class="tbtn" id="font-lbl" onclick="resetFont()" title="Reset font size">13px</button>
   <button class="tbtn" onclick="adjustFont(1)" title="Increase font size">A+</button>
+  <button class="tbtn" id="lh-lbl" onclick="cycleLineSpacing()" title="Cycle line spacing">Normal</button>
   <button class="tbtn" onclick="toggleSettings()" title="Settings" style="color:var(--amber);border-color:var(--amber);font-weight:600">⚙ Settings</button>
   <button class="tbtn" onclick="openRules()" title="Star rules">★ Rules</button>
   <div id="status-pill">● connecting</div>
@@ -920,6 +921,26 @@ function adjustFont(d) { fontSize = Math.min(20, Math.max(10, fontSize+d)); appl
 function resetFont()   { fontSize=13; applyFont(); }
 
 // ═══════════════════════════════════════════════════
+//  LINE SPACING
+// ═══════════════════════════════════════════════════
+const LINE_SPACINGS = [
+  { label:'Compact',  value:1.3 },
+  { label:'Normal',   value:1.6 },
+  { label:'Relaxed',  value:1.9 }
+];
+let lineSpacingIdx = parseInt(LS.get('bpq_lh_idx')||'1');
+function applyLineSpacing() {
+  const s = LINE_SPACINGS[lineSpacingIdx];
+  document.documentElement.style.setProperty('--body-lh', s.value);
+  document.getElementById('lh-lbl').textContent = s.label;
+  LS.set('bpq_lh_idx', lineSpacingIdx);
+}
+function cycleLineSpacing() {
+  lineSpacingIdx = (lineSpacingIdx + 1) % LINE_SPACINGS.length;
+  applyLineSpacing();
+}
+
+// ═══════════════════════════════════════════════════
 //  SETTINGS TOGGLE (mobile full-screen overlay)
 // ═══════════════════════════════════════════════════
 function isMobile() { return window.matchMedia('(max-width:768px)').matches; }
@@ -954,7 +975,7 @@ function toggleSettings() {
     // Info row: version, callsign, status
     const info = document.createElement('div');
     info.className = 'm-cfg-info';
-    info.innerHTML = '<span>v1.5.2</span>' +
+    info.innerHTML = '<span>v1.5.3</span>' +
       '<span style="color:var(--accent);background:var(--accent-bg);border:1px solid var(--accent-border);padding:2px 7px;border-radius:4px">' + (callEl ? callEl.textContent : '—') + '</span>' +
       '<span id="m-status-pill" class="' + (statusPill ? statusPill.className : '') + '">' + (statusPill ? statusPill.textContent : '') + '</span>';
 
@@ -967,6 +988,7 @@ function toggleSettings() {
       '<button class="tbtn" onclick="adjustFont(-1)">A-</button>' +
       '<button class="tbtn" onclick="adjustFont(1)">A+</button>' +
       '<button class="tbtn" onclick="resetFont()">Reset Font</button>' +
+      '<button class="tbtn" onclick="cycleLineSpacing()">↕ Spacing</button>' +
       '<button class="tbtn" onclick="toggleSettings();openRules()">★ Rules</button>';
 
     bar.prepend(actions);
@@ -2187,6 +2209,7 @@ async function init(){
   }
   applyTheme();
   applyFont();
+  applyLineSpacing();
   initResize('rh1','sidebar',140,'bpq_sb_width');
   initResize('rh2','list-pane',160,'bpq_lp_width');
 

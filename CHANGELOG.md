@@ -1,5 +1,13 @@
 # Changelog
 
+## v1.5.3 — 2026-04-10
+
+### Added
+- **Line spacing setting** — cycle between Compact (1.3), Normal (1.6), and Relaxed (1.9) line height in the message reader. Available in the topbar and mobile settings quick actions. Preference saved across sessions. (credit: HB9DHG)
+
+### Changed
+- Default message reader line height changed from 1.8 to 1.6 (Normal)
+
 ## v1.5.2 — 2026-04-10
 
 ### Added
