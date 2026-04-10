@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.5.3 — 2026-04-10
+
+### Fixed
+- **Duplicate "ALL Bulletins" subfilter** — when a bulletin's TO field was literally "ALL", it appeared twice in the sidebar because the synthetic "ALL" entry wasn't deduplicated against real categories (credit: HB9DHG)
+- **Settings bar stays open after Apply** — clicking Apply now automatically closes the settings panel (credit: HB9DHG)
+
 ## v1.5.2 — 2026-04-10
 
 ### Added

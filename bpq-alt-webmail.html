@@ -450,7 +450,7 @@ body { font-family:var(--sans); font-size:1rem; background:var(--bg); color:var(
 <!-- TOPBAR -->
 <div class="topbar">
   <div class="logo">BPQ-ALT-WEBMAIL</div>
-  <span style="font-family:var(--mono);font-size:0.69rem;color:var(--text3);margin-left:-6px">v1.5.2</span>
+  <span style="font-family:var(--mono);font-size:0.69rem;color:var(--text3);margin-left:-6px">v1.5.3</span>
   <div class="top-call" id="top-call">—</div>
   <span class="top-node" id="top-node">—</span>
   <div class="tspc"></div>
@@ -954,7 +954,7 @@ function toggleSettings() {
     // Info row: version, callsign, status
     const info = document.createElement('div');
     info.className = 'm-cfg-info';
-    info.innerHTML = '<span>v1.5.2</span>' +
+    info.innerHTML = '<span>v1.5.3</span>' +
       '<span style="color:var(--accent);background:var(--accent-bg);border:1px solid var(--accent-border);padding:2px 7px;border-radius:4px">' + (callEl ? callEl.textContent : '—') + '</span>' +
       '<span id="m-status-pill" class="' + (statusPill ? statusPill.className : '') + '">' + (statusPill ? statusPill.textContent : '') + '</span>';
 
@@ -1063,6 +1063,9 @@ function applyConfig() {
   CFG.qth       = document.getElementById('cfg-qth').value.trim();
   saveCFG();
   syncTopbar();
+  // Close settings bar after applying
+  const bar = document.getElementById('cfg-bar');
+  if (bar.classList.contains('open')) toggleSettings();
   connectAndLoad();
 }
 function syncTopbar() {
@@ -1282,7 +1285,7 @@ function buildSubfilters(wrapId, msgs, keyFn, activeVal, onClickFn, pinFirst) {
   if(pinFirst) {
     keys=[pinFirst,...keys.filter(k=>k!==pinFirst)];
   }
-  keys=['ALL',...keys];
+  keys=['ALL',...keys.filter(k=>k!=='ALL')];
 
   const wrap=document.getElementById(wrapId);
   wrap.innerHTML=keys.map(k=>{
