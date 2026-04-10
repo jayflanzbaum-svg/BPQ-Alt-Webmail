@@ -1,5 +1,15 @@
 # Changelog
 
+## v1.5.2 — 2026-04-10
+
+### Added
+- **Auto-detect host and port from URL** — when served from the BPQ HTML folder, the setup screen pre-populates host and port from the browser URL. `completeSetup()` also uses detected values if the host field is empty or still the default. (credit: K5DAT Lee)
+- Setup screen port hint clarifying HTTPPORT vs telnet port
+
+### Changed
+- Default port changed from 8010 to 8080 — 8010 is the telnet port, not the HTTP port (credit: K5DAT Lee)
+- Settings button in topbar now labeled "⚙ Settings" and highlighted in amber for visibility (credit: K5DAT Lee)
+
 ## v1.5.1 — 2026-04-10
 
 ### Changed

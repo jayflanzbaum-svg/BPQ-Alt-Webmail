@@ -314,19 +314,39 @@ body { font-family:var(--sans); font-size:1rem; background:var(--bg); color:var(
   /* Hide desktop resize handles */
   .rh { display:none !important }
 
-  /* Topbar compact */
+  /* Topbar minimal — just logo + gear */
   .topbar { padding:0 10px; gap:6px; height:44px; flex-wrap:nowrap; overflow-x:auto }
   .logo { font-size:0.77rem }
-  .top-node { display:none }
-  #refresh-lbl { display:none }
-  .tbtn { padding:4px 6px; font-size:0.69rem; min-width:28px; text-align:center }
+  .topbar > span,                /* version label */
+  .top-call, .top-node, .tspc,
+  #refresh-lbl,
+  .topbar > button.tbtn,         /* all tbtn except gear */
+  #status-pill,
+  .topbar > button.tbtn[title="Star rules"] { display:none !important }
+  /* Show only the gear button */
+  .topbar > button.tbtn[title="Settings"] { display:flex !important; margin-left:auto }
   #font-lbl { display:none }
 
-  /* Config bar stacks better */
-  #cfg-bar { padding:8px 10px; gap:6px }
+  /* Config bar — full-screen overlay on mobile */
+  #cfg-bar { padding:16px; gap:10px; position:fixed; inset:0; z-index:150; background:var(--bg); overflow-y:auto; flex-direction:column; align-items:stretch }
   #cfg-bar label { font-size:0.69rem }
   .cfg-in { font-size:0.77rem; width:100% !important }
-  #cfg-bar { flex-direction:column; align-items:stretch }
+
+  /* Mobile settings header row (injected by JS) */
+  .m-cfg-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; padding-bottom:10px; border-bottom:1px solid var(--border) }
+  .m-cfg-title { font-family:var(--mono); font-size:0.92rem; font-weight:600; color:var(--accent) }
+  .m-cfg-close { background:none; border:1px solid var(--border2); border-radius:6px; font-size:1rem; padding:4px 10px; color:var(--text2); cursor:pointer; font-family:var(--mono) }
+
+  /* Quick-action buttons row in mobile settings */
+  .m-cfg-actions { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:12px; padding-bottom:12px; border-bottom:1px solid var(--border) }
+  .m-cfg-actions .tbtn { display:inline-flex !important; padding:8px 14px; font-size:0.85rem }
+
+  /* Status + info in mobile settings */
+  .m-cfg-info { display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin-bottom:12px; padding-bottom:12px; border-bottom:1px solid var(--border); font-family:var(--mono); font-size:0.77rem }
+  .m-cfg-info #m-status-pill { font-family:var(--mono); font-size:0.77rem; padding:3px 8px; border-radius:4px; border:1px solid var(--border); background:var(--bg2); color:var(--text2) }
+  .m-cfg-info #m-status-pill.ok  { color:var(--green);  border-color:var(--accent-border); background:var(--accent-bg) }
+  .m-cfg-info #m-status-pill.err { color:var(--red);    border-color:#e0525230; background:#e0525208 }
+  .m-cfg-info #m-status-pill.busy{ color:var(--amber);  border-color:#f5a62330; background:#f5a62308 }
 
   /* Main layout: stack panels, show one at a time */
   .main { flex-direction:column; position:relative }
@@ -411,7 +431,8 @@ body { font-family:var(--sans); font-size:1rem; background:var(--bg); color:var(
     </div>
     <div class="setup-field">
       <span class="setup-lbl">BPQ Port</span>
-      <input class="setup-in" id="su-port" value="8010">
+      <input class="setup-in" id="su-port" value="8080">
+      <div style="font-family:var(--mono);font-size:0.69rem;color:var(--text3);margin-top:4px">This is HTTPPORT in your BPQ config — not the telnet/TCP port. Typically 8080 or 8088.</div>
     </div>
     <div class="setup-field">
       <span class="setup-lbl">BPQ Username (if login required)</span>
@@ -429,7 +450,7 @@ body { font-family:var(--sans); font-size:1rem; background:var(--bg); color:var(
 <!-- TOPBAR -->
 <div class="topbar">
   <div class="logo">BPQ-ALT-WEBMAIL</div>
-  <span style="font-family:var(--mono);font-size:0.69rem;color:var(--text3);margin-left:-6px">v1.5.0</span>
+  <span style="font-family:var(--mono);font-size:0.69rem;color:var(--text3);margin-left:-6px">v1.5.2</span>
   <div class="top-call" id="top-call">—</div>
   <span class="top-node" id="top-node">—</span>
   <div class="tspc"></div>
@@ -440,7 +461,7 @@ body { font-family:var(--sans); font-size:1rem; background:var(--bg); color:var(
   <button class="tbtn" onclick="adjustFont(-1)" title="Decrease font size">A-</button>
   <button class="tbtn" id="font-lbl" onclick="resetFont()" title="Reset font size">13px</button>
   <button class="tbtn" onclick="adjustFont(1)" title="Increase font size">A+</button>
-  <button class="tbtn" onclick="document.getElementById('cfg-bar').classList.toggle('open')" title="Settings">⚙</button>
+  <button class="tbtn" onclick="toggleSettings()" title="Settings" style="color:var(--amber);border-color:var(--amber);font-weight:600">⚙ Settings</button>
   <button class="tbtn" onclick="openRules()" title="Star rules">★ Rules</button>
   <div id="status-pill">● connecting</div>
 </div>
@@ -643,7 +664,7 @@ const LS = {
 
 let CFG = {
   host:      LS.get('bpq_host')     || '127.0.0.1',
-  port:      LS.get('bpq_port')     || '8010',
+  port:      LS.get('bpq_port')     || '8080',
   key:       LS.get('bpq_key')      || '',
   callsign:  LS.get('bpq_call')     || '',
   signature: LS.get('bpq_sig')      || '',
@@ -899,6 +920,73 @@ function adjustFont(d) { fontSize = Math.min(20, Math.max(10, fontSize+d)); appl
 function resetFont()   { fontSize=13; applyFont(); }
 
 // ═══════════════════════════════════════════════════
+//  SETTINGS TOGGLE (mobile full-screen overlay)
+// ═══════════════════════════════════════════════════
+function isMobile() { return window.matchMedia('(max-width:768px)').matches; }
+
+function toggleSettings() {
+  const bar = document.getElementById('cfg-bar');
+  const isOpen = bar.classList.contains('open');
+
+  if (isOpen) {
+    // closing — remove mobile header if present
+    const mh = bar.querySelector('.m-cfg-header');
+    if (mh) mh.remove();
+    const ma = bar.querySelector('.m-cfg-actions');
+    if (ma) ma.remove();
+    const mi = bar.querySelector('.m-cfg-info');
+    if (mi) mi.remove();
+    bar.classList.remove('open');
+    return;
+  }
+
+  // opening
+  if (isMobile()) {
+    // Build mobile header + quick actions
+    const statusPill = document.getElementById('status-pill');
+    const callEl = document.getElementById('top-call');
+
+    // Header with close button
+    const header = document.createElement('div');
+    header.className = 'm-cfg-header';
+    header.innerHTML = '<span class="m-cfg-title">Settings</span><button class="m-cfg-close" onclick="toggleSettings()">✕ Close</button>';
+
+    // Info row: version, callsign, status
+    const info = document.createElement('div');
+    info.className = 'm-cfg-info';
+    info.innerHTML = '<span>v1.5.2</span>' +
+      '<span style="color:var(--accent);background:var(--accent-bg);border:1px solid var(--accent-border);padding:2px 7px;border-radius:4px">' + (callEl ? callEl.textContent : '—') + '</span>' +
+      '<span id="m-status-pill" class="' + (statusPill ? statusPill.className : '') + '">' + (statusPill ? statusPill.textContent : '') + '</span>';
+
+    // Quick action buttons
+    const actions = document.createElement('div');
+    actions.className = 'm-cfg-actions';
+    actions.innerHTML =
+      '<button class="tbtn" onclick="silentRefresh()">↻ Refresh</button>' +
+      '<button class="tbtn" onclick="toggleTheme()">☀ Theme</button>' +
+      '<button class="tbtn" onclick="adjustFont(-1)">A-</button>' +
+      '<button class="tbtn" onclick="adjustFont(1)">A+</button>' +
+      '<button class="tbtn" onclick="resetFont()">Reset Font</button>' +
+      '<button class="tbtn" onclick="toggleSettings();openRules()">★ Rules</button>';
+
+    bar.prepend(actions);
+    bar.prepend(info);
+    bar.prepend(header);
+  }
+
+  bar.classList.add('open');
+}
+
+// Keep mobile status pill in sync
+const _origStatusPill = document.getElementById('status-pill');
+if (_origStatusPill) {
+  new MutationObserver(function() {
+    const mp = document.getElementById('m-status-pill');
+    if (mp) { mp.className = _origStatusPill.className.replace('status-pill','').trim(); mp.className = 'm-cfg-info-pill ' + _origStatusPill.className; mp.textContent = _origStatusPill.textContent; }
+  }).observe(_origStatusPill, { childList:true, attributes:true, characterData:true });
+}
+
+// ═══════════════════════════════════════════════════
 //  COLUMN RESIZE
 // ═══════════════════════════════════════════════════
 function initResize(handleId, targetId, minW, storageKey) {
@@ -932,17 +1020,23 @@ function parseHostInput(hostRaw, portRaw) {
   if (host.includes(':')) {
     const parts = host.split(':');
     host = parts[0];
-    if (!port || port === '8010') port = parts[1];
+    if (!port || port === '8080') port = parts[1];
   }
-  return { host, port: port || '8010' };
+  return { host, port: port || '8080' };
 }
 function completeSetup() {
   const call = document.getElementById('su-call').value.trim().toUpperCase();
   if (!call) { document.getElementById('su-call').focus(); return; }
   CFG.callsign = call;
-  const parsed = parseHostInput(document.getElementById('su-host').value, document.getElementById('su-port').value);
-  CFG.host     = parsed.host;
-  CFG.port     = parsed.port;
+  const detected = detectHostFromUrl();
+  if (detected && (!document.getElementById('su-host').value.trim() || document.getElementById('su-host').value.trim() === '127.0.0.1')) {
+    CFG.host = detected.host;
+    CFG.port = detected.port;
+  } else {
+    const parsed = parseHostInput(document.getElementById('su-host').value, document.getElementById('su-port').value);
+    CFG.host = parsed.host;
+    CFG.port = parsed.port;
+  }
   CFG.qth      = document.getElementById('su-qth').value.trim();
   CFG.username = document.getElementById('su-user').value.trim();
   CFG.password = document.getElementById('su-pass').value;
@@ -1981,7 +2075,7 @@ function checkMobile() {
 
 function mobileNav(view) {
   if (view === 'settings') {
-    document.getElementById('cfg-bar').classList.toggle('open');
+    toggleSettings();
     return;
   }
   currentMobileView = view;
@@ -2063,6 +2157,13 @@ async function connectAndLoad(){
   startRefresh();
 }
 
+function detectHostFromUrl() {
+  if (window.location.protocol === 'file:') return null;
+  const host = window.location.hostname || '127.0.0.1';
+  const port = window.location.port || '8080';
+  return { host, port };
+}
+
 async function init(){
   // Detect mobile layout
   checkMobile();
@@ -2095,6 +2196,12 @@ async function init(){
 
   // Show setup screen on first run
   if(!LS.get('bpq_setup_done') || !CFG.callsign){
+    // Pre-populate host/port from URL if served from BPQ
+    const detected = detectHostFromUrl();
+    if (detected && !LS.get('bpq_host')) {
+      document.getElementById('su-host').value = detected.host;
+      document.getElementById('su-port').value = detected.port;
+    }
     showSetup();
     return;
   }
