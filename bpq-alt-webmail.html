@@ -943,8 +943,6 @@ function cycleLineSpacing() {
 // ═══════════════════════════════════════════════════
 //  SETTINGS TOGGLE (mobile full-screen overlay)
 // ═══════════════════════════════════════════════════
-function isMobile() { return window.matchMedia('(max-width:768px)').matches; }
-
 function toggleSettings() {
   const bar = document.getElementById('cfg-bar');
   const isOpen = bar.classList.contains('open');
@@ -962,7 +960,7 @@ function toggleSettings() {
   }
 
   // opening
-  if (isMobile()) {
+  if (isMobile) {
     // Build mobile header + quick actions
     const statusPill = document.getElementById('status-pill');
     const callEl = document.getElementById('top-call');
