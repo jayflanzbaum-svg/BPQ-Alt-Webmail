@@ -1,33 +1,22 @@
 # Changelog
 
-## v1.5.3 — 2026-04-10
+## v1.5.1 — 2026-04-11
 
 ### Added
-- **Line spacing setting** — cycle between Compact (1.3), Normal (1.6), and Relaxed (1.9) line height in the message reader. Available in the topbar and mobile settings quick actions. Preference saved across sessions. (credit: HB9DHG)
-
-### Changed
-- Default message reader line height changed from 1.8 to 1.6 (Normal)
-
-## v1.5.2 — 2026-04-10
-
-### Added
-- **Auto-detect host and port from URL** — when served from the BPQ HTML folder, the setup screen pre-populates host and port from the browser URL. `completeSetup()` also uses detected values if the host field is empty or still the default. (credit: K5DAT Lee)
+- **Line spacing setting** — cycle between Compact, Normal, and Relaxed line height in the message reader. Available in the topbar and mobile settings quick actions. Preference saved across sessions. (credit: HB9DHG)
+- **Auto-detect host and port from URL** — when served from the BPQ HTML folder, host and port are automatically read from the browser URL on every page load. No more stale port settings. (credit: K5DAT Lee)
 - Setup screen port hint clarifying HTTPPORT vs telnet port
 
 ### Fixed
 - **Duplicate "ALL Bulletins" subfilter** — when a bulletin's TO field was literally "ALL", it appeared twice in the sidebar (credit: HB9DHG)
 - **Settings bar stays open after Apply** — clicking Apply now automatically closes the settings panel (credit: HB9DHG)
+- **Script crash on load** — duplicate `isMobile` declaration (function vs let) caused a SyntaxError that prevented the entire page from loading
 
 ### Changed
-- Default port changed from 8010 to 8080 — 8010 is the telnet port, not the HTTP port (credit: K5DAT Lee)
+- **Mobile settings is now a full-screen overlay** — tapping the gear icon opens a dedicated settings screen with close button, version/callsign/status info, and quick-action buttons (Refresh, Theme, Font, Spacing, Rules)
+- Mobile topbar simplified — only the logo and gear button are visible; all other controls moved into the settings overlay
 - Settings button in topbar now labeled "⚙ Settings" and highlighted in amber for visibility (credit: K5DAT Lee)
-
-## v1.5.1 — 2026-04-10
-
-### Changed
-- **Mobile settings is now a full-screen overlay** — tapping the gear icon opens a dedicated settings screen instead of toggling the config bar inline. Includes a close button header, version/callsign/status info row, and quick-action buttons (Refresh, Theme, Font, Rules) so all controls are accessible without the topbar.
-- Mobile topbar simplified — only the logo and gear button are visible; version label, callsign, node, status pill, theme/font/rules buttons, and refresh label are all hidden (moved into the settings overlay).
-- Mobile status pill in settings overlay stays in sync with the main status pill via MutationObserver.
+- Default message reader line height changed from 1.8 to 1.6 (Normal)
 
 ## v1.5.0 — 2026-04-09
 
