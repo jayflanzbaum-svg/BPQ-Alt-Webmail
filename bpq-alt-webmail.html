@@ -450,7 +450,7 @@ body { font-family:var(--sans); font-size:1rem; background:var(--bg); color:var(
 <!-- TOPBAR -->
 <div class="topbar">
   <div class="logo">BPQ-ALT-WEBMAIL</div>
-  <span style="font-family:var(--mono);font-size:0.69rem;color:var(--text3);margin-left:-6px">v1.5.1</span>
+  <span style="font-family:var(--mono);font-size:0.69rem;color:var(--text3);margin-left:-6px">v1.5.2</span>
   <div class="top-call" id="top-call">—</div>
   <span class="top-node" id="top-node">—</span>
   <div class="tspc"></div>
@@ -973,7 +973,7 @@ function toggleSettings() {
     // Info row: version, callsign, status
     const info = document.createElement('div');
     info.className = 'm-cfg-info';
-    info.innerHTML = '<span>v1.5.1</span>' +
+    info.innerHTML = '<span>v1.5.2</span>' +
       '<span style="color:var(--accent);background:var(--accent-bg);border:1px solid var(--accent-border);padding:2px 7px;border-radius:4px">' + (callEl ? callEl.textContent : '—') + '</span>' +
       '<span id="m-status-pill" class="' + (statusPill ? statusPill.className : '') + '">' + (statusPill ? statusPill.textContent : '') + '</span>';
 
@@ -2216,19 +2216,13 @@ async function init(){
   const lpW = LS.get('bpq_lp_width');
   if (sbW) document.getElementById('sidebar').style.width = sbW + 'px';
   if (lpW) document.getElementById('list-pane').style.width = lpW + 'px';
-  // Auto-detect host/port from URL when served from BPQ
-  const detected = detectHostFromUrl();
-  if (detected) {
-    CFG.host = detected.host;
-    CFG.port = detected.port;
-    saveCFG();
-  }
-
   syncTopbar();
 
   // Show setup screen on first run
   if(!LS.get('bpq_setup_done') || !CFG.callsign){
-    if (detected) {
+    // Pre-populate host/port from URL if no saved config yet
+    const detected = detectHostFromUrl();
+    if (detected && !LS.get('bpq_host')) {
       document.getElementById('su-host').value = detected.host;
       document.getElementById('su-port').value = detected.port;
     }

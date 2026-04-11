@@ -1,5 +1,10 @@
 # Changelog
 
+## v1.5.2 — 2026-04-11
+
+### Fixed
+- **Host/port auto-detect no longer overwrites user settings** — `detectHostFromUrl()` was running on every page load and silently overwriting any manually configured host/port. Now only applies on first run when no saved config exists.
+
 ## v1.5.1 — 2026-04-11
 
 ### Added
