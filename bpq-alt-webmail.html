@@ -2216,13 +2216,19 @@ async function init(){
   const lpW = LS.get('bpq_lp_width');
   if (sbW) document.getElementById('sidebar').style.width = sbW + 'px';
   if (lpW) document.getElementById('list-pane').style.width = lpW + 'px';
+  // Auto-detect host/port from URL when served from BPQ
+  const detected = detectHostFromUrl();
+  if (detected) {
+    CFG.host = detected.host;
+    CFG.port = detected.port;
+    saveCFG();
+  }
+
   syncTopbar();
 
   // Show setup screen on first run
   if(!LS.get('bpq_setup_done') || !CFG.callsign){
-    // Pre-populate host/port from URL if served from BPQ
-    const detected = detectHostFromUrl();
-    if (detected && !LS.get('bpq_host')) {
+    if (detected) {
       document.getElementById('su-host').value = detected.host;
       document.getElementById('su-port').value = detected.port;
     }
