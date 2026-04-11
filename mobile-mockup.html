@@ -10,25 +10,25 @@
   --mono: 'JetBrains Mono', 'Cascadia Code', 'Consolas', 'Courier New', monospace;
   --sans: 'IBM Plex Sans', 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
   --green:#00c98a; --green-dim:#009966; --amber:#f5a623; --red:#e05252; --blue:#4da6ff; --purple:#a78bfa;
-  --bg:#0d0f12; --bg2:#13161b; --bg3:#1a1e25;
-  --border:#2a2f3a; --border2:#363d4a;
-  --text:#d4dae8; --text2:#7b8499; --text3:#4a5066;
-  --accent:#00c98a; --accent-bg:#00c98a0a; --accent-border:#00c98a30;
-  --unread-dot:#4da6ff;
+  --bg:#f4f5f7; --bg2:#ffffff; --bg3:#eef0f3;
+  --border:#dde0e6; --border2:#c4c9d4;
+  --text:#1a1d24; --text2:#555e70; --text3:#9098a8;
+  --accent:#006644; --accent-bg:#e6f4ee; --accent-border:#9dd6be;
+  --unread-dot:#2563eb;
 }
 * { box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent }
-html,body { height:100%; overflow:hidden; font-family:var(--sans); font-size:14px; background:#111318; color:#8896ab }
+html,body { height:100%; overflow:hidden; font-family:var(--sans); font-size:14px; background:#e8eaed; color:#555e70 }
 
 /* ── PAGE LAYOUT — side-by-side phone frames ── */
-.page { display:flex; gap:32px; align-items:flex-start; justify-content:center; flex-wrap:wrap; padding:28px 16px; min-height:100vh; background:#111318 }
-.page-title { width:100%; text-align:center; font-family:var(--mono); font-size:0.85rem; color:var(--text3); letter-spacing:.15em; text-transform:uppercase; margin-bottom:4px }
+.page { display:flex; gap:32px; align-items:flex-start; justify-content:center; flex-wrap:wrap; padding:28px 16px; min-height:100vh; background:#e8eaed }
+.page-title { width:100%; text-align:center; font-family:var(--mono); font-size:0.85rem; color:var(--text2); letter-spacing:.15em; text-transform:uppercase; margin-bottom:4px }
 
 /* ── PHONE FRAME ── */
-.phone { width:375px; height:812px; border:2px solid #2a2f3a; border-radius:40px; overflow:hidden; background:var(--bg); display:flex; flex-direction:column; position:relative; box-shadow:0 0 60px rgba(0,201,138,.04), 0 8px 32px rgba(0,0,0,.5) }
+.phone { width:375px; height:812px; border:2px solid var(--border2); border-radius:40px; overflow:hidden; background:var(--bg); display:flex; flex-direction:column; position:relative; box-shadow:0 4px 24px rgba(0,0,0,.1), 0 1px 4px rgba(0,0,0,.06) }
 .phone-label { text-align:center; font-family:var(--mono); font-size:0.69rem; color:var(--accent); letter-spacing:.18em; text-transform:uppercase; margin-bottom:8px }
 
 /* notch */
-.notch { width:160px; height:30px; background:#000; border-radius:0 0 18px 18px; margin:0 auto; flex-shrink:0; position:relative; z-index:10 }
+.notch { width:160px; height:30px; background:#1a1d24; border-radius:0 0 18px 18px; margin:0 auto; flex-shrink:0; position:relative; z-index:10 }
 
 /* status bar (fake iOS) */
 .status-bar { display:flex; justify-content:space-between; align-items:center; padding:0 22px; height:22px; font-family:var(--mono); font-size:0.69rem; color:var(--text2); flex-shrink:0; margin-top:-26px; position:relative; z-index:5 }
@@ -41,7 +41,7 @@ html,body { height:100%; overflow:hidden; font-family:var(--sans); font-size:14p
 .m-topbar-sp { flex:1 }
 .m-call { font-family:var(--mono); font-size:0.69rem; color:var(--accent); background:var(--accent-bg); border:1px solid var(--accent-border); padding:2px 6px; border-radius:4px }
 .m-tbtn { width:32px; height:32px; display:flex; align-items:center; justify-content:center; background:transparent; border:1px solid var(--border2); border-radius:6px; color:var(--text3); font-size:0.85rem; cursor:pointer }
-.m-status { font-family:var(--mono); font-size:0.69rem; padding:2px 6px; border-radius:4px; color:var(--green); border:1px solid var(--accent-border); background:var(--accent-bg) }
+.m-status { font-family:var(--mono); font-size:0.69rem; padding:2px 6px; border-radius:4px; color:var(--accent); border:1px solid var(--accent-border); background:var(--accent-bg) }
 
 /* ── BOTTOM NAV ── */
 .m-nav { display:flex; height:56px; border-top:1px solid var(--border); background:var(--bg2); flex-shrink:0; padding-bottom:4px }
@@ -157,7 +157,7 @@ html,body { height:100%; overflow:hidden; font-family:var(--sans); font-size:14p
 <body>
 
 <div class="page">
-  <div class="page-title">BPQ-Alt-WebMail &mdash; Mobile Mockup &mdash; Dark Theme</div>
+  <div class="page-title">BPQ-Alt-WebMail &mdash; Mobile Mockup &mdash; Light Theme</div>
 
   <!-- ════════════════════════════════════════════════════
        PHONE 1 — FOLDERS / FILTERS
@@ -168,12 +168,11 @@ html,body { height:100%; overflow:hidden; font-family:var(--sans); font-size:14p
       <div class="notch"></div>
       <div class="status-bar"><span>9:41</span><span>●●●●○ WiFi ▌▌▌</span></div>
 
-      <!-- topbar -->
+      <!-- topbar (minimal — details in settings) -->
       <div class="m-topbar">
         <div class="m-logo">BPQ-ALT-WEBMAIL</div>
         <div class="m-topbar-sp"></div>
-        <div class="m-call">N8FLA</div>
-        <div class="m-status">● ok</div>
+        <div class="m-tbtn">⚙</div>
       </div>
 
       <!-- folder list -->
@@ -283,12 +282,11 @@ html,body { height:100%; overflow:hidden; font-family:var(--sans); font-size:14p
       <div class="notch"></div>
       <div class="status-bar"><span>9:41</span><span>●●●●○ WiFi ▌▌▌</span></div>
 
-      <!-- topbar -->
+      <!-- topbar (minimal — details in settings) -->
       <div class="m-topbar">
         <div class="m-logo">BPQ-ALT-WEBMAIL</div>
         <div class="m-topbar-sp"></div>
-        <div class="m-call">N8FLA</div>
-        <div class="m-status">● ok</div>
+        <div class="m-tbtn">⚙</div>
       </div>
 
       <!-- list sub-header -->
@@ -433,12 +431,11 @@ html,body { height:100%; overflow:hidden; font-family:var(--sans); font-size:14p
       <div class="notch"></div>
       <div class="status-bar"><span>9:41</span><span>●●●●○ WiFi ▌▌▌</span></div>
 
-      <!-- topbar -->
+      <!-- topbar (minimal — details in settings) -->
       <div class="m-topbar">
         <div class="m-logo">BPQ-ALT-WEBMAIL</div>
         <div class="m-topbar-sp"></div>
-        <div class="m-call">N8FLA</div>
-        <div class="m-status">● ok</div>
+        <div class="m-tbtn">⚙</div>
       </div>
 
       <!-- reader view -->
@@ -508,6 +505,69 @@ Atlanta, GA EM73</div>
         </div>
       </div>
       <div class="home-ind"></div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════════════
+       PHONE 4 — SETTINGS OVERLAY
+       ════════════════════════════════════════════════════ -->
+  <div>
+    <div class="phone-label">Settings (Full Overlay)</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="status-bar"><span>9:41</span><span>●●●●○ WiFi ▌▌▌</span></div>
+
+      <!-- settings overlay covers everything -->
+      <div style="flex:1;display:flex;flex-direction:column;padding:16px;overflow-y:auto;background:var(--bg)">
+        <!-- header -->
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid var(--border)">
+          <span style="font-family:var(--mono);font-size:0.92rem;font-weight:600;color:var(--accent)">Settings</span>
+          <button style="background:none;border:1px solid var(--border2);border-radius:6px;font-size:0.85rem;padding:4px 10px;color:var(--text2);cursor:pointer;font-family:var(--mono)">✕ Close</button>
+        </div>
+
+        <!-- info row: version, callsign, status -->
+        <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid var(--border);font-family:var(--mono);font-size:0.77rem;color:var(--text3)">
+          <span>v1.5.1</span>
+          <span style="color:var(--accent);background:var(--accent-bg);border:1px solid var(--accent-border);padding:2px 7px;border-radius:4px">N8FLA</span>
+          <span style="color:var(--green);border:1px solid var(--accent-border);background:var(--accent-bg);padding:3px 8px;border-radius:4px;font-size:0.77rem">● 11 msgs</span>
+        </div>
+
+        <!-- quick action buttons -->
+        <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid var(--border)">
+          <button class="m-tbtn" style="padding:8px 14px;width:auto;font-size:0.85rem;font-family:var(--mono)">↻ Refresh</button>
+          <button class="m-tbtn" style="padding:8px 14px;width:auto;font-size:0.85rem;font-family:var(--mono)">☀ Theme</button>
+          <button class="m-tbtn" style="padding:8px 14px;width:auto;font-size:0.85rem;font-family:var(--mono)">A-</button>
+          <button class="m-tbtn" style="padding:8px 14px;width:auto;font-size:0.85rem;font-family:var(--mono)">A+</button>
+          <button class="m-tbtn" style="padding:8px 14px;width:auto;font-size:0.85rem;font-family:var(--mono)">Reset Font</button>
+          <button class="m-tbtn" style="padding:8px 14px;width:auto;font-size:0.85rem;font-family:var(--mono)">★ Rules</button>
+        </div>
+
+        <!-- config fields -->
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div style="display:flex;flex-direction:column;gap:3px">
+            <label style="font-family:var(--mono);font-size:0.69rem;color:var(--text3);text-transform:uppercase;letter-spacing:.1em">Host</label>
+            <input style="width:100%;padding:8px 10px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;font-family:var(--mono);font-size:0.77rem;color:var(--text)" value="127.0.0.1">
+          </div>
+          <div style="display:flex;flex-direction:column;gap:3px">
+            <label style="font-family:var(--mono);font-size:0.69rem;color:var(--text3);text-transform:uppercase;letter-spacing:.1em">Port</label>
+            <input style="width:100%;padding:8px 10px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;font-family:var(--mono);font-size:0.77rem;color:var(--text)" value="8010">
+          </div>
+          <div style="display:flex;flex-direction:column;gap:3px">
+            <label style="font-family:var(--mono);font-size:0.69rem;color:var(--text3);text-transform:uppercase;letter-spacing:.1em">Callsign</label>
+            <input style="width:100%;padding:8px 10px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;font-family:var(--mono);font-size:0.77rem;color:var(--text)" value="N8FLA">
+          </div>
+          <div style="display:flex;flex-direction:column;gap:3px">
+            <label style="font-family:var(--mono);font-size:0.69rem;color:var(--text3);text-transform:uppercase;letter-spacing:.1em">QTH</label>
+            <input style="width:100%;padding:8px 10px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;font-family:var(--mono);font-size:0.77rem;color:var(--text)" value="Atlanta, GA">
+          </div>
+          <div style="display:flex;gap:8px;margin-top:8px">
+            <button style="flex:1;padding:10px;background:var(--accent);color:#fff;border:none;border-radius:6px;font-family:var(--mono);font-size:0.77rem;cursor:pointer">APPLY</button>
+            <button style="flex:1;padding:10px;background:#555;color:#fff;border:none;border-radius:6px;font-family:var(--mono);font-size:0.77rem;cursor:pointer">Reset</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- no bottom nav visible — settings covers everything -->
     </div>
   </div>
 
