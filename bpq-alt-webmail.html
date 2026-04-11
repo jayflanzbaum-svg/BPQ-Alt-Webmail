@@ -450,7 +450,7 @@ body { font-family:var(--sans); font-size:1rem; background:var(--bg); color:var(
 <!-- TOPBAR -->
 <div class="topbar">
   <div class="logo">BPQ-ALT-WEBMAIL</div>
-  <span style="font-family:var(--mono);font-size:0.69rem;color:var(--text3);margin-left:-6px">v1.5.2</span>
+  <span style="font-family:var(--mono);font-size:0.69rem;color:var(--text3);margin-left:-6px">v1.5.3</span>
   <div class="top-call" id="top-call">—</div>
   <span class="top-node" id="top-node">—</span>
   <div class="tspc"></div>
@@ -973,7 +973,7 @@ function toggleSettings() {
     // Info row: version, callsign, status
     const info = document.createElement('div');
     info.className = 'm-cfg-info';
-    info.innerHTML = '<span>v1.5.2</span>' +
+    info.innerHTML = '<span>v1.5.3</span>' +
       '<span style="color:var(--accent);background:var(--accent-bg);border:1px solid var(--accent-border);padding:2px 7px;border-radius:4px">' + (callEl ? callEl.textContent : '—') + '</span>' +
       '<span id="m-status-pill" class="' + (statusPill ? statusPill.className : '') + '">' + (statusPill ? statusPill.textContent : '') + '</span>';
 
@@ -1137,7 +1137,8 @@ function authHeaders() {
 
 // Detect if HTML is a BPQ login form (contains a password input + form POST, no WebMail links)
 function isLoginPage(html) {
-  return html.includes('type=password') && !html.match(/\/WebMail\/[A-Za-z]+\?[A-Z0-9]{6,12}/i);
+  return (html.includes('type=password') || html.includes('type="password"') || html.includes("type='password'"))
+    && !html.match(/\/WebMail\/[A-Za-z]+\?[A-Z0-9]{6,12}/i);
 }
 
 // Submit credentials to a BPQ login form and return the response HTML
@@ -1181,7 +1182,10 @@ async function bpqGet(url) {
   let html = await r.text();
 
   // If BPQ returned a login form instead of the requested page, log in and retry
-  if (isLoginPage(html) && (CFG.username || CFG.password)) {
+  if (isLoginPage(html)) {
+    if (!CFG.username && !CFG.password) {
+      throw new Error('BPQ requires login — enter your username and password in ⚙ Settings');
+    }
     const postLoginHtml = await bpqFormLogin(html, url);
     // After login, BPQ may return the requested content or a page with session links
     if (!isLoginPage(postLoginHtml)) {
@@ -2170,7 +2174,7 @@ async function connectAndLoad(){
     else{
       setStatus('err','✕ no key');
       document.getElementById('list-body').innerHTML=
-        `<div class="list-empty">Could not detect session key.<br><br>If accessing remotely, make sure your BPQ username and password are entered in ⚙ Settings.<br><br>If that doesn't help, log into BPQ WebMail directly, then click ⚙ and paste the token from the URL into Session key.</div>`;
+        `<div class="list-empty">Could not connect to BPQ node.<br><br><strong>If your BPQ requires a login:</strong><br>Click <strong>⚙ Settings</strong> and enter your BPQ username and password.<br><br><strong>If you are accessing remotely:</strong><br>Make sure host and port match the address you use to reach BPQ in your browser.<br><br><strong>If accessing from localhost:</strong><br>Verify BPQ is running and HTTPPORT is set in your config.</div>`;
       return;
     }
   }

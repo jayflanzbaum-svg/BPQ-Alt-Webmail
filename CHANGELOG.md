@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.5.3 — 2026-04-11
+
+### Fixed
+- **Login page detection handles quoted attributes** — `isLoginPage()` now matches `type="password"` and `type='password'` in addition to unquoted, fixing detection on BPQ nodes that emit quoted HTML (credit: N3MEL Glenn, KC2NJV Wayne)
+- **Login not silently skipped when credentials missing** — if BPQ returns a login page but no username/password is configured, the app now throws a clear error directing users to Settings instead of silently failing
+- **Improved connection error message** — the "could not connect" screen now walks users through three common scenarios: login required, remote access misconfiguration, and localhost/HTTPPORT issues
+
 ## v1.5.2 — 2026-04-11
 
 ### Fixed
