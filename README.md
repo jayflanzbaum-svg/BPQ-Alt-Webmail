@@ -15,12 +15,15 @@ The same single HTML file automatically adapts to phones and tablets — no sepa
 ### Interface
 - **Three-pane layout** — folder sidebar, message list, message reader (desktop)
 - **Mobile responsive** — automatically adapts to phones and tablets (≤768px). Bottom navigation bar, full-screen stacked views (Folders → Messages → Reader), floating compose button, collapsible message headers, and touch-friendly sizing. Same single HTML file — no separate mobile version needed
+- **Mobile settings overlay** — tapping the gear icon opens a full-screen settings panel with quick-action buttons (Refresh, Theme, Font, Spacing, Rules), version/callsign/status info, and all config fields
 - **Light and dark themes** — toggle with ☀/🌙 button, preference saved. Four themes: Dark, Dark Hi-Contrast, Light, Light Hi-Contrast — all work on both desktop and mobile
 - **Adjustable font size** — A- / A+ buttons scale all text simultaneously
+- **Line spacing** — cycle between Compact, Normal, and Relaxed line height in the message reader. Click the spacing button in the topbar or mobile settings. Preference saved across sessions
 - **Draggable column widths** — drag the dividers between panes (desktop)
 - **Auto-refresh** — polls BPQ every 5 minutes, shows new messages silently
+- **Auto-detect host and port** — when served from BPQ, the setup screen automatically detects the correct host and port from the browser URL. No manual entry needed on first run
 - **Session key auto-detection** — no manual token entry needed; detects and recovers from key rotation automatically
-- **Remote access with login** — automatically handles BPQ's form-based login page when accessing remotely with USER= password set. Enter your BPQ username/password in settings and the app logs in for you
+- **Remote access with login** — automatically handles BPQ's form-based login page when accessing remotely with USER= password set. Detects both quoted and unquoted HTML attributes. If credentials aren't configured, shows a clear error directing you to Settings
 
 ### Folders
 - All Messages, Personal (inbox), Bulletins, NTS Traffic, Mine, My Sent, My Received
@@ -56,7 +59,7 @@ The same single HTML file automatically adapts to phones and tablets — no sepa
 ## Installation
 
 ### Requirements
-- BPQ32 (Windows) or LinBPQ (Linux/Raspberry Pi) with web server enabled (`HTTPPORT=8010` in Telnet port config)
+- BPQ32 (Windows) or LinBPQ (Linux/Raspberry Pi) with web server enabled (HTTPPORT in Telnet port config — commonly 8080 or 8010)
 - Any modern browser (Chrome, Edge, Firefox)
 
 ### Quick Start — BPQ32 (Windows)
@@ -64,14 +67,14 @@ The same single HTML file automatically adapts to phones and tablets — no sepa
 1. Download `bpq-alt-webmail.html` from the [latest release](https://github.com/jayflanzbaum-svg/BPQ-Alt-Webmail/releases/latest)
 2. Copy it to your BPQ HTML directory:
    `C:\Users\<you>\AppData\Roaming\BPQ32\HTML\`
-3. Open in your browser: `http://127.0.0.1:8010/bpq-alt-webmail.html`
-4. On first run, enter your callsign and confirm host/port — done
+3. Open in your browser: `http://127.0.0.1:<your-HTTPPORT>/bpq-alt-webmail.html`
+4. On first run, enter your callsign — host and port are auto-detected from the URL
 
 ### Quick Start — LinBPQ (Linux / Raspberry Pi)
 
 BPQ-Alt-WebMail works on LinBPQ without any changes — the web server and WebMail URL structure are identical to BPQ32.
 
-1. Enable the web server in `linbpq.cfg` if not already done — add `HTTPPORT=8010` to your Telnet port section
+1. Enable the web server in `linbpq.cfg` if not already done — add `HTTPPORT=8080` (or your preferred port) to your Telnet port section
 2. Find your LinBPQ HTML directory (usually `~/linbpq/HTML/`) — create it if it doesn't exist:
    ```
    mkdir -p ~/linbpq/HTML
@@ -82,10 +85,10 @@ BPQ-Alt-WebMail works on LinBPQ without any changes — the web server and WebMa
      https://github.com/jayflanzbaum-svg/BPQ-Alt-Webmail/releases/latest/download/bpq-alt-webmail.html
    ```
 4. Open in a browser — from the Pi itself:
-   `http://127.0.0.1:8010/bpq-alt-webmail.html`
+   `http://127.0.0.1:8080/bpq-alt-webmail.html`
    
-   Or from another machine on your network (replace with your Pi's IP):
-   `http://192.168.1.x:8010/bpq-alt-webmail.html`
+   Or from another machine on your network (replace with your Pi's IP and port):
+   `http://192.168.1.x:8080/bpq-alt-webmail.html`
 
 > **Headless Pi tip:** Most Raspberry Pi BPQ nodes run headless with no local display. Access the web interface from any browser on your network using the Pi's IP address. You can find it with `hostname -I` on the Pi.
 
@@ -93,17 +96,17 @@ BPQ-Alt-WebMail works on LinBPQ without any changes — the web server and WebMa
 
 ### Enabling the Web Server (both platforms)
 
-If you haven't enabled the BPQ web server yet, add `HTTPPORT=8010` to your Telnet port block in `bpq32.cfg` or `linbpq.cfg`:
+If you haven't enabled the BPQ web server yet, add an HTTPPORT line to your Telnet port block in `bpq32.cfg` or `linbpq.cfg`:
 
 ```
 TELNET
-HTTPPORT=8010
+HTTPPORT=8080
 TCPPORT=8011
 ...
 ENDTELNET
 ```
 
-Restart BPQ after making this change. You can verify it's working by opening `http://127.0.0.1:8010` — you should see the BPQ node menu page.
+Restart BPQ after making this change. You can verify it's working by opening `http://127.0.0.1:8080` — you should see the BPQ node menu page.
 
 ### Optional: Local Fonts
 
@@ -131,8 +134,8 @@ The app uses `JetBrains Mono` and `IBM Plex Sans` for the best appearance. Witho
 
 ## Configuration
 
-Click **⚙** in the topbar to access settings:
-- **Host / Port** — defaults to `127.0.0.1:8010`
+Click **⚙ Settings** in the topbar to access settings:
+- **Host / Port** — defaults to `127.0.0.1:8080`. Auto-detected from the browser URL on first run when served from BPQ
 - **Callsign** — used to filter the Personal inbox
 - **Session key** — leave blank for auto-detection
 - **Signature** — multi-line field appended to replies, forwards, and new messages. Supports line breaks so you can format it like:
