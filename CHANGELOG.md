@@ -1,5 +1,10 @@
 # Changelog
 
+## v1.5.5 — 2026-04-13
+
+### Fixed
+- **Personal folder now uses WMP endpoint** — correctly shows all personal messages involving your callsign (sent and received), matching BPQ's standard WebMail behavior. Previously used WMtoMe which only showed messages addressed to you. My Received continues to show only messages addressed to you. (credit: K5DAT Lee)
+
 ## v1.5.4 — 2026-04-13
 
 ### Changed
