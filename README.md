@@ -26,8 +26,9 @@ The same single HTML file automatically adapts to phones and tablets — no sepa
 - **Remote access with login** — automatically handles BPQ's form-based login page when accessing remotely. Uses your BBS callsign and BBS password (not the sysop credentials from BPQ config `USER=` lines). Detects both quoted and unquoted HTML attributes. If credentials aren't configured, shows a clear error directing you to Settings
 
 ### Folders
-- All Messages, Personal (inbox), Bulletins, NTS Traffic, Mine, My Sent, My Received
-- **Personal subfilters** — filter by sender callsign; SYSTEM pinned at top
+- My Received (primary inbox), Bulletins, NTS Traffic, Mine, My Sent, All Messages
+- **Unread badges** — My Received, Bulletins, and NTS Traffic show unread message counts in the sidebar, updated on every auto-refresh
+- **My Received subfilters** — filter by sender callsign; SYSTEM pinned at top
 - **Bulletin subfilters** — filter by TO category (SITREP, TECHNI, ARISS, etc.)
 - Message counts and unread indicators on every filter
 
@@ -126,9 +127,9 @@ The app uses `JetBrains Mono` and `IBM Plex Sans` for the best appearance. Witho
 
 **Killing messages** — BPQ marks messages as killed but doesn't purge them immediately (housekeeping runs periodically). This app hides killed messages locally right away and remembers them across reloads so they don't reappear.
 
-**Personal inbox** — uses BPQ's `/WebMail/WMP` endpoint which returns all personal messages involving your callsign (both sent and received), matching BPQ's standard WebMail behavior. Use **My Received** to see only messages addressed to you, or **My Sent** for messages you sent.
+**My Received inbox** — uses BPQ's `/WebMail/WMtoMe` endpoint which returns personal messages addressed to your callsign. Client-side filtering ensures only P-type messages to your call are shown.
 
-**Star rules** — rules match against list metadata (fast, no body fetch required). The FROM field for the Personal inbox is resolved from the message body header for accuracy.
+**Star rules** — rules match against list metadata (fast, no body fetch required). The FROM field for My Received is resolved from the message body header for accuracy.
 
 ---
 
@@ -136,7 +137,7 @@ The app uses `JetBrains Mono` and `IBM Plex Sans` for the best appearance. Witho
 
 Click **⚙ Settings** in the topbar to access settings:
 - **Host / Port** — defaults to `127.0.0.1:8080`. Auto-detected from the browser URL on first run when served from BPQ
-- **BBS Callsign** — your BBS login callsign, also used to filter the Personal inbox
+- **BBS Callsign** — your BBS login callsign, also used to filter My Received
 - **BBS Password** — your BBS password (not the sysop password from `USER=` lines in your BPQ config)
 - **Session key** — leave blank for auto-detection
 - **Signature** — multi-line field appended to replies, forwards, and new messages. Supports line breaks so you can format it like:

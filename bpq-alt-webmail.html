@@ -137,6 +137,8 @@ body { font-family:var(--sans); font-size:1rem; background:var(--bg); color:var(
 .fldr-ico { font-size:0.77rem; width:13px; text-align:center; flex-shrink:0 }
 .fldr-lbl { flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis }
 .fldr-bdg { font-family:var(--mono); font-size:0.69rem; padding:1px 4px; border-radius:3px; background:#4da6ff20; color:var(--blue); flex-shrink:0 }
+.fldr-bdg.bdg-green { background:#22c55e20; color:var(--green) }
+.fldr-bdg.bdg-purple { background:#a855f720; color:#a855f7 }
 
 /* subfilters */
 .sf-wrap { overflow-y:auto; overflow-x:hidden; max-height:0; transition:max-height .2s ease }
@@ -488,25 +490,27 @@ body { font-family:var(--sans); font-size:1rem; background:var(--bg); color:var(
     <div class="cmp-wrap"><button class="cmp-btn" onclick="openCompose()">+ NEW MESSAGE</button></div>
     <div class="fldr-sep">Folders</div>
 
-    <div class="fldr" id="fldr-ALL" onclick="loadFolder('ALL','All Messages')">
-      <span class="fldr-ico">◈</span><span class="fldr-lbl">All Messages</span>
-    </div>
-
     <div class="fldr active" id="fldr-Personal" onclick="activatePersonal()">
-      <span class="fldr-ico">✉</span><span class="fldr-lbl">Personal</span>
+      <span class="fldr-ico">✉</span><span class="fldr-lbl">My Received</span>
       <span class="fldr-bdg" id="bdg-Personal" style="display:none"></span>
     </div>
     <div class="sf-wrap open" id="sf-pers-wrap"></div>
 
     <div class="fldr" id="fldr-Bulls" onclick="activateBulletins()">
       <span class="fldr-ico">◉</span><span class="fldr-lbl">Bulletins</span>
+      <span class="fldr-bdg bdg-green" id="bdg-Bulls" style="display:none"></span>
     </div>
     <div class="sf-wrap" id="sf-bulls-wrap"></div>
 
-    <div class="fldr" id="fldr-NTS"    onclick="loadFolder('NTS','NTS Traffic')"><span class="fldr-ico">⊕</span><span class="fldr-lbl">NTS Traffic</span></div>
+    <div class="fldr" id="fldr-NTS" onclick="loadFolder('NTS','NTS Traffic')">
+      <span class="fldr-ico">⊕</span><span class="fldr-lbl">NTS Traffic</span>
+      <span class="fldr-bdg bdg-purple" id="bdg-NTS" style="display:none"></span>
+    </div>
     <div class="fldr" id="fldr-Mine"   onclick="loadFolder('Mine','Mine')"><span class="fldr-ico">◎</span><span class="fldr-lbl">Mine</span></div>
     <div class="fldr" id="fldr-MySent" onclick="loadFolder('MySent','My Sent')"><span class="fldr-ico">▲</span><span class="fldr-lbl">My Sent</span></div>
-    <div class="fldr" id="fldr-MyRxed" onclick="loadFolder('MyRxed','My Received')"><span class="fldr-ico">▼</span><span class="fldr-lbl">My Received</span></div>
+    <div class="fldr" id="fldr-ALL" onclick="loadFolder('ALL','All Messages')">
+      <span class="fldr-ico">◈</span><span class="fldr-lbl">All Messages</span>
+    </div>
 
     <div class="sidebar-footer">
       <div>Node: <span id="si-node">—</span></div>
@@ -519,7 +523,7 @@ body { font-family:var(--sans); font-size:1rem; background:var(--bg); color:var(
 
   <div class="list-pane" id="list-pane">
     <div class="list-hd">
-      <span class="list-title" id="list-title">Personal</span>
+      <span class="list-title" id="list-title">My Received</span>
       <button id="star-filter-btn" onclick="toggleStarFilter()" title="Filter by starred"
         style="background:none;border:none;cursor:pointer;font-size:0.92rem;color:var(--text3);padding:0 4px;line-height:1;transition:color .15s">★</button>
       <span class="list-count" id="list-count">—</span>
@@ -1110,12 +1114,11 @@ function syncTopbar() {
 // ═══════════════════════════════════════════════════
 const FOLDER_PATHS = {
   ALL:      k=>`/WebMail/WMALL?${k}`,
-  Personal: k=>`/WebMail/WMP?${k}`,  // all personal messages involving user (sent + received)
+  Personal: k=>`/WebMail/WMtoMe?${k}`,  // messages addressed to user
   Bulls:    k=>`/WebMail/WMB?${k}`,
   NTS:      k=>`/WebMail/WMT?${k}`,
   Mine:     k=>`/WebMail/WMMine?${k}`,
   MySent:   k=>`/WebMail/WMfromMe?${k}`,
-  MyRxed:   k=>`/WebMail/WMtoMe?${k}`,
 };
 function base() {
   return `http://${CFG.host}:${CFG.port}`;
@@ -1438,7 +1441,7 @@ function buildBullFilters(msgs) {
 function setPersFilter(f) {
   persFilter=f;
   buildPersFilters(allMsgs);
-  const label = f==='ALL' ? 'Personal' : `Personal · ${f}`;
+  const label = f==='ALL' ? 'My Received' : `My Received · ${f}`;
   document.getElementById('list-title').textContent=label;
   const filtered=getFiltered();
   renderList(filtered);
@@ -1501,7 +1504,7 @@ function toggleStarFilter() {
 function activatePersonal() {
   document.getElementById('sf-pers-wrap').classList.add('open');
   document.getElementById('sf-bulls-wrap').classList.remove('open');
-  loadFolder('Personal','Personal');
+  loadFolder('Personal','My Received');
 }
 function activateBulletins() {
   document.getElementById('sf-bulls-wrap').classList.add('open');
@@ -1536,11 +1539,15 @@ async function loadFolder(folder, label) {
     }
     let msgs=parseList(html);
 
-    // Personal: keep only P-type messages (WMP should already filter, but guard against mixed results)
+    // Personal (My Received): filter to only P-type messages addressed to us
+    // WMtoMe should handle this but some LinBPQ versions return mixed types
     if(folder==='Personal') {
+      const myCall=(CFG.callsign||'').toUpperCase();
       msgs = msgs.filter(m => {
         const t = (m.type||'').toUpperCase();
-        return t.startsWith('P');
+        if (!t.startsWith('P')) return false;
+        if (myCall && m.to && !m.to.toUpperCase().includes(myCall)) return false;
+        return true;
       });
 
       msgs=sortPersonal(msgs);
@@ -2062,8 +2069,31 @@ async function silentRefresh(){
     const f=getFiltered(); renderList(f); updateListCount(f);
     lastRefresh=new Date();
     if(added.length) toast(`${added.length} new message${added.length>1?'s':''}`, 'info');
+    updateFolderBadges();
   }catch(_){}
 }
+
+// ── SIDEBAR UNREAD BADGES ─────────────────────────────
+async function updateFolderBadges(){
+  if(!CFG.key) return;
+  const folders = [
+    { key:'Personal', id:'bdg-Personal' },
+    { key:'Bulls',    id:'bdg-Bulls' },
+    { key:'NTS',      id:'bdg-NTS' }
+  ];
+  for(const f of folders){
+    try {
+      const html = await bpqGet(base()+FOLDER_PATHS[f.key](CFG.key));
+      const msgs = parseList(html).filter(m=>!killedSet.has(m.num));
+      const unread = msgs.filter(m=>!readSet.has(m.num)).length;
+      const el = document.getElementById(f.id);
+      if(!el) continue;
+      if(unread>0){ el.textContent=unread; el.style.display=''; }
+      else { el.style.display='none'; }
+    }catch(_){}
+  }
+}
+
 document.addEventListener('visibilitychange',()=>{
   if(document.hidden) stopRefresh();
   else { silentRefresh(); startRefresh(); }
@@ -2178,9 +2208,10 @@ async function connectAndLoad(){
       return;
     }
   }
-  await loadFolder('Personal','Personal');
+  await loadFolder('Personal','My Received');
   lastRefresh=new Date();
   document.getElementById('refresh-lbl').textContent='just refreshed';
+  updateFolderBadges();
   startRefresh();
 }
 
