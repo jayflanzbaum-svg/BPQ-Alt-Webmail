@@ -1,9 +1,23 @@
 # Changelog
 
+## v1.5.6 — 2026-04-13
+
+### Changed
+- **Renamed "Personal" to "My Received"** — clearer label matching actual behavior (received messages only)
+- **Reverted Personal/My Received to WMtoMe endpoint** (received only, not sent+received)
+- **Restored TO-callsign filter** for My Received
+- **Removed redundant My Received folder** (was identical to Personal)
+- **Reordered sidebar** — My Received, Bulletins, NTS Traffic, Mine, My Sent, All Messages
+
+### Added
+- **Unread badges on sidebar folders** — blue for My Received, green for Bulletins, purple for NTS Traffic — updated on load and every auto-refresh
+
 ## v1.5.5 — 2026-04-13
 
-### Fixed
-- **Personal folder now uses WMP endpoint** — correctly shows all personal messages involving your callsign (sent and received), matching BPQ's standard WebMail behavior. Previously used WMtoMe which only showed messages addressed to you. My Received continues to show only messages addressed to you. (credit: K5DAT Lee)
+### Changed
+- **Clarified WebMail login credentials** — all labels and hints now specify "BBS Callsign" and "BBS Password" instead of "BPQ Username / Password", making it clear that WebMail login uses your BBS callsign and password — not the sysop credentials from your BPQ config `USER=` lines (credit: John Wiseman G8BPQ for clarifying BPQ authentication)
+- **Removed debug console.log statements** from `bpqFormLogin()`
+- **Updated README and mobile mockup** to match v1.5.4–v1.5.5 changes (credit: K5DAT Lee)
 
 ## v1.5.4 — 2026-04-13
 
