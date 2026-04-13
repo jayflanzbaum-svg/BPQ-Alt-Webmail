@@ -435,12 +435,13 @@ body { font-family:var(--sans); font-size:1rem; background:var(--bg); color:var(
       <div style="font-family:var(--mono);font-size:0.69rem;color:var(--text3);margin-top:4px">This is HTTPPORT in your BPQ config — not the telnet/TCP port. Typically 8080 or 8088.</div>
     </div>
     <div class="setup-field">
-      <span class="setup-lbl">BPQ Username (if login required)</span>
-      <input class="setup-in" id="su-user" placeholder="leave blank if no login required">
+      <span class="setup-lbl">BBS Callsign (for WebMail login)</span>
+      <input class="setup-in" id="su-user" placeholder="your callsign e.g. N4SFL">
     </div>
     <div class="setup-field">
-      <span class="setup-lbl">BPQ Password (if login required)</span>
-      <input class="setup-in" id="su-pass" type="password" placeholder="leave blank if no login required">
+      <span class="setup-lbl">BBS Password (for WebMail login)</span>
+      <input class="setup-in" id="su-pass" type="password" placeholder="your BBS password">
+      <div style="font-family:var(--mono);font-size:0.69rem;color:var(--text3);margin-top:4px">WebMail uses your BBS callsign and password — not the sysop credentials from your BPQ config USER= lines.</div>
     </div>
     <button class="setup-go" onclick="completeSetup()">Connect to Node ▶</button>
     <div class="setup-hint">Session key is auto-detected.<br>You can change these settings later via the ⚙ button.</div>
@@ -450,7 +451,7 @@ body { font-family:var(--sans); font-size:1rem; background:var(--bg); color:var(
 <!-- TOPBAR -->
 <div class="topbar">
   <div class="logo">BPQ-ALT-WEBMAIL</div>
-  <span style="font-family:var(--mono);font-size:0.69rem;color:var(--text3);margin-left:-6px">v1.5.3</span>
+  <span style="font-family:var(--mono);font-size:0.69rem;color:var(--text3);margin-left:-6px">v1.5.4</span>
   <div class="top-call" id="top-call">—</div>
   <span class="top-node" id="top-node">—</span>
   <div class="tspc"></div>
@@ -471,8 +472,8 @@ body { font-family:var(--sans); font-size:1rem; background:var(--bg); color:var(
 <div id="cfg-bar">
   <label>Host</label><input class="cfg-in" id="cfg-host" value="127.0.0.1" style="width:110px">
   <label>Port</label><input class="cfg-in" id="cfg-port" value="8010" style="width:50px">
-  <label>Username</label><input class="cfg-in" id="cfg-user" style="width:80px" placeholder="sysop">
-  <label>Password</label><input class="cfg-in" id="cfg-pass" type="password" style="width:80px" placeholder="password">
+  <label>BBS Callsign</label><input class="cfg-in" id="cfg-user" style="width:80px" placeholder="callsign">
+  <label>BBS Password</label><input class="cfg-in" id="cfg-pass" type="password" style="width:80px" placeholder="password">
   <label>Callsign</label><input class="cfg-in" id="cfg-call" value="" style="width:80px">
   <label>QTH</label><input class="cfg-in" id="cfg-qth" style="width:120px" placeholder="City, State">
   <label>Session key</label><input class="cfg-in" id="cfg-key" value="" style="width:100px" placeholder="auto-detect">
@@ -973,7 +974,7 @@ function toggleSettings() {
     // Info row: version, callsign, status
     const info = document.createElement('div');
     info.className = 'm-cfg-info';
-    info.innerHTML = '<span>v1.5.3</span>' +
+    info.innerHTML = '<span>v1.5.4</span>' +
       '<span style="color:var(--accent);background:var(--accent-bg);border:1px solid var(--accent-border);padding:2px 7px;border-radius:4px">' + (callEl ? callEl.textContent : '—') + '</span>' +
       '<span id="m-status-pill" class="' + (statusPill ? statusPill.className : '') + '">' + (statusPill ? statusPill.textContent : '') + '</span>';
 
@@ -1137,6 +1138,8 @@ function authHeaders() {
 
 // Detect if HTML is a BPQ login form (contains a password input + form POST, no WebMail links)
 function isLoginPage(html) {
+  console.log('isLoginPage check - type=password found:', html.includes('type=password') || html.includes('type="password"'));
+  console.log('isLoginPage check - WebMail key found:', !!html.match(/\/WebMail\/[A-Za-z]+\?[A-Z0-9]{6,12}/i));
   return (html.includes('type=password') || html.includes('type="password"') || html.includes("type='password'"))
     && !html.match(/\/WebMail\/[A-Za-z]+\?[A-Z0-9]{6,12}/i);
 }
@@ -1173,7 +1176,8 @@ async function bpqFormLogin(loginHtml, originUrl) {
     body: formData.toString()
   });
 
-  return r.text();
+  const responseText = await r.text();
+  return responseText;
 }
 
 async function bpqGet(url) {

@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.5.4 — 2026-04-13
+
+### Changed
+- **Clarified WebMail login credentials** — all labels and hints now specify "BBS Callsign" and "BBS Password" instead of "BPQ Username / Password", making it clear that WebMail login uses your BBS callsign and password — not the sysop credentials from your BPQ config `USER=` lines (credit: John Wiseman G8BPQ for clarifying BPQ authentication)
+- **Removed debug console.log statements** from `bpqFormLogin()`
+
 ## v1.5.3 — 2026-04-11
 
 ### Fixed
