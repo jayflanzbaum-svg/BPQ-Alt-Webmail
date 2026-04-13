@@ -23,7 +23,7 @@ The same single HTML file automatically adapts to phones and tablets — no sepa
 - **Auto-refresh** — polls BPQ every 5 minutes, shows new messages silently
 - **Auto-detect host and port** — when served from BPQ, the setup screen automatically detects the correct host and port from the browser URL. No manual entry needed on first run
 - **Session key auto-detection** — no manual token entry needed; detects and recovers from key rotation automatically
-- **Remote access with login** — automatically handles BPQ's form-based login page when accessing remotely with USER= password set. Detects both quoted and unquoted HTML attributes. If credentials aren't configured, shows a clear error directing you to Settings
+- **Remote access with login** — automatically handles BPQ's form-based login page when accessing remotely. Uses your BBS callsign and BBS password (not the sysop credentials from BPQ config `USER=` lines). Detects both quoted and unquoted HTML attributes. If credentials aren't configured, shows a clear error directing you to Settings
 
 ### Folders
 - All Messages, Personal (inbox), Bulletins, NTS Traffic, Mine, My Sent, My Received
@@ -126,7 +126,7 @@ The app uses `JetBrains Mono` and `IBM Plex Sans` for the best appearance. Witho
 
 **Killing messages** — BPQ marks messages as killed but doesn't purge them immediately (housekeeping runs periodically). This app hides killed messages locally right away and remembers them across reloads so they don't reappear.
 
-**Personal inbox** — uses BPQ's `/WebMail/WMtoMe` endpoint which returns only messages addressed to your callsign. Messages you sent do not appear here.
+**Personal inbox** — uses BPQ's `/WebMail/WMP` endpoint which returns all personal messages involving your callsign (both sent and received), matching BPQ's standard WebMail behavior. Use **My Received** to see only messages addressed to you, or **My Sent** for messages you sent.
 
 **Star rules** — rules match against list metadata (fast, no body fetch required). The FROM field for the Personal inbox is resolved from the message body header for accuracy.
 
@@ -136,7 +136,8 @@ The app uses `JetBrains Mono` and `IBM Plex Sans` for the best appearance. Witho
 
 Click **⚙ Settings** in the topbar to access settings:
 - **Host / Port** — defaults to `127.0.0.1:8080`. Auto-detected from the browser URL on first run when served from BPQ
-- **Callsign** — used to filter the Personal inbox
+- **BBS Callsign** — your BBS login callsign, also used to filter the Personal inbox
+- **BBS Password** — your BBS password (not the sysop password from `USER=` lines in your BPQ config)
 - **Session key** — leave blank for auto-detection
 - **Signature** — multi-line field appended to replies, forwards, and new messages. Supports line breaks so you can format it like:
   ```
