@@ -116,8 +116,8 @@ The app uses `JetBrains Mono` and `IBM Plex Sans` for the best appearance. Witho
 1. Download from [fontsource.org/fonts/jetbrains-mono](https://fontsource.org/fonts/jetbrains-mono) and [fontsource.org/fonts/ibm-plex-sans](https://fontsource.org/fonts/ibm-plex-sans)
 2. Create a `fonts/` folder in your BPQ HTML directory
 3. Place the woff2 files there, named:
-   - `jbm-400.woff2`, `jbm-500.woff2`, `jbm-600.woff2`
-   - `ibm-300.woff2`, `ibm-400.woff2`, `ibm-500.woff2`, `ibm-600.woff2`
+   - `jbm-400-normal.woff2`, `jbm-500-normal.woff2`, `jbm-600-normal.woff2`
+   - `ibm-300-normal.woff2`, `ibm-400-normal.woff2`, `ibm-500-normal.woff2`, `ibm-600-normal.woff2`
 
 ---
 

@@ -14,37 +14,37 @@
 ─────────────────────────────────────────────────────── */
 @font-face {
   font-family:'JetBrains Mono';
-  src: url('fonts/jbm-400.woff2') format('woff2');
+  src: url('fonts/jbm-400-normal.woff2') format('woff2');
   font-weight:400; font-display:swap;
 }
 @font-face {
   font-family:'JetBrains Mono';
-  src: url('fonts/jbm-500.woff2') format('woff2');
+  src: url('fonts/jbm-500-normal.woff2') format('woff2');
   font-weight:500; font-display:swap;
 }
 @font-face {
   font-family:'JetBrains Mono';
-  src: url('fonts/jbm-600.woff2') format('woff2');
+  src: url('fonts/jbm-600-normal.woff2') format('woff2');
   font-weight:600; font-display:swap;
 }
 @font-face {
   font-family:'IBM Plex Sans';
-  src: url('fonts/ibm-300.woff2') format('woff2');
+  src: url('fonts/ibm-300-normal.woff2') format('woff2');
   font-weight:300; font-display:swap;
 }
 @font-face {
   font-family:'IBM Plex Sans';
-  src: url('fonts/ibm-400.woff2') format('woff2');
+  src: url('fonts/ibm-400-normal.woff2') format('woff2');
   font-weight:400; font-display:swap;
 }
 @font-face {
   font-family:'IBM Plex Sans';
-  src: url('fonts/ibm-500.woff2') format('woff2');
+  src: url('fonts/ibm-500-normal.woff2') format('woff2');
   font-weight:500; font-display:swap;
 }
 @font-face {
   font-family:'IBM Plex Sans';
-  src: url('fonts/ibm-600.woff2') format('woff2');
+  src: url('fonts/ibm-600-normal.woff2') format('woff2');
   font-weight:600; font-display:swap;
 }
 /* ── THEMES ── */
@@ -2111,7 +2111,6 @@ function toast(msg,type='ok'){
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 
 document.getElementById('del-ov').addEventListener('click',e=>{if(e.target===e.currentTarget)closeKill();});
-document.getElementById('cmp-ov').addEventListener('click',e=>{if(e.target===e.currentTarget)closeCompose();});
 
 // ═══════════════════════════════════════════════════
 //  MOBILE NAVIGATION
