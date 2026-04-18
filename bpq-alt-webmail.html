@@ -263,12 +263,12 @@ body { font-family:var(--sans); font-size:1rem; background:var(--bg); color:var(
 /* ── OVERLAYS ── */
 .overlay { position:fixed; inset:0; background:rgba(0,0,0,.6); display:none; align-items:center; justify-content:center; z-index:100 }
 .overlay.open { display:flex }
-.modal { background:var(--bg2); border:1px solid var(--border2); border-radius:8px; width:1040px; max-width:96vw; display:flex; flex-direction:column; resize:horizontal; overflow:auto; min-width:360px }
+.modal { background:var(--bg2); border:1px solid var(--border2); border-radius:8px; width:1040px; max-width:96vw; max-height:92vh; display:flex; flex-direction:column; resize:horizontal; overflow:hidden; min-width:360px }
 .modal-hd { padding:12px 16px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center }
 .modal-ttl { font-family:var(--mono); font-size:0.85rem; font-weight:600; color:var(--text); text-transform:uppercase; letter-spacing:.1em }
 .modal-x { background:none; border:none; color:var(--text3); cursor:pointer; font-size:1.38rem; line-height:1; padding:0 3px }
 .modal-x:hover { color:var(--text) }
-.modal-bd { padding:14px 16px; display:flex; flex-direction:column; gap:10px }
+.modal-bd { padding:14px 16px; display:flex; flex-direction:column; gap:10px; overflow-y:auto; min-height:0; flex:1 1 auto }
 .field { display:flex; flex-direction:column; gap:3px }
 .field-lbl { font-family:var(--mono); font-size:0.77rem; color:var(--text3); text-transform:uppercase; letter-spacing:.1em }
 .field-in { padding:7px 10px; background:var(--bg); border:1px solid var(--border); border-radius:4px; color:var(--text); font-family:var(--mono); font-size:0.92rem; outline:none; width:100% }
@@ -453,7 +453,7 @@ body { font-family:var(--sans); font-size:1rem; background:var(--bg); color:var(
 <!-- TOPBAR -->
 <div class="topbar">
   <div class="logo">BPQ-ALT-WEBMAIL</div>
-  <span style="font-family:var(--mono);font-size:0.69rem;color:var(--text3);margin-left:-6px">v1.5.7</span>
+  <span style="font-family:var(--mono);font-size:0.69rem;color:var(--text3);margin-left:-6px">v1.5.8</span>
   <div class="top-call" id="top-call">—</div>
   <span class="top-node" id="top-node">—</span>
   <div class="tspc"></div>
@@ -978,7 +978,7 @@ function toggleSettings() {
     // Info row: version, callsign, status
     const info = document.createElement('div');
     info.className = 'm-cfg-info';
-    info.innerHTML = '<span>v1.5.7</span>' +
+    info.innerHTML = '<span>v1.5.8</span>' +
       '<span style="color:var(--accent);background:var(--accent-bg);border:1px solid var(--accent-border);padding:2px 7px;border-radius:4px">' + (callEl ? callEl.textContent : '—') + '</span>' +
       '<span id="m-status-pill" class="' + (statusPill ? statusPill.className : '') + '">' + (statusPill ? statusPill.textContent : '') + '</span>';
 

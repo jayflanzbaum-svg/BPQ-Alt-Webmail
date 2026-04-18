@@ -1,5 +1,10 @@
 # Changelog
 
+## v1.5.8 — 2026-04-18
+
+### Fixed
+- **Compose modal no longer overflows small laptop screens** — the modal now caps at 92% of viewport height and the body scrolls internally, so the TO field and Send button always remain visible regardless of screen size. Previously, on smaller laptop viewports the top (TO line) and bottom (Send button) could be clipped with no way to scroll. (credit: G7TAJ Steve)
+
 ## v1.5.7 — 2026-04-18
 
 ### Changed
