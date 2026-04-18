@@ -7,7 +7,7 @@
 - **Compose modal is now user-resizable** — drag the edge to resize; width persists across sessions via localStorage
 
 ### Fixed
-- **Font filenames match fontsource.org download names** — drop the woff2 files into `fonts/` as-downloaded; no manual renaming required (credit: K5DAT Lee)
+- **Font filenames match fontsource.org download names** — drop the woff2 files into `fonts/` as-downloaded; no manual renaming required (credit: KC2NJV Wayne Spivak)
 - **Compose/reply dialog no longer closes on backdrop click** — prevents accidental loss of draft content
 
 ## v1.5.6 — 2026-04-13
