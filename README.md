@@ -109,10 +109,6 @@ ENDTELNET
 
 Restart BPQ after making this change. You can verify it's working by opening `http://127.0.0.1:8080` — you should see the BPQ node menu page.
 
-### Local Fonts
-
-The app uses `JetBrains Mono` and `IBM Plex Sans` for the best appearance. The required woff2 files are bundled in the `fonts/` folder of this repo — just copy that folder alongside `bpq-alt-webmail.html` into your BPQ HTML directory. If the `fonts/` folder is missing, the app falls back to `Consolas` / system fonts (perfectly usable).
-
 ---
 
 ## Usage Notes
