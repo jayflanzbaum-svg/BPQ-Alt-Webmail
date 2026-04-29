@@ -432,6 +432,14 @@ body { font-family:var(--sans); font-size:1rem; background:var(--bg); color:var(
       <div style="font-family:var(--mono);font-size:0.69rem;color:var(--text3);margin-top:4px">This is HTTPPORT in your BPQ config — not the telnet/TCP port. Typically 8080 or 8088.</div>
     </div>
     <div class="setup-field">
+      <span class="setup-lbl">Protocol</span>
+      <select class="setup-in" id="su-proto">
+        <option value="">auto (http unless port is 443)</option>
+        <option value="http">http — local / LAN access</option>
+        <option value="https">https — TLS / Cloudflare tunnel / reverse proxy</option>
+      </select>
+    </div>
+    <div class="setup-field">
       <span class="setup-lbl">BBS Callsign (for WebMail login)</span>
       <input class="setup-in" id="su-user" placeholder="your callsign e.g. N4SFL">
     </div>
@@ -448,7 +456,7 @@ body { font-family:var(--sans); font-size:1rem; background:var(--bg); color:var(
 <!-- TOPBAR -->
 <div class="topbar">
   <div class="logo">BPQ-ALT-WEBMAIL</div>
-  <span style="font-family:var(--mono);font-size:0.69rem;color:var(--text3);margin-left:-6px">v1.5.8</span>
+  <span style="font-family:var(--mono);font-size:0.69rem;color:var(--text3);margin-left:-6px">v1.5.9-test</span>
   <div class="top-call" id="top-call">—</div>
   <span class="top-node" id="top-node">—</span>
   <div class="tspc"></div>
@@ -467,6 +475,11 @@ body { font-family:var(--sans); font-size:1rem; background:var(--bg); color:var(
 
 <!-- CFG BAR (hidden until ⚙ pressed) -->
 <div id="cfg-bar">
+  <label>Protocol</label><select class="cfg-in" id="cfg-proto" style="width:80px">
+    <option value="">auto</option>
+    <option value="http">http</option>
+    <option value="https">https</option>
+  </select>
   <label>Host</label><input class="cfg-in" id="cfg-host" value="127.0.0.1" style="width:110px">
   <label>Port</label><input class="cfg-in" id="cfg-port" value="8010" style="width:50px">
   <label>BBS Callsign</label><input class="cfg-in" id="cfg-user" style="width:80px" placeholder="callsign">
@@ -666,6 +679,7 @@ const LS = {
 let CFG = {
   host:      LS.get('bpq_host')     || '127.0.0.1',
   port:      LS.get('bpq_port')     || '8080',
+  protocol:  LS.get('bpq_proto')    || '',   // '' = auto, 'http', 'https'
   key:       LS.get('bpq_key')      || '',
   callsign:  LS.get('bpq_call')     || '',
   signature: LS.get('bpq_sig')      || '',
@@ -675,14 +689,15 @@ let CFG = {
 };
 
 function saveCFG() {
-  LS.set('bpq_host', CFG.host);
-  LS.set('bpq_port', CFG.port);
-  LS.set('bpq_key',  CFG.key);
-  LS.set('bpq_call', CFG.callsign);
-  LS.set('bpq_sig',  CFG.signature);
-  LS.set('bpq_user', CFG.username);
-  LS.set('bpq_pass', CFG.password);
-  LS.set('bpq_qth',  CFG.qth);
+  LS.set('bpq_host',  CFG.host);
+  LS.set('bpq_port',  CFG.port);
+  LS.set('bpq_proto', CFG.protocol);
+  LS.set('bpq_key',   CFG.key);
+  LS.set('bpq_call',  CFG.callsign);
+  LS.set('bpq_sig',   CFG.signature);
+  LS.set('bpq_user',  CFG.username);
+  LS.set('bpq_pass',  CFG.password);
+  LS.set('bpq_qth',   CFG.qth);
 }
 
 // ═══════════════════════════════════════════════════
@@ -973,7 +988,7 @@ function toggleSettings() {
     // Info row: version, callsign, status
     const info = document.createElement('div');
     info.className = 'm-cfg-info';
-    info.innerHTML = '<span>v1.5.8</span>' +
+    info.innerHTML = '<span>v1.5.9-test</span>' +
       '<span style="color:var(--accent);background:var(--accent-bg);border:1px solid var(--accent-border);padding:2px 7px;border-radius:4px">' + (callEl ? callEl.textContent : '—') + '</span>' +
       '<span id="m-status-pill" class="' + (statusPill ? statusPill.className : '') + '">' + (statusPill ? statusPill.textContent : '') + '</span>';
 
@@ -1035,14 +1050,23 @@ function hideSetup() {
   document.getElementById('setup-screen').style.display='none';
 }
 function parseHostInput(hostRaw, portRaw) {
-  let host = hostRaw.trim().replace(/^https?:\/\//i, '');
+  let raw  = hostRaw.trim();
+  let proto = null;
+  const protoMatch = raw.match(/^(https?):\/\//i);
+  if (protoMatch) {
+    proto = protoMatch[1].toLowerCase();
+    raw = raw.slice(protoMatch[0].length);
+  }
+  let host = raw;
   let port = portRaw.trim();
   if (host.includes(':')) {
     const parts = host.split(':');
     host = parts[0];
     if (!port || port === '8080') port = parts[1];
   }
-  return { host, port: port || '8080' };
+  // Infer protocol from port if not explicitly given
+  if (!proto && port === '443') proto = 'https';
+  return { host, port: port || '8080', proto };
 }
 function completeSetup() {
   const call = document.getElementById('su-call').value.trim().toUpperCase();
@@ -1056,7 +1080,10 @@ function completeSetup() {
     const parsed = parseHostInput(document.getElementById('su-host').value, document.getElementById('su-port').value);
     CFG.host = parsed.host;
     CFG.port = parsed.port;
+    if (parsed.proto) CFG.protocol = parsed.proto;
   }
+  // Selector is the explicit source of truth; '' means auto and is also valid
+  CFG.protocol = document.getElementById('su-proto').value;
   CFG.qth      = document.getElementById('su-qth').value.trim();
   CFG.username = document.getElementById('su-user').value.trim();
   CFG.password = document.getElementById('su-pass').value;
@@ -1075,6 +1102,8 @@ function applyConfig() {
   const parsed  = parseHostInput(document.getElementById('cfg-host').value, document.getElementById('cfg-port').value);
   CFG.host      = parsed.host;
   CFG.port      = parsed.port;
+  // Selector is the explicit source of truth; '' means auto and is also valid
+  CFG.protocol = document.getElementById('cfg-proto').value;
   CFG.callsign  = document.getElementById('cfg-call').value.trim().toUpperCase() || CFG.callsign;
   CFG.key       = document.getElementById('cfg-key').value.trim();
   CFG.signature = document.getElementById('cfg-sig').value;
@@ -1090,12 +1119,14 @@ function applyConfig() {
 }
 function syncTopbar() {
   document.getElementById('top-call').textContent = CFG.callsign || '—';
-  document.getElementById('top-node').textContent = `${CFG.host}:${CFG.port}`;
+  document.getElementById('top-node').textContent = base();
   document.getElementById('si-node').textContent  = CFG.callsign || '—';
   document.getElementById('si-qth').textContent   = CFG.qth || '—';
   // Sync cfg bar fields
   document.getElementById('cfg-host').value = CFG.host;
   document.getElementById('cfg-port').value = CFG.port;
+  const protoSel = document.getElementById('cfg-proto');
+  if (protoSel) protoSel.value = CFG.protocol || '';
   document.getElementById('cfg-call').value = CFG.callsign;
   document.getElementById('cfg-key').value  = CFG.key;
   document.getElementById('cfg-sig').value  = CFG.signature;
@@ -1116,7 +1147,15 @@ const FOLDER_PATHS = {
   MySent:   k=>`/WebMail/WMfromMe?${k}`,
 };
 function base() {
-  return `http://${CFG.host}:${CFG.port}`;
+  // Resolve protocol: explicit config → infer from port → fallback to page protocol
+  let proto = CFG.protocol;
+  if (!proto) {
+    proto = CFG.port === '443' ? 'https' : 'http';
+  }
+  // Omit port when it matches the protocol's default
+  const omitPort = (proto === 'https' && CFG.port === '443') ||
+                   (proto === 'http'  && CFG.port === '80');
+  return omitPort ? `${proto}://${CFG.host}` : `${proto}://${CFG.host}:${CFG.port}`;
 }
 function msgUrl(n)   { return `${base()}/WebMail/WM?${CFG.key}&${n}`; }
 function killUrl(n)  { return `${base()}/WebMail/WMDel/${n}?${CFG.key}`; }
@@ -1135,14 +1174,20 @@ function authHeaders() {
 }
 
 // Detect if HTML is a BPQ login form (contains a password input + form POST, no WebMail links)
+// BPQ generates unquoted uppercase attributes (TYPE=PASSWORD), so use a case-insensitive regex
 function isLoginPage(html) {
-  console.log('isLoginPage check - type=password found:', html.includes('type=password') || html.includes('type="password"'));
-  console.log('isLoginPage check - WebMail key found:', !!html.match(/\/WebMail\/[A-Za-z]+\?[A-Z0-9]{6,12}/i));
-  return (html.includes('type=password') || html.includes('type="password"') || html.includes("type='password'"))
+  return /type\s*=\s*["']?password["']?/i.test(html)
     && !html.match(/\/WebMail\/[A-Za-z]+\?[A-Z0-9]{6,12}/i);
 }
 
-// Submit credentials to a BPQ login form and return the response HTML
+// Extract a WebMail session key from a URL string or HTML fragment, or null if not found
+function extractKey(text) {
+  return text?.match(/\/WebMail\/[A-Za-z]+\?([A-Z0-9]{6,12})/i)?.[1] ?? null;
+}
+
+// Submit credentials to a BPQ login form.
+// Returns { html, finalUrl } — finalUrl is the URL fetch landed on after any redirects,
+// which is where BPQ often embeds the session key (Post-Redirect-Get pattern).
 async function bpqFormLogin(loginHtml, originUrl) {
   const doc = new DOMParser().parseFromString(loginHtml, 'text/html');
   const form = doc.querySelector('form');
@@ -1167,6 +1212,7 @@ async function bpqFormLogin(loginHtml, originUrl) {
     }
   }
 
+  console.debug('[BPQ] form login POST →', postUrl, '| fields:', formData.toString().replace(/password=[^&]*/i,'password=***'));
   const r = await fetch(postUrl, {
     method: 'POST',
     credentials: 'include',
@@ -1174,45 +1220,126 @@ async function bpqFormLogin(loginHtml, originUrl) {
     body: formData.toString()
   });
 
-  const responseText = await r.text();
-  return responseText;
+  const html = await r.text();
+  console.debug('[BPQ] post-login final URL:', r.url);
+  return { html, finalUrl: r.url };
 }
 
 async function bpqGet(url) {
+  console.debug('[BPQ] GET', url);
   const r = await fetch(url, { credentials:'include', headers: authHeaders() });
-  if (!r.ok) throw new Error(`HTTP ${r.status}`);
+  if (!r.ok) {
+    console.debug('[BPQ] GET', url, '→ HTTP', r.status);
+    throw new Error(`HTTP ${r.status}`);
+  }
   let html = await r.text();
+  console.debug('[BPQ] GET', url, '→ final URL:', r.url, '| loginPage:', isLoginPage(html));
+
+  // Check if BPQ redirected to a WebMail URL containing the session key
+  const redirectKey = extractKey(r.url);
+  if (redirectKey && redirectKey !== CFG.key) {
+    console.debug('[BPQ] session key found in redirect URL:', redirectKey);
+    CFG.key = redirectKey; saveCFG();
+    try { document.getElementById('cfg-key').value = redirectKey; } catch(_){}
+  }
 
   // If BPQ returned a login form instead of the requested page, log in and retry
   if (isLoginPage(html)) {
     if (!CFG.username && !CFG.password) {
       throw new Error('BPQ requires login — enter your username and password in ⚙ Settings');
     }
-    const postLoginHtml = await bpqFormLogin(html, url);
-    // After login, BPQ may return the requested content or a page with session links
-    if (!isLoginPage(postLoginHtml)) {
-      // Check if the post-login response has a session key — if so, update our key
-      const km = postLoginHtml.match(/\/WebMail\/[A-Za-z]+\?([A-Z0-9]{6,12})/i);
-      if (km?.[1] && km[1] !== CFG.key) {
-        CFG.key = km[1]; saveCFG();
-        try { document.getElementById('cfg-key').value = km[1]; } catch(_){}
-      }
-      return postLoginHtml;
+    const { html: postLoginHtml, finalUrl } = await bpqFormLogin(html, url);
+    if (isLoginPage(postLoginHtml)) {
+      throw new Error('Login failed — check username/password in settings');
     }
-    // If still a login page after submitting, credentials are wrong
-    throw new Error('Login failed — check username/password in settings');
+    // BPQ may signal the session key via: (a) redirect URL, (b) links in the response HTML
+    const key = extractKey(finalUrl) || extractKey(postLoginHtml);
+    console.debug('[BPQ] key from post-login (redirect URL / HTML):', key);
+    if (key && key !== CFG.key) {
+      CFG.key = key; saveCFG();
+      try { document.getElementById('cfg-key').value = key; } catch(_){}
+    }
+    if (key) return postLoginHtml;
+    // No key yet — retry the originally-requested URL now that we are authenticated
+    console.debug('[BPQ] no key in post-login response, retrying original URL:', url);
+    const retry = await fetch(url, { credentials:'include', headers: authHeaders() });
+    if (retry.ok) {
+      const retryHtml = await retry.text();
+      console.debug('[BPQ] retry URL:', retry.url, '| loginPage:', isLoginPage(retryHtml), '| HTML (first 400):', retryHtml.slice(0,400));
+      if (!isLoginPage(retryHtml)) return retryHtml;
+    }
+    return postLoginHtml;
   }
   return html;
 }
 
+// Return the URL from a <meta http-equiv="refresh"> tag, or null
+function extractMetaRefresh(html) {
+  const m = html.match(/<meta[^>]+content\s*=\s*["']?\d+\s*;\s*url=([^"'\s>]+)/i);
+  return m?.[1] ?? null;
+}
+
 async function autoDetectKey() {
-  for (const url of [`${base()}/`,`${base()}/WebMail/WMALL`]) {
+  console.debug('[BPQ] autoDetectKey — base:', base());
+  for (const url of [`${base()}/`, `${base()}/WebMail/WMALL`]) {
     try {
+      const prevKey = CFG.key;
       const html = await bpqGet(url);
-      const m = html.match(/\/WebMail\/[A-Za-z]+\?([A-Z0-9]{6,12})/i);
-      if (m?.[1]) return m[1];
-    } catch(_){}
+      if (CFG.key && CFG.key !== prevKey) {
+        console.debug('[BPQ] key set by bpqGet via redirect:', CFG.key);
+        return CFG.key;
+      }
+      // fetch() follows HTTP redirects but not <meta http-equiv="refresh">.
+      // BPQ's root page uses meta-refresh to point to the real index
+      // (e.g. /Node/NodeIndex.html) which carries the session key links.
+      const metaTarget = extractMetaRefresh(html);
+      if (metaTarget) {
+        const metaUrl = metaTarget.startsWith('http')
+          ? (new URL(metaTarget).origin === new URL(base()).origin ? metaTarget : null)
+          : `${base()}${metaTarget.startsWith('/') ? '' : '/'}${metaTarget}`;
+        if (!metaUrl) { console.debug('[BPQ] meta-refresh target is off-origin, ignoring'); continue; }
+        console.debug('[BPQ] following meta-refresh to:', metaUrl);
+        try {
+          const prevKey2 = CFG.key;
+          const metaHtml = await bpqGet(metaUrl);
+          if (CFG.key && CFG.key !== prevKey2) return CFG.key;
+          const mk = extractKey(metaHtml);
+          console.debug('[BPQ] key from meta-refresh page:', mk ?? 'not found');
+          if (mk) return mk;
+          // No key on the index page itself — follow its WebMail entry-point links.
+          // BPQ links to /Webmail (no key); navigating there triggers session creation.
+          const wmHrefs = [...metaHtml.matchAll(/href\s*=\s*["']?([^"'\s>]*[Ww]eb[Mm]ail[^"'\s>]*)/g)].map(m=>m[1]);
+          console.debug('[BPQ] WebMail entry links on index page:', wmHrefs);
+          for (const wmHref of wmHrefs) {
+            const inlineKey = extractKey(wmHref);
+            if (inlineKey) return inlineKey;
+            const wmUrl = wmHref.startsWith('http')
+              ? (new URL(wmHref).origin === new URL(base()).origin ? wmHref : null)
+              : `${base()}${wmHref.startsWith('/') ? '' : '/'}${wmHref}`;
+            if (!wmUrl) continue;
+            try {
+              const prevKey3 = CFG.key;
+              const wmHtml = await bpqGet(wmUrl);
+              if (CFG.key && CFG.key !== prevKey3) return CFG.key;
+              const wk = extractKey(wmHtml);
+              console.debug('[BPQ] key from WebMail entry', wmUrl, ':', wk ?? 'not found');
+              if (wk) return wk;
+            } catch(e3) {
+              console.debug('[BPQ] error following WebMail entry link', wmUrl, ':', e3.message);
+            }
+          }
+        } catch(e2) {
+          console.debug('[BPQ] error fetching meta-refresh target:', e2.message);
+        }
+      }
+      const k = extractKey(html);
+      console.debug('[BPQ] key from HTML for', url, '→', k ?? 'not found');
+      if (k) return k;
+    } catch(e) {
+      console.debug('[BPQ] error fetching', url, ':', e.message);
+    }
   }
+  console.debug('[BPQ] autoDetectKey failed');
   return null;
 }
 
@@ -2205,7 +2332,7 @@ async function connectAndLoad(){
     else{
       setStatus('err','✕ no key');
       document.getElementById('list-body').innerHTML=
-        `<div class="list-empty">Could not connect to BPQ node.<br><br><strong>If your BPQ requires a login:</strong><br>Click <strong>⚙ Settings</strong> and enter your BPQ username and password.<br><br><strong>If you are accessing remotely:</strong><br>Make sure host and port match the address you use to reach BPQ in your browser.<br><br><strong>If accessing from localhost:</strong><br>Verify BPQ is running and HTTPPORT is set in your config.</div>`;
+        `<div class="list-empty">Could not connect to BPQ node.<br><br><strong>If your BPQ requires a login:</strong><br>Click <strong>⚙ Settings</strong> and enter your BPQ username and password.<br><br><strong>If you are accessing via Cloudflare tunnel or any reverse proxy:</strong><br>BPQ has a known bug — it returns a blank page (instead of a login form) when the HTTP request omits <code>Accept-Encoding: deflate</code>. Cloudflare and most proxies do not forward <code>deflate</code> to origins. Until BPQ is patched, use one of these workarounds:<br>① Add <code>LOCALNET=127.0.0.0/8</code> to the <code>[BPQTCP]</code> section of your BPQ config so loopback connections are treated as local (no login required).<br>② Or: connect via LAN, copy the session token from the WebMail URL (e.g. <code>/WebMail/WMALL?ABC123</code>), and paste it into ⚙ Settings → Session key.<br><br><strong>If accessing from localhost:</strong><br>Verify BPQ is running and HTTPPORT is set in your config.</div>`;
       return;
     }
   }
@@ -2219,8 +2346,9 @@ async function connectAndLoad(){
 function detectHostFromUrl() {
   if (window.location.protocol === 'file:') return null;
   const host = window.location.hostname || '127.0.0.1';
-  const port = window.location.port || '8080';
-  return { host, port };
+  const proto = window.location.protocol.replace(':', '');
+  const port = window.location.port || (proto === 'https' ? '443' : '8080');
+  return { host, port, proto };
 }
 
 async function init(){
@@ -2261,6 +2389,7 @@ async function init(){
     if (detected && !LS.get('bpq_host')) {
       document.getElementById('su-host').value = detected.host;
       document.getElementById('su-port').value = detected.port;
+      if (detected.proto) document.getElementById('su-proto').value = detected.proto;
     }
     showSetup();
     return;
