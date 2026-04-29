@@ -1,5 +1,18 @@
 # Changelog
 
+## v1.5.9 — 2026-04-29
+
+### Added
+- **HTTPS / reverse-proxy support** — works with Cloudflare Tunnel, nginx, or any TLS reverse proxy in front of BPQ. New protocol selector (auto / http / https) on the setup screen and in the settings bar, persisted as `bpq_proto`. Standard ports 80/443 are omitted from URLs; port 443 infers https. The topbar displays the full resolved base URL. (credit: Ben Kuhn, K5DAT Lee)
+
+### Changed
+- **Session-key detection overhaul** — extracts the WebMail session key from post-login redirect URLs and follows `<meta http-equiv="refresh">` redirects that `fetch()` silently ignores. Traverses WebMail entry-point links on the node index page (with off-origin guard). Retries the original URL after form login when no key is found in the response.
+- **Login-page detection** rewritten as a case-insensitive regex — correctly matches BPQ's unquoted uppercase `TYPE=PASSWORD` attribute, which broke detection in earlier versions.
+- **Connection error message** updated to explain the Cloudflare/proxy root cause and provide the `LOCALNET=127.0.0.0/8` BPQ config workaround for the underlying BPQ `HTTPcode.c` bug.
+
+### Fixed
+- Reverse-proxy/HTTPS access (K5DAT Lee's original report) — now confirmed working through HTTPS reverse proxies.
+
 ## v1.5.8 — 2026-04-18
 
 ### Fixed
