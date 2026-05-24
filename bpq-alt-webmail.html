@@ -76,6 +76,13 @@ body.light-hc {
   --accent:#005500; --accent-bg:#e0f0e0; --accent-border:#88bb88;
   --unread-dot:#0044cc;
 }
+body.classic {
+  --bg:#c8a87c; --bg2:#d4b890; --bg3:#b89660;
+  --border:#9b7a40; --border2:#7a5c28;
+  --text:#1a1008; --text2:#3d2b0a; --text3:#6b5030;
+  --accent:#0033aa; --accent-bg:#e8dcc8; --accent-border:#9b7a40;
+  --unread-dot:#cc0000;
+}
 * { box-sizing:border-box; margin:0; padding:0 }
 html,body { height:100%; overflow:hidden }
 body { font-family:var(--sans); font-size:1rem; background:var(--bg); color:var(--text); display:flex; flex-direction:column; transition:background .15s,color .15s }
@@ -249,6 +256,8 @@ body { font-family:var(--sans); font-size:1rem; background:var(--bg); color:var(
 .btn.primary:hover { background:#4da6ff12 }
 .btn.danger { color:var(--red); border-color:#e0525230 }
 .btn.danger:hover { background:#e0525210; border-color:var(--red) }
+.btn.success { color:var(--green); border-color:#00c98a30 }
+.btn.success:hover { background:#00c98a12; border-color:var(--green) }
 .btn:disabled { opacity:.3; cursor:not-allowed }
 .btn-sp { flex:1 }
 .rv-body { flex:1; padding:20px 24px; overflow-y:auto; font-family:var(--mono); font-size:1rem; line-height:var(--body-lh,1.6); color:var(--text); white-space:pre-wrap; word-break:break-word }
@@ -583,6 +592,7 @@ body { font-family:var(--sans); font-size:1rem; background:var(--bg); color:var(
         <div class="btn-sp"></div>
         <button class="btn danger" id="btn-kill" onclick="confirmKill()">✕ Kill</button>
         <button class="btn danger" id="btn-reject" onclick="confirmReject()">⊘ Reject</button>
+        <button class="btn success" id="btn-nts-del" onclick="confirmNtsDel()" style="display:none" title="Mark NTS traffic as delivered to addressee">✓ Delivered</button>
       </div>
       <div class="rv-body" id="rv-body"></div>
     </div>
@@ -624,6 +634,18 @@ body { font-family:var(--sans); font-size:1rem; background:var(--bg); color:var(
     <div class="del-ttl">⊘ Reject Filter</div>
     <div class="del-msg" id="rej-msg"></div>
     <div class="del-btns" id="rej-btns"></div>
+  </div>
+</div>
+
+<!-- NTS DELIVERED CONFIRM -->
+<div class="overlay" id="ntsdel-ov">
+  <div class="del-box">
+    <div class="del-ttl">✓ Mark NTS Delivered</div>
+    <div class="del-msg" id="ntsdel-msg"></div>
+    <div class="del-btns">
+      <button class="btn" onclick="closeNtsDel()">Cancel</button>
+      <button class="btn success" id="ntsdel-yes" onclick="doNtsDel()">Mark Delivered</button>
+    </div>
   </div>
 </div>
 
@@ -907,6 +929,7 @@ const THEMES = [
   { key:'dark-hc',  label:'Dark Hi-Contrast', icon:'☀+' },
   { key:'light',    label:'Light',          icon:'🌙' },
   { key:'light-hc', label:'Light Hi-Contrast', icon:'🌙+' },
+  { key:'classic',  label:'Classic',        icon:'📻' },
 ];
 let themeIdx = Math.max(0, THEMES.findIndex(t => t.key === (LS.get('bpq_theme')||'dark')));
 
@@ -1159,6 +1182,7 @@ function base() {
 }
 function msgUrl(n)   { return `${base()}/WebMail/WM?${CFG.key}&${n}`; }
 function killUrl(n)  { return `${base()}/WebMail/WMDel/${n}?${CFG.key}`; }
+function ntsDelUrl(n){ return `${base()}/WebMail/WMNDel/${n}?${CFG.key}`; }
 function replyUrl(n) { return `${base()}/WebMail/Reply/${n}?${CFG.key}`; }
 function nextUrl()   { return `${base()}/WebMail/WMNext?${CFG.key}`; }
 function prevUrl()   { return `${base()}/WebMail/WMPrev?${CFG.key}`; }
@@ -1786,6 +1810,7 @@ async function openMsg(num) {
   updateMobileSummary(msg);
   document.getElementById('rv-body').textContent='Loading…';
   document.getElementById('btn-kill').disabled=false;
+  document.getElementById('btn-nts-del').style.display = (msg.type==='T') ? '' : 'none';
 
   try {
     if(!msg.body) {
@@ -1968,6 +1993,37 @@ async function doKill() {
   else toast(`${killed.length} message${killed.length>1?'s':''} killed`,'ok');
 
   closeKill(); btn.disabled=false;
+}
+
+// ═══════════════════════════════════════════════════
+//  NTS DELIVERED
+// ═══════════════════════════════════════════════════
+function confirmNtsDel() {
+  if (!activeNum) return;
+  const msg = allMsgs.find(m=>m.num===activeNum);
+  if (!msg) return;
+  document.getElementById('ntsdel-msg').innerHTML=
+    `Mark NTS message <strong>#${esc(msg.num)}</strong> to <strong>${esc(msg.to)}</strong> as delivered?<br>
+     <span style="font-family:var(--mono);font-size:0.85rem;color:var(--text3)">${esc(msg.subject)}</span><br>
+     <span style="font-size:0.85rem;color:var(--text3)">Use after you have delivered the message to the addressee (e.g. by phone).</span>`;
+  document.getElementById('ntsdel-yes').textContent='Mark Delivered';
+  document.getElementById('ntsdel-yes').disabled=false;
+  document.getElementById('ntsdel-ov').classList.add('open');
+}
+function closeNtsDel() { document.getElementById('ntsdel-ov').classList.remove('open'); }
+async function doNtsDel() {
+  if (!activeNum) { closeNtsDel(); return; }
+  const num = activeNum;
+  const btn = document.getElementById('ntsdel-yes');
+  btn.disabled=true; btn.textContent='Marking…';
+  try {
+    await bpqGet(ntsDelUrl(num));
+    toast(`#${num} marked delivered`, 'ok');
+    closeNtsDel();
+  } catch(e) {
+    toast(`Delivered failed: ${e.message}`, 'err');
+    btn.disabled=false; btn.textContent='Mark Delivered';
+  }
 }
 
 // ═══════════════════════════════════════════════════
