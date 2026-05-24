@@ -2123,6 +2123,42 @@ function closeCompose(){
   if(modal.style.width) LS.set('bpq_compose_w',modal.style.width);
   document.getElementById('cmp-ov').classList.remove('open');
 }
+// Open compose modal pre-populated from a URL hash, e.g.:
+//   #compose?to=N4SFL&subject=Test&body=Hello&type=P
+// Designed for dashboard / external "send mail" buttons.
+function processHashAction(){
+  const hash = location.hash || '';
+  if (!hash.toLowerCase().startsWith('#compose')) return;
+  const qIdx = hash.indexOf('?');
+  const qs = qIdx >= 0 ? hash.slice(qIdx + 1) : '';
+  let params;
+  try { params = new URLSearchParams(qs); }
+  catch(e) { console.warn('Bad hash params:', e); return; }
+  const to   = (params.get('to')      || '').toUpperCase();
+  const subj = params.get('subject')  || '';
+  const body = params.get('body')     || '';
+  const type = (params.get('type')    || '').toUpperCase();
+  // Clear the hash so a reload doesn't re-fire the compose window
+  try { history.replaceState(null, '', location.pathname + location.search); }
+  catch(e) { location.hash = ''; }
+  openCompose(to, subj, body, 'New Message');
+  if (['P','B','T'].includes(type)) {
+    document.getElementById('cmp-type').value = type;
+  }
+}
+// Self-driving trigger: poll briefly until the compose modal exists in the DOM,
+// then process the hash. Independent of whether connectAndLoad() reaches its end.
+function tryHashAction(attempt){
+  attempt = attempt || 0;
+  const hash = location.hash || '';
+  if (!hash.toLowerCase().startsWith('#compose')) return;
+  const ready = document.getElementById('cmp-to') &&
+                document.getElementById('cmp-ov');
+  if (ready) { processHashAction(); return; }
+  if (attempt > 40) { console.warn('hash action gave up waiting for DOM'); return; }
+  setTimeout(function(){ tryHashAction(attempt + 1); }, 250);
+}
+window.addEventListener('load', function(){ tryHashAction(0); });
 function doForward(){
   const msg=allMsgs.find(m=>m.num===activeNum); if(!msg)return;
   const sig = CFG.signature || `73 de ${CFG.callsign||'N4SFL'}`;
