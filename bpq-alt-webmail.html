@@ -2599,10 +2599,12 @@ function rgGenerate() {
   const email       = val('rg-email').trim();
   // Body text: uppercase, then substitute punctuation to NTS phonetic
   // words. Standard practice spells out commas and question marks so
-  // CW/voice relay stations can transcribe unambiguously. "X" for
-  // end-of-sentence is intentionally NOT auto-inserted — that one is
-  // contextual and the operator handles it.
+  // CW/voice relay stations can transcribe unambiguously, and uses
+  // "R" as the decimal point inside numbers (146.52 → 146R52). "X"
+  // for end-of-sentence is intentionally NOT auto-inserted — that
+  // one is contextual and the operator handles it.
   const text = val('rg-text').trim().toUpperCase()
+    .replace(/(?<=\d)\.(?=\d)/g, 'R')
     .replace(/,/g, ' COMMA ')
     .replace(/\?/g, ' QUERY ')
     .replace(/\s+/g, ' ').trim();
@@ -2722,7 +2724,8 @@ function rgParseRadiogram(body) {
     out.text = lines.slice(btStart + 1, bodyEnd).join(' ').trim()
       .replace(/\bCOMMA\b/g, ',')
       .replace(/\bQUERY\b/g, '?')
-      .replace(/\s+([,?])/g, '$1')     // tidy " ," and " ?" → joined punctuation
+      .replace(/(?<=\d)R(?=\d)/g, '.')   // "146R52" → "146.52"; R between digits only
+      .replace(/\s+([,?])/g, '$1')      // tidy " ," and " ?" → joined punctuation
       .replace(/\s{2,}/g, ' ')
       .trim();
   }
