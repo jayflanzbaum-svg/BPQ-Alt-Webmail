@@ -77,12 +77,21 @@ body.light-hc {
   --unread-dot:#0044cc;
 }
 body.classic {
-  --bg:#cdb78d; --bg2:#d2bd95; --bg3:#bea675;
-  --border:#a48b62; --border2:#856a35;
-  --text:#1a1008; --text2:#3d2b0a; --text3:#5a4220;
-  --accent:#0033aa; --accent-bg:#e6d8bd; --accent-border:#a48b62;
+  /* Content surfaces (list pane, reader, modals, inputs) — light cream */
+  --bg:#f6ecd2; --bg2:#fcf5e2; --bg3:#ead9b1;
+  --border:#c4a878; --border2:#9b7a40;
+  --text:#1a1008; --text2:#3d2b0a; --text3:#6b5030;
+  --accent:#0033aa; --accent-bg:#e8dcc8; --accent-border:#c4a878;
   --unread-dot:#cc0000;
 }
+/* Classic theme: keep sidebar / topbar / mobile nav tan even though
+   the body and content panes are light cream. Hardcoded so the
+   sidebar palette is independent of the content --bg variables. */
+body.classic .sidebar,
+body.classic .topbar,
+body.classic .m-nav { background:#cdb78d }
+body.classic .sidebar .fldr:hover,
+body.classic .sidebar .sf:hover { background:#bea675 }
 * { box-sizing:border-box; margin:0; padding:0 }
 html,body { height:100%; overflow:hidden }
 body { font-family:var(--sans); font-size:1rem; background:var(--bg); color:var(--text); display:flex; flex-direction:column; transition:background .15s,color .15s }
