@@ -1810,7 +1810,7 @@ async function openMsg(num) {
   updateMobileSummary(msg);
   document.getElementById('rv-body').textContent='Loading…';
   document.getElementById('btn-kill').disabled=false;
-  document.getElementById('btn-nts-del').style.display = (msg.type==='T') ? '' : 'none';
+  document.getElementById('btn-nts-del').style.display = (msg.type && msg.type[0]==='T') ? '' : 'none';
 
   try {
     if(!msg.body) {
