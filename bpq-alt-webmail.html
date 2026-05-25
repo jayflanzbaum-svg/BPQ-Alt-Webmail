@@ -204,7 +204,9 @@ body { font-family:var(--sans); font-size:1rem; background:var(--bg); color:var(
 .tb-B { background:#00e5a012; color:var(--green);   border:1px solid #00e5a030 }
 .tb-P { background:#4da6ff12; color:var(--blue);    border:1px solid #4da6ff30 }
 .tb-N { background:#a78bfa12; color:var(--purple);  border:1px solid #a78bfa30 }
+.tb-T { background:#a78bfa12; color:var(--purple);  border:1px solid #a78bfa30 }
 .tb-X { background:#7b849920; color:var(--text2);   border:1px solid #7b849930 }
+.tb-delivered { background:#00c98a18; color:var(--green); border:1px solid #00c98a40 }
 .list-empty   { padding:28px 16px; text-align:center; font-family:var(--mono); font-size:0.85rem; color:var(--text3); line-height:1.8 }
 .list-loading { padding:20px; text-align:center; font-family:var(--mono); font-size:0.85rem; color:var(--amber) }
 /* bulk kill bar */
@@ -243,7 +245,7 @@ body { font-family:var(--sans); font-size:1rem; background:var(--bg); color:var(
 .reader-empty-txt { font-family:var(--mono); font-size:0.85rem }
 #rv { display:none; flex-direction:column; flex:1; min-height:0 }
 .rv-hd { padding:14px 20px 12px; border-bottom:1px solid var(--border); background:var(--bg2); flex-shrink:0 }
-.rv-subj { font-size:1.15rem; font-weight:500; color:var(--text); margin-bottom:10px; line-height:1.3 }
+.rv-subj { font-size:1.5rem; font-weight:700; color:var(--text); margin-bottom:10px; line-height:1.25 }
 .rv-fields { display:flex; flex-wrap:wrap; gap:0 18px }
 .rv-f { font-family:var(--mono); font-size:0.85rem; margin-bottom:3px }
 .rv-k { color:var(--text3); margin-right:4px }
@@ -258,6 +260,10 @@ body { font-family:var(--sans); font-size:1rem; background:var(--bg); color:var(
 .btn.danger:hover { background:#e0525210; border-color:var(--red) }
 .btn.success { color:var(--green); border-color:#00c98a30 }
 .btn.success:hover { background:#00c98a12; border-color:var(--green) }
+.btn.success.on { background:var(--green); color:#fff; border-color:var(--green) }
+.btn.success.on:hover { background:var(--green-dim); border-color:var(--green-dim) }
+.rv-banner { display:none; padding:8px 20px; font-family:var(--mono); font-size:0.85rem; background:#00c98a18; color:var(--green); border-bottom:1px solid #00c98a40; flex-shrink:0 }
+.rv-banner.on { display:block }
 .btn:disabled { opacity:.3; cursor:not-allowed }
 .btn-sp { flex:1 }
 .rv-body { flex:1; padding:20px 24px; overflow-y:auto; font-family:var(--mono); font-size:1rem; line-height:var(--body-lh,1.6); color:var(--text); white-space:pre-wrap; word-break:break-word }
@@ -505,7 +511,7 @@ body { font-family:var(--sans); font-size:1rem; background:var(--bg); color:var(
 <div class="main">
   <div class="sidebar" id="sidebar">
     <div class="cmp-wrap"><button class="cmp-btn" onclick="openCompose()">+ NEW MESSAGE</button></div>
-    <div class="fldr-sep">Folders</div>
+    <div class="fldr-sep">Mailbox</div>
 
     <div class="fldr active" id="fldr-Personal" onclick="activatePersonal()">
       <span class="fldr-ico">✉</span><span class="fldr-lbl">My Received</span>
@@ -519,10 +525,11 @@ body { font-family:var(--sans); font-size:1rem; background:var(--bg); color:var(
     </div>
     <div class="sf-wrap" id="sf-bulls-wrap"></div>
 
-    <div class="fldr" id="fldr-NTS" onclick="loadFolder('NTS','NTS Traffic')">
+    <div class="fldr" id="fldr-NTS" onclick="activateNts()">
       <span class="fldr-ico">⊕</span><span class="fldr-lbl">NTS Traffic</span>
       <span class="fldr-bdg bdg-purple" id="bdg-NTS" style="display:none"></span>
     </div>
+    <div class="sf-wrap" id="sf-nts-wrap"></div>
     <div class="fldr" id="fldr-Mine"   onclick="loadFolder('Mine','Mine')"><span class="fldr-ico">◎</span><span class="fldr-lbl">Mine</span></div>
     <div class="fldr" id="fldr-MySent" onclick="loadFolder('MySent','My Sent')"><span class="fldr-ico">▲</span><span class="fldr-lbl">My Sent</span></div>
     <div class="fldr" id="fldr-ALL" onclick="loadFolder('ALL','All Messages')">
@@ -530,9 +537,10 @@ body { font-family:var(--sans); font-size:1rem; background:var(--bg); color:var(
     </div>
 
     <div class="sidebar-footer">
-      <div>Node: <span id="si-node">—</span></div>
-      <div>QTH: <span id="si-qth">—</span></div>
-      <div>Msgs: <span id="si-count">—</span></div>
+      <div id="si-ver">v1.5.9</div>
+      <div>Node <span id="si-node">—</span></div>
+      <div>User <span id="si-user">—</span></div>
+      <div style="display:none">Msgs: <span id="si-count">—</span></div>
     </div>
   </div>
 
@@ -594,6 +602,7 @@ body { font-family:var(--sans); font-size:1rem; background:var(--bg); color:var(
         <button class="btn danger" id="btn-reject" onclick="confirmReject()">⊘ Reject</button>
         <button class="btn success" id="btn-nts-del" onclick="confirmNtsDel()" style="display:none" title="Mark NTS traffic as delivered to addressee">✓ Delivered</button>
       </div>
+      <div class="rv-banner" id="rv-banner"></div>
       <div class="rv-body" id="rv-body"></div>
     </div>
   </div>
@@ -902,6 +911,14 @@ document.getElementById('rules-ov').addEventListener('click',e=>{if(e.target===e
 let killedSet = new Set(LS.getJ('bpq_killed')||[]);
 function saveKilled() { LS.setJ('bpq_killed',[...killedSet].slice(-500)); }
 
+// ── DELIVERED SET (NTS) ────────────────────────────
+// Persists which NTS messages we have marked delivered, so the green
+// banner / sub-filter / list pill survive page reloads. Independent
+// of BPQ's own state (we may also call WMNDel on the node, but that
+// is best-effort and not load-bearing for our UI).
+let deliveredSet = new Set(LS.getJ('bpq_delivered')||[]);
+function saveDelivered() { LS.setJ('bpq_delivered',[...deliveredSet].slice(-500)); }
+
 // ── BODY CACHE (FIFO 30) ───────────────────────────
 const BODY_MAX=30, bodyOrder=[];
 function cacheBody(msg,body) {
@@ -919,7 +936,7 @@ let readSet = new Set();
 
 // ── STATE ──────────────────────────────────────────
 let allMsgs=[], activeNum=null, killTarget=null;
-let activeFolder='Personal', persFilter='ALL', bullFilter='ALL';
+let activeFolder='Personal', persFilter='ALL', bullFilter='ALL', ntsFilter='ALL';
 
 // ═══════════════════════════════════════════════════
 //  THEME
@@ -1144,7 +1161,10 @@ function syncTopbar() {
   document.getElementById('top-call').textContent = CFG.callsign || '—';
   document.getElementById('top-node').textContent = base();
   document.getElementById('si-node').textContent  = CFG.callsign || '—';
-  document.getElementById('si-qth').textContent   = CFG.qth || '—';
+  const siUser = document.getElementById('si-user');
+  if (siUser) siUser.textContent = (CFG.username || CFG.callsign || '—').toUpperCase();
+  const siQth = document.getElementById('si-qth');
+  if (siQth) siQth.textContent = CFG.qth || '—';
   // Sync cfg bar fields
   document.getElementById('cfg-host').value = CFG.host;
   document.getElementById('cfg-port').value = CFG.port;
@@ -1583,6 +1603,43 @@ function buildPersFilters(msgs) {
 function buildBullFilters(msgs) {
   buildSubfilters('sf-bulls-wrap', msgs, m=>m.to, bullFilter, 'setBullFilter', null);
 }
+// NTS routing area: the "@AREA" suffix on the to field, captured into msg.via.
+// Falls back to "NO AREA" when via is missing or duplicates the to field.
+function ntsAreaKey(m) {
+  if (m.via && m.via !== m.to) return m.via.toUpperCase();
+  return 'NO AREA';
+}
+// NTS sub-filters: All NTS (undelivered), per-area buckets, and ✓ Delivered.
+// Delivered messages are pulled out of All NTS and area buckets so the list
+// reads as "what still needs work" vs "already handled".
+function buildNtsFilters(msgs) {
+  const areaCounts={}, areaUnreads={};
+  let delivered=0, deliveredUnread=0, undelivered=0, undeliveredUnread=0;
+  for (const m of msgs) {
+    const isDel = deliveredSet.has(m.num);
+    const isUnread = !readSet.has(m.num);
+    if (isDel) { delivered++; if (isUnread) deliveredUnread++; }
+    else {
+      undelivered++; if (isUnread) undeliveredUnread++;
+      const a = ntsAreaKey(m);
+      areaCounts[a] = (areaCounts[a]||0) + 1;
+      if (isUnread) areaUnreads[a] = (areaUnreads[a]||0) + 1;
+    }
+  }
+  const items = [{ key:'ALL', label:'All NTS', count:undelivered, unread:undeliveredUnread }];
+  for (const k of Object.keys(areaCounts).sort()) {
+    items.push({ key:k, label:k, count:areaCounts[k], unread:areaUnreads[k]||0 });
+  }
+  if (delivered > 0) items.push({ key:'DELIVERED', label:'✓ Delivered', count:delivered, unread:deliveredUnread });
+
+  const wrap = document.getElementById('sf-nts-wrap');
+  wrap.innerHTML = items.map(it => `
+    <div class="sf${ntsFilter===it.key?' active':''}" onclick="setNtsFilter('${esc(it.key)}')">
+      <span class="sf-lbl">${esc(it.label)}</span>
+      <span class="sf-count">(${it.count})</span>
+      <span class="sf-unread${it.unread>0?' on':''}"></span>
+    </div>`).join('');
+}
 
 function setPersFilter(f) {
   persFilter=f;
@@ -1606,6 +1663,19 @@ function setBullFilter(f) {
   if (isMobile) { mobileNav('list'); }
   else if(filtered.length>0) openMsg(filtered[0].num);
 }
+function setNtsFilter(f) {
+  ntsFilter=f;
+  buildNtsFilters(allMsgs);
+  const label = f==='ALL' ? 'NTS Traffic'
+              : f==='DELIVERED' ? 'NTS Traffic · Delivered'
+              : `NTS Traffic · ${f}`;
+  document.getElementById('list-title').textContent=label;
+  const filtered=getFiltered();
+  renderList(filtered);
+  updateListCount(filtered);
+  if (isMobile) { mobileNav('list'); }
+  else if(filtered.length>0) openMsg(filtered[0].num);
+}
 
 // ═══════════════════════════════════════════════════
 //  FILTERING
@@ -1614,6 +1684,11 @@ function getFiltered() {
   let msgs=allMsgs;
   if(activeFolder==='Personal'&&persFilter!=='ALL') msgs=msgs.filter(m=>persFromKey(m)===persFilter);
   if(activeFolder==='Bulls'&&bullFilter!=='ALL') msgs=msgs.filter(m=>m.to===bullFilter);
+  if(activeFolder==='NTS') {
+    if(ntsFilter==='ALL')           msgs=msgs.filter(m=>!deliveredSet.has(m.num));
+    else if(ntsFilter==='DELIVERED') msgs=msgs.filter(m=> deliveredSet.has(m.num));
+    else                             msgs=msgs.filter(m=>!deliveredSet.has(m.num) && ntsAreaKey(m)===ntsFilter);
+  }
   if(starFilterOn) msgs=msgs.filter(m=>{ const {starred}=evalRules(m); return starred||manualStars.has(m.num); });
   const q=document.getElementById('srch').value.toLowerCase();
   if(q) msgs=msgs.filter(m=>[m.from,m.to,m.subject,m.type,m.num,m.via].some(v=>(v||'').toLowerCase().includes(q)));
@@ -1655,7 +1730,14 @@ function activatePersonal() {
 function activateBulletins() {
   document.getElementById('sf-bulls-wrap').classList.add('open');
   document.getElementById('sf-pers-wrap').classList.remove('open');
+  document.getElementById('sf-nts-wrap').classList.remove('open');
   loadFolder('Bulls','Bulletins');
+}
+function activateNts() {
+  document.getElementById('sf-nts-wrap').classList.add('open');
+  document.getElementById('sf-pers-wrap').classList.remove('open');
+  document.getElementById('sf-bulls-wrap').classList.remove('open');
+  loadFolder('NTS','NTS Traffic');
 }
 
 async function loadFolder(folder, label) {
@@ -1665,6 +1747,7 @@ async function loadFolder(folder, label) {
   if(fEl) fEl.classList.add('active');
   if(folder!=='Personal') document.getElementById('sf-pers-wrap').classList.remove('open');
   if(folder!=='Bulls')    document.getElementById('sf-bulls-wrap').classList.remove('open');
+  if(folder!=='NTS')      document.getElementById('sf-nts-wrap').classList.remove('open');
   document.getElementById('list-title').textContent=label||folder;
   document.getElementById('list-count').textContent='…';
   document.getElementById('list-body').innerHTML='<div class="list-loading">loading…</div>';
@@ -1709,6 +1792,11 @@ async function loadFolder(folder, label) {
       buildBullFilters(msgs);
       document.getElementById('sf-bulls-wrap').classList.add('open');
     }
+    if(folder==='NTS') {
+      ntsFilter='ALL';
+      buildNtsFilters(msgs);
+      document.getElementById('sf-nts-wrap').classList.add('open');
+    }
 
     allMsgs=msgs;
     const filtered=getFiltered();
@@ -1740,8 +1828,17 @@ function tcls(t) {
   const c=t[0].toUpperCase();
   if(c==='B') return 'tb tb-B';
   if(c==='P') return 'tb tb-P';
+  if(c==='T') return 'tb tb-T';
   if(c==='N') return 'tb tb-N';
   return 'tb tb-X';
+}
+// Display label for a type code in list cards.
+// Collapses NTS sub-types (TY/TN/TF/…) into a single "NTS" pill so the
+// list reads cleanly; the raw type stays visible in the reader header.
+function tlabel(t) {
+  if(!t) return '?';
+  if(t[0].toUpperCase()==='T') return 'NTS';
+  return t;
 }
 function renderList(msgs) {
   const el=document.getElementById('list-body');
@@ -1767,7 +1864,7 @@ function renderList(msgs) {
             ${esc(m.date)}
           </span>
         </div>
-        <div class="mr-subj">${tagHtml}<span class="${tcls(m.type)}">${esc(m.type)}</span>${esc(m.subject)}</div>
+        <div class="mr-subj">${tagHtml}<span class="${tcls(m.type)}">${esc(tlabel(m.type))}</span>${deliveredSet.has(m.num)?'<span class="tb tb-delivered">✓ Delivered</span>':''}${esc(m.subject)}</div>
         <div class="mr-meta">#${esc(m.num)} · to:${esc(m.to)}${m.via&&m.via!==m.to?` @${esc(m.via)}`:''} · ${esc(m.size)}b</div>
       </div>
     </div>`;
@@ -1792,6 +1889,7 @@ async function openMsg(num) {
     // Re-render subfilters to update unread dots/counts
     if(activeFolder==='Personal') buildPersFilters(allMsgs);
     if(activeFolder==='Bulls')    buildBullFilters(allMsgs);
+    if(activeFolder==='NTS')      buildNtsFilters(allMsgs);
     updateMobileNavBadge();
   }
 
@@ -1810,7 +1908,21 @@ async function openMsg(num) {
   updateMobileSummary(msg);
   document.getElementById('rv-body').textContent='Loading…';
   document.getElementById('btn-kill').disabled=false;
-  document.getElementById('btn-nts-del').style.display = (msg.type && msg.type[0]==='T') ? '' : 'none';
+  const isNts = msg.type && msg.type[0]==='T';
+  const isDelivered = deliveredSet.has(num);
+  const ntsBtn = document.getElementById('btn-nts-del');
+  ntsBtn.style.display = isNts ? '' : 'none';
+  ntsBtn.classList.toggle('on', isNts && isDelivered);
+  ntsBtn.disabled = isDelivered;
+  ntsBtn.title = isDelivered ? 'Already marked delivered' : 'Mark NTS traffic as delivered to addressee';
+  const banner = document.getElementById('rv-banner');
+  if (isNts && isDelivered) {
+    banner.innerHTML = '✓ Marked as Delivered &nbsp;·&nbsp; this message is in NTS Traffic › Delivered';
+    banner.classList.add('on');
+  } else {
+    banner.classList.remove('on');
+    banner.innerHTML = '';
+  }
 
   try {
     if(!msg.body) {
@@ -1979,6 +2091,7 @@ async function doKill() {
   // Update filters and list
   if(activeFolder==='Personal') buildPersFilters(allMsgs);
   if(activeFolder==='Bulls')    buildBullFilters(allMsgs);
+  if(activeFolder==='NTS')      buildNtsFilters(allMsgs);
   const f=getFiltered(); renderList(f); updateListCount(f);
 
   // Auto-advance to next message after single kill
@@ -2018,8 +2131,24 @@ async function doNtsDel() {
   btn.disabled=true; btn.textContent='Marking…';
   try {
     await bpqGet(ntsDelUrl(num));
+    deliveredSet.add(num); saveDelivered();
     toast(`#${num} marked delivered`, 'ok');
     closeNtsDel();
+    // Update the open message's banner + button state directly
+    if (activeNum === num) {
+      const ntsBtn = document.getElementById('btn-nts-del');
+      ntsBtn.classList.add('on');
+      ntsBtn.disabled = true;
+      ntsBtn.title = 'Already marked delivered';
+      const banner = document.getElementById('rv-banner');
+      banner.innerHTML = '✓ Marked as Delivered &nbsp;·&nbsp; this message is in NTS Traffic › Delivered';
+      banner.classList.add('on');
+    }
+    // Refresh the list (pills) and NTS sub-filters if visible
+    if (activeFolder === 'NTS' && typeof buildNtsFilters === 'function') {
+      buildNtsFilters(allMsgs);
+    }
+    renderList(getFiltered());
   } catch(e) {
     toast(`Delivered failed: ${e.message}`, 'err');
     btn.disabled=false; btn.textContent='Mark Delivered';
@@ -2287,6 +2416,7 @@ async function silentRefresh(){
     for(const m of removed) allMsgs=allMsgs.filter(x=>x.num!==m.num);
     if(activeFolder==='Personal') buildPersFilters(allMsgs);
     if(activeFolder==='Bulls') buildBullFilters(allMsgs);
+    if(activeFolder==='NTS') buildNtsFilters(allMsgs);
     const f=getFiltered(); renderList(f); updateListCount(f);
     lastRefresh=new Date();
     if(added.length) toast(`${added.length} new message${added.length>1?'s':''}`, 'info');
