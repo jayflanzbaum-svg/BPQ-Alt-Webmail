@@ -2543,9 +2543,75 @@ function rgFormatPhone(p) {
   if (digits.length === 11) return `${digits[0]} ${digits.slice(1,4)} ${digits.slice(4,7)} ${digits.slice(7)}`;
   return digits;  // fall back to raw digits when count is non-standard
 }
-// Phonetic substitution for the email line. Reference output shows
-// "KY2D@ARRL.NET" rendered as "KY2D ATSIGN ARRL DOT NET" — every "@"
-// becomes ATSIGN, every "." becomes DOT, plus DASH/NR for "-"/"#".
+// ARRL extended-punctuation table (NTS phonetic spellings used on
+// phone/CW nets). Round-tripped: generator emits the WORD form,
+// parser reverses to the literal char. Order is unimportant for
+// char→word generation (every char is unique); for word→char
+// parsing we anchor each word with \b so substrings don't match.
+const RG_BODY_SUBS = [
+  { sym: ',',  word: 'COMMA' },
+  { sym: '?',  word: 'QUERY' },
+  { sym: '/',  word: 'SLASH' },
+  { sym: '@',  word: 'ATSIGN' },
+  { sym: '-',  word: 'DASH' },
+  { sym: '+',  word: 'PLUSSIGN' },
+  { sym: ':',  word: 'COLON' },
+  { sym: '~',  word: 'TILDE' },
+  { sym: '(',  word: 'OPENPAREN' },
+  { sym: ')',  word: 'CLOSEPAREN' },
+  { sym: '%',  word: 'PERCENTSIGN' },
+  { sym: "'",  word: 'APOSTROPHE' },
+  { sym: '!',  word: 'EXCLAMATION' },
+  { sym: '"',  word: 'QUOTE' },
+  { sym: '#',  word: 'NR' },
+];
+// Compatibility forms that parsers should accept but generators do
+// NOT emit (we emit the standard form). E.g. DECIMAL is an alias for
+// R between digits, PERIOD is an alias for end-of-sentence X, SLANT
+// is an older synonym for /.
+const RG_BODY_COMPAT = [
+  { word: 'DECIMAL', sym: '.' },
+  { word: 'PERIOD',  sym: '.' },
+  { word: 'SLANT',   sym: '/' },
+];
+function rgEscapeRe(s) { return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
+// Apply NTS body substitutions to outgoing message text.
+// Decimal between digits (146.52 → 146R52) is handled first so the
+// digit context survives the later @/./- passes. End-of-sentence "."
+// is left untouched — operators handle X manually because the X
+// convention is contextual.
+function rgBodyGenerate(text) {
+  let r = (text || '').toUpperCase();
+  r = r.replace(/(?<=\d)\.(?=\d)/g, 'R');
+  for (const { sym, word } of RG_BODY_SUBS) {
+    r = r.replace(new RegExp(rgEscapeRe(sym), 'g'), ' ' + word + ' ');
+  }
+  return r.replace(/\s+/g, ' ').trim();
+}
+// Reverse-apply NTS body substitutions on parsed incoming text, then
+// tidy up common punctuation spacing so it reads naturally in the
+// form ("WELL COMMA HELLO" → "WELL, HELLO" rather than "WELL , HELLO").
+function rgBodyParse(text) {
+  let r = text || '';
+  for (const { sym, word } of RG_BODY_SUBS) {
+    r = r.replace(new RegExp('\\b' + word + '\\b', 'g'), sym);
+  }
+  r = r.replace(/(?<=\d)R(?=\d)/g, '.');
+  for (const { word, sym } of RG_BODY_COMPAT) {
+    r = r.replace(new RegExp('\\b' + word + '\\b', 'g'), sym);
+  }
+  // Cosmetic cleanup — join displaced punctuation to adjacent words.
+  r = r.replace(/\s+([,?:;!%])/g, '$1')        // close punct → left
+       .replace(/\(\s+/g, '(')                 // ( → right
+       .replace(/\s+\)/g, ')')                 // ) → left
+       .replace(/(\w)\s+'\s+(\w)/g, "$1'$2")    // apostrophe between words
+       .replace(/@\s+/g, '@')                  // @ joins right (email-ish)
+       .replace(/\s{2,}/g, ' ').trim();
+  return r;
+}
+// Email-field phonetic substitution. Same set as the body but applied
+// unconditionally (no decimal-context check) since email addresses
+// have a constrained character set and any "." is a domain separator.
 function rgFormatEmail(e) {
   return (e||'').toUpperCase()
     .replace(/@/g, ' ATSIGN ')
@@ -2553,6 +2619,7 @@ function rgFormatEmail(e) {
     .replace(/-/g, ' DASH ')
     .replace(/#/g, ' NR ')
     .replace(/_/g, ' UNDERSCORE ')
+    .replace(/\+/g, ' PLUSSIGN ')
     .replace(/\s+/g, ' ').trim();
 }
 // NTS body wrap: 5 words per line on word boundaries. Matches the
@@ -2597,17 +2664,7 @@ function rgGenerate() {
   const zip         = val('rg-zip').trim();
   const phone       = val('rg-phone').trim();
   const email       = val('rg-email').trim();
-  // Body text: uppercase, then substitute punctuation to NTS phonetic
-  // words. Standard practice spells out commas and question marks so
-  // CW/voice relay stations can transcribe unambiguously, and uses
-  // "R" as the decimal point inside numbers (146.52 → 146R52). "X"
-  // for end-of-sentence is intentionally NOT auto-inserted — that
-  // one is contextual and the operator handles it.
-  const text = val('rg-text').trim().toUpperCase()
-    .replace(/(?<=\d)\.(?=\d)/g, 'R')
-    .replace(/,/g, ' COMMA ')
-    .replace(/\?/g, ' QUERY ')
-    .replace(/\s+/g, ' ').trim();
+  const text = rgBodyGenerate(val('rg-text').trim());
   const words = text ? text.split(/\s+/).filter(Boolean).length : 0;
 
   // Preamble: NUM PREC [HX] STATION COUNT PLACE TIME DATE
@@ -2704,6 +2761,7 @@ function rgParseRadiogram(body) {
           .replace(/\s+DASH\s+/gi, '-')
           .replace(/\s+NR\s+/gi, '#')
           .replace(/\s+UNDERSCORE\s+/gi, '_')
+          .replace(/\s+PLUSSIGN\s+/gi, '+')
           .trim();
       } else if (/^[\d\s]+$/.test(l)) {
         out.phone = l.replace(/\s+/g, ' ').trim();
@@ -2721,13 +2779,7 @@ function rgParseRadiogram(body) {
     let btEnd = -1;
     for (let j = btStart + 1; j < lines.length; j++) if (/^BT$/.test(lines[j])) { btEnd = j; break; }
     const bodyEnd = btEnd === -1 ? lines.length : btEnd;
-    out.text = lines.slice(btStart + 1, bodyEnd).join(' ').trim()
-      .replace(/\bCOMMA\b/g, ',')
-      .replace(/\bQUERY\b/g, '?')
-      .replace(/(?<=\d)R(?=\d)/g, '.')   // "146R52" → "146.52"; R between digits only
-      .replace(/\s+([,?])/g, '$1')      // tidy " ," and " ?" → joined punctuation
-      .replace(/\s{2,}/g, ' ')
-      .trim();
+    out.text = rgBodyParse(lines.slice(btStart + 1, bodyEnd).join(' ').trim());
   }
   return out;
 }
