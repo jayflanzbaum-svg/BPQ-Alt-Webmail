@@ -294,6 +294,23 @@ body { font-family:var(--sans); font-size:1rem; background:var(--bg); color:var(
 .modal-hint { font-family:var(--mono); font-size:0.77rem; color:var(--text3) }
 .send-btn { padding:7px 20px; background:var(--green-dim); border:none; border-radius:4px; color:#fff; font-family:var(--mono); font-size:0.92rem; font-weight:700; cursor:pointer }
 .send-btn:hover { background:var(--green) }
+/* ── RADIOGRAM (T/RRI) FORM ── */
+.rg-sec { background:var(--bg3); border:1px solid var(--border); border-radius:5px; padding:10px 12px; margin-bottom:8px }
+.rg-sec-hd { font-family:var(--mono); font-size:0.77rem; font-weight:600; color:var(--accent); text-transform:uppercase; letter-spacing:.1em; margin-bottom:8px; display:flex; align-items:center; gap:8px }
+.rg-row { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:6px }
+.rg-row:last-child { margin-bottom:0 }
+.rg-row .field { flex:1 1 140px; min-width:0 }
+.rg-now { background:var(--bg); border:1px solid var(--border); border-radius:3px; padding:1px 7px; font-family:var(--mono); font-size:0.69rem; cursor:pointer; color:var(--text2); text-transform:uppercase; letter-spacing:.05em }
+.rg-now:hover { background:var(--accent-bg); border-color:var(--accent); color:var(--accent) }
+.rg-output { background:#0a0d10; color:#00c98a; font-family:var(--mono); font-size:0.85rem; padding:12px 14px; border-radius:4px; min-height:200px; max-height:380px; overflow:auto; white-space:pre-wrap; line-height:1.5; border:1px solid #2a2f3a; margin:0 }
+.rg-actions { display:flex; gap:6px; margin-top:10px; flex-wrap:wrap }
+.rg-btn { padding:7px 14px; border:none; border-radius:4px; color:#fff; font-family:var(--mono); font-size:0.77rem; font-weight:700; cursor:pointer; letter-spacing:.05em }
+.rg-btn.rg-gen   { background:#00a86b }
+.rg-btn.rg-copy  { background:#2563eb }
+.rg-btn.rg-save  { background:#ea580c }
+.rg-btn.rg-reset { background:#dc2626 }
+.rg-btn:hover { filter:brightness(1.08) }
+.rg-credit { font-family:var(--mono); font-size:0.69rem; color:var(--text3); margin-top:8px; text-align:right }
 .del-box { background:var(--bg2); border:1px solid var(--border2); border-radius:8px; padding:22px 26px; max-width:360px; width:90% }
 .del-ttl { font-family:var(--mono); font-size:0.92rem; font-weight:600; color:var(--red); margin-bottom:10px }
 .del-msg { font-size:1rem; color:var(--text2); margin-bottom:18px; line-height:1.5 }
@@ -668,10 +685,77 @@ body { font-family:var(--sans); font-size:1rem; background:var(--bg); color:var(
   <div class="modal">
     <div class="modal-hd"><span class="modal-ttl" id="cmp-ttl">New Message</span><button class="modal-x" onclick="closeCompose()">×</button></div>
     <div class="modal-bd">
-      <div class="field"><span class="field-lbl">To (callsign)</span><input class="field-in" id="cmp-to" placeholder="K1AJD"></div>
-      <div class="field"><span class="field-lbl">Subject</span><input class="field-in" id="cmp-subj" placeholder="subject line"></div>
-      <div class="field"><span class="field-lbl">Type</span><select class="field-in" id="cmp-type" style="width:auto"><option value="P">P – Personal</option><option value="B">B – Bulletin</option><option value="T">T – NTS Traffic</option></select></div>
-      <div class="field"><span class="field-lbl">Message</span><textarea class="field-ta" id="cmp-body" placeholder="message text…"></textarea></div>
+      <div class="field"><span class="field-lbl">To (callsign or routing)</span><input class="field-in" id="cmp-to" placeholder="K1AJD"></div>
+      <div class="field"><span class="field-lbl">Type</span><select class="field-in" id="cmp-type" style="width:auto" onchange="onComposeTypeChange()"><option value="P">P – Personal</option><option value="B">B – Bulletin</option><option value="T">T – NTS Traffic</option><option value="T/RRI">T/RRI – NTS Radiogram (form)</option></select></div>
+      <div id="cmp-normal-fields">
+        <div class="field"><span class="field-lbl">Subject</span><input class="field-in" id="cmp-subj" placeholder="subject line"></div>
+        <div class="field"><span class="field-lbl">Message</span><textarea class="field-ta" id="cmp-body" placeholder="message text…"></textarea></div>
+      </div>
+      <div id="cmp-radiogram" style="display:none">
+        <div class="rg-sec">
+          <div class="rg-sec-hd">1 · Station of Origin</div>
+          <div class="rg-row">
+            <div class="field"><span class="field-lbl">Op Name</span><input class="field-in" id="rg-op-name" placeholder="JOHN DOE"></div>
+            <div class="field"><span class="field-lbl">Station Callsign</span><input class="field-in" id="rg-station-call" placeholder="W1ABC"></div>
+            <div class="field"><span class="field-lbl">Place of Origin</span><input class="field-in" id="rg-place" placeholder="PHILADELPHIA PA"></div>
+          </div>
+        </div>
+        <div class="rg-sec">
+          <div class="rg-sec-hd">2 · Preamble (Header)</div>
+          <div class="rg-row">
+            <div class="field"><span class="field-lbl">Msg #</span><input class="field-in" id="rg-msgnum" placeholder="1"></div>
+            <div class="field"><span class="field-lbl">Precedence</span><select class="field-in" id="rg-prec">
+              <option value="R">ROUTINE (R)</option>
+              <option value="W">WELFARE (W)</option>
+              <option value="P">PRIORITY (P)</option>
+              <option value="EMERGENCY">EMERGENCY</option>
+            </select></div>
+            <div class="field"><span class="field-lbl">Handling (HX)</span><select class="field-in" id="rg-hx">
+              <option value="">NONE</option>
+              <option value="HXA">HXA</option><option value="HXB">HXB</option><option value="HXC">HXC</option>
+              <option value="HXD">HXD</option><option value="HXE">HXE</option><option value="HXF">HXF</option>
+              <option value="HXG">HXG</option>
+            </select></div>
+            <div class="field"><span class="field-lbl">Date Filed</span><input class="field-in" id="rg-date" placeholder="MAY 24"></div>
+            <div class="field"><span class="field-lbl">Time UTC &nbsp; <button type="button" class="rg-now" onclick="rgNowTime()" title="Fill with current UTC HHMM">⊙ NOW</button></span><input class="field-in" id="rg-time" placeholder="2237"></div>
+          </div>
+        </div>
+        <div class="rg-sec">
+          <div class="rg-sec-hd">3 · The Address (Recipient)</div>
+          <div class="rg-row">
+            <div class="field"><span class="field-lbl">Recipient Name</span><input class="field-in" id="rg-rcpt-name" placeholder="JANE SMITH"></div>
+            <div class="field"><span class="field-lbl">Recipient Callsign</span><input class="field-in" id="rg-rcpt-call" placeholder="W2XYZ"></div>
+          </div>
+          <div class="rg-row">
+            <div class="field"><span class="field-lbl">Street Address</span><input class="field-in" id="rg-street" placeholder="123 MAIN ST"></div>
+            <div class="field"><span class="field-lbl">Apt / Suite / Box</span><input class="field-in" id="rg-apt" placeholder="(optional)"></div>
+          </div>
+          <div class="rg-row">
+            <div class="field"><span class="field-lbl">City</span><input class="field-in" id="rg-city" placeholder="TOWN"></div>
+            <div class="field" style="flex:0 0 90px"><span class="field-lbl">State</span><select class="field-in" id="rg-state"></select></div>
+            <div class="field" style="flex:0 0 110px"><span class="field-lbl">ZIP</span><input class="field-in" id="rg-zip" placeholder="ZIP"></div>
+          </div>
+          <div class="rg-row">
+            <div class="field"><span class="field-lbl">Phone</span><input class="field-in" id="rg-phone" placeholder="555-123-4567"></div>
+            <div class="field"><span class="field-lbl">Email (optional)</span><input class="field-in" id="rg-email" placeholder="JANE@EXAMPLE.COM"></div>
+          </div>
+        </div>
+        <div class="rg-sec">
+          <div class="rg-sec-hd">4 · The Text (Message Body)</div>
+          <textarea class="field-ta" id="rg-text" style="min-height:120px" placeholder="DASH BECOMES 'DASH', # BECOMES 'NR', .COM BECOMES 'DOT COM'."></textarea>
+        </div>
+        <div class="rg-sec">
+          <div class="rg-sec-hd">5 · RRI / ARRL ASCII Output</div>
+          <pre id="rg-output" class="rg-output">Ready for input...</pre>
+          <div class="rg-actions">
+            <button type="button" class="rg-btn rg-gen"   onclick="rgGenerate()">GENERATE RRI MESSAGE</button>
+            <button type="button" class="rg-btn rg-copy"  onclick="rgCopy()">COPY FOR TERMINAL</button>
+            <button type="button" class="rg-btn rg-save"  onclick="rgSaveTxt()">SAVE AS .TXT</button>
+            <button type="button" class="rg-btn rg-reset" onclick="rgResetMsg()">RESET RECIPIENT/MSG</button>
+          </div>
+          <div class="rg-credit">Generator logic ported from N3MEL's TPRFN/RRI radiogram form.</div>
+        </div>
+      </div>
     </div>
     <div class="modal-ft"><span class="modal-hint" id="cmp-status"></span><button class="send-btn" id="cmp-send" onclick="doSend()">SEND ▶</button></div>
   </div>
@@ -2302,6 +2386,10 @@ function openCompose(to='',subj='',body='',title=''){
   document.getElementById('cmp-body').value=body||`\n\n${sig}`;
   document.getElementById('cmp-ttl').textContent=title||(to?'Forward':'New Message');
   document.getElementById('cmp-status').textContent='';
+  // Reset to plain compose mode (in case a prior radiogram session left it active)
+  const typeSel = document.getElementById('cmp-type');
+  if (typeSel.value === 'T/RRI') typeSel.value = 'P';
+  onComposeTypeChange();
   const modal=document.querySelector('#cmp-ov .modal');
   const saved=LS.get('bpq_compose_w');
   if(saved && !isMobile) modal.style.width=saved;
@@ -2355,11 +2443,23 @@ function doForward(){
   openCompose('',`FWD: ${msg.subject}`,`\n\n${sig}\n\n--- Fwd #${msg.num} from ${msg.from} ---\n${msg.body||''}`,'Forward');
 }
 function doSend(){
-  const to=document.getElementById('cmp-to').value.trim().toUpperCase();
-  const subj=document.getElementById('cmp-subj').value.trim();
-  const msg=document.getElementById('cmp-body').value.trim();
-  const type=document.getElementById('cmp-type').value;
+  let type=document.getElementById('cmp-type').value;
   const st=document.getElementById('cmp-status');
+  let to=document.getElementById('cmp-to').value.trim().toUpperCase();
+  let subj, msg;
+  if (type === 'T/RRI') {
+    // Generate the radiogram body; auto-fill subject + (if blank) the BBS to.
+    msg = rgGenerate();
+    const num = document.getElementById('rg-msgnum').value.trim() || '?';
+    const city = document.getElementById('rg-city').value.trim().toUpperCase();
+    const rcptCall = document.getElementById('rg-rcpt-call').value.trim().toUpperCase();
+    subj = `RADIOGRAM #${num}${city?` ${city}`:''}`;
+    if (!to) to = rcptCall;
+    type = 'T'; // send as plain NTS Traffic
+  } else {
+    subj=document.getElementById('cmp-subj').value.trim();
+    msg=document.getElementById('cmp-body').value.trim();
+  }
   if(!to||!subj||!msg){st.style.color='var(--red)';st.textContent='Fill in all fields';return;}
   st.style.color='var(--amber)';st.textContent='Sending…';
   document.getElementById('cmp-send').disabled=true;
@@ -2379,6 +2479,171 @@ function doSend(){
   };
   f.submit();
   setTimeout(()=>{document.getElementById('cmp-send').disabled=false;},5000);
+}
+
+// ═══════════════════════════════════════════════════
+//  RADIOGRAM (T/RRI) FORM
+//  Ports the client-side logic of N3MEL's TPRFN/RRI radiogram
+//  generator into the compose modal. Selecting the "T/RRI" type
+//  swaps the plain subject/body fields for this structured form;
+//  on Send, the assembled ASCII becomes the message body and the
+//  type is sent as plain T (NTS Traffic).
+// ═══════════════════════════════════════════════════
+const RG_STATES = ['AL','AK','AZ','AR','CA','CO','CT','DE','FL','GA','HI','ID','IL','IN','IA',
+                   'KS','KY','LA','ME','MD','MA','MI','MN','MS','MO','MT','NE','NV','NH','NJ',
+                   'NM','NY','NC','ND','OH','OK','OR','PA','RI','SC','SD','TN','TX','UT','VT',
+                   'VA','WA','WV','WI','WY','DC','PR','VI','GU','AS','MP'];
+let rgInited = false;
+function rgInit() {
+  if (rgInited) return;
+  const sel = document.getElementById('rg-state');
+  sel.innerHTML = '<option value="">ST</option>' + RG_STATES.map(s => `<option value="${s}">${s}</option>`).join('');
+  // Load persisted Station of Origin (op name, station call, place)
+  let origin;
+  try { origin = JSON.parse(LS.get('bpq_rg_origin')||'null') || {}; } catch(_) { origin = {}; }
+  if (origin.opName)      document.getElementById('rg-op-name').value     = origin.opName;
+  if (origin.stationCall) document.getElementById('rg-station-call').value = origin.stationCall;
+  if (origin.place)       document.getElementById('rg-place').value        = origin.place;
+  // Default station call to user's BBS callsign if origin not set
+  if (!origin.stationCall && CFG.callsign) {
+    document.getElementById('rg-station-call').value = CFG.callsign.toUpperCase();
+  }
+  rgInited = true;
+}
+function rgSaveOrigin() {
+  LS.set('bpq_rg_origin', JSON.stringify({
+    opName: document.getElementById('rg-op-name').value,
+    stationCall: document.getElementById('rg-station-call').value,
+    place: document.getElementById('rg-place').value,
+  }));
+}
+function rgNowTime() {
+  const d = new Date();
+  const h = String(d.getUTCHours()).padStart(2,'0');
+  const m = String(d.getUTCMinutes()).padStart(2,'0');
+  document.getElementById('rg-time').value = h+m;
+}
+function rgFormatPhone(p) {
+  const digits = (p||'').replace(/\D/g,'');
+  if (digits.length === 10) return `${digits.slice(0,3)} ${digits.slice(3,6)} ${digits.slice(6)}`;
+  if (digits.length === 11) return `${digits[0]} ${digits.slice(1,4)} ${digits.slice(4,7)} ${digits.slice(7)}`;
+  return digits;  // fall back to raw digits when count is non-standard
+}
+function rgFormatEmail(e) {
+  return (e||'').toUpperCase()
+    .replace(/\.COM/g, ' DOT COM')
+    .replace(/#/g, ' NR ')
+    .replace(/-/g, ' DASH ')
+    .replace(/\s+/g, ' ').trim();
+}
+// Word-wrap on word boundaries with a per-line cap of ~25 chars, the
+// observed wrap width of the TPRFN form output. Single words longer
+// than the cap are emitted on their own line.
+function rgWrap25(text, max=25) {
+  const words = (text||'').trim().split(/\s+/).filter(Boolean);
+  if (!words.length) return '';
+  const lines = [];
+  let cur = '';
+  for (const w of words) {
+    if (!cur) { cur = w; continue; }
+    if ((cur + ' ' + w).length <= max) cur += ' ' + w;
+    else { lines.push(cur); cur = w; }
+  }
+  if (cur) lines.push(cur);
+  return lines.join('\n');
+}
+function rgGenerate() {
+  rgSaveOrigin();
+  const val = id => document.getElementById(id).value;
+  const opName      = val('rg-op-name').trim().toUpperCase();
+  const stationCall = val('rg-station-call').trim().toUpperCase();
+  const place       = val('rg-place').trim().toUpperCase();
+  const msgNum      = val('rg-msgnum').trim();
+  const prec        = val('rg-prec');
+  const hx          = val('rg-hx');
+  const date        = val('rg-date').trim().toUpperCase();
+  const time        = val('rg-time').trim();
+  const rcptName    = val('rg-rcpt-name').trim().toUpperCase();
+  const rcptCall    = val('rg-rcpt-call').trim().toUpperCase();
+  const street      = val('rg-street').trim().toUpperCase();
+  const apt         = val('rg-apt').trim().toUpperCase();
+  const city        = val('rg-city').trim().toUpperCase();
+  const zip         = val('rg-zip').trim();
+  const phone       = val('rg-phone').trim();
+  const email       = val('rg-email').trim();
+  const text        = val('rg-text').trim().toUpperCase();
+  const words = text ? text.split(/\s+/).filter(Boolean).length : 0;
+
+  // Preamble: NUM PREC [HX] STATION COUNT PLACE TIME DATE
+  const preambleParts = [msgNum, prec];
+  if (hx) preambleParts.push(hx);
+  preambleParts.push(stationCall, String(words), place, time, date);
+  const preamble = preambleParts.join(' ').replace(/\s+/g,' ').trim();
+
+  const lines = [];
+  lines.push(`${city} ${rcptCall}`.replace(/\s+/g,' ').trim());
+  lines.push('');
+  lines.push(preamble);
+  lines.push(`${rcptName} ${rcptCall}`.replace(/\s+/g,' ').trim());
+  lines.push(street);
+  if (apt) lines.push(apt);
+  lines.push(`${city}  ${zip}`.trim());  // two spaces between city and zip, per spec
+  if (phone) lines.push(rgFormatPhone(phone));
+  if (email) lines.push(rgFormatEmail(email));
+  lines.push('BT');
+  if (text) lines.push(rgWrap25(text));
+  lines.push('BT');
+  lines.push(`${opName} ${stationCall}`.replace(/\s+/g,' ').trim());
+  lines.push('/EX');
+
+  const output = lines.join('\n');
+  document.getElementById('rg-output').textContent = output;
+  return output;
+}
+function rgCopy() {
+  const out = document.getElementById('rg-output').textContent;
+  if (!out || out === 'Ready for input...') { toast('Generate first', 'info'); return; }
+  // Terminal-clean copy: strip leading whitespace on each line
+  const cleaned = out.split('\n').map(l => l.replace(/^\s+/,'').replace(/\s+$/,'')).join('\n');
+  navigator.clipboard.writeText(cleaned).then(
+    () => toast('Copied for terminal', 'ok'),
+    () => toast('Copy failed', 'err')
+  );
+}
+function rgSaveTxt() {
+  const out = document.getElementById('rg-output').textContent;
+  if (!out || out === 'Ready for input...') { toast('Generate first', 'info'); return; }
+  const num = document.getElementById('rg-msgnum').value.trim() || 'msg';
+  const a = Object.assign(document.createElement('a'), {
+    href: URL.createObjectURL(new Blob([out], {type:'text/plain'})),
+    download: `radiogram-${num}.txt`,
+  });
+  document.body.appendChild(a); a.click(); a.remove();
+  toast('Saved', 'ok');
+}
+function rgResetMsg() {
+  // Clears Sections 3 & 4 only — Section 1 (Station of Origin) and
+  // Section 2 (Preamble) are preserved so you can fire off the next
+  // message in a chain without re-entering your own info.
+  ['rg-rcpt-name','rg-rcpt-call','rg-street','rg-apt','rg-city','rg-zip','rg-phone','rg-email','rg-text'].forEach(id => {
+    document.getElementById(id).value = '';
+  });
+  document.getElementById('rg-state').value = '';
+  document.getElementById('rg-output').textContent = 'Ready for input...';
+}
+// Toggle compose modal body between the plain subj/body fields and
+// the radiogram form, based on the selected type.
+function onComposeTypeChange() {
+  const type = document.getElementById('cmp-type').value;
+  const isRg = (type === 'T/RRI');
+  document.getElementById('cmp-normal-fields').style.display = isRg ? 'none' : '';
+  document.getElementById('cmp-radiogram').style.display     = isRg ? '' : 'none';
+  if (isRg) {
+    rgInit();
+    document.getElementById('cmp-ttl').textContent = 'New Radiogram (T/RRI)';
+  } else {
+    document.getElementById('cmp-ttl').textContent = 'New Message';
+  }
 }
 function doDownload(){
   const msg=allMsgs.find(m=>m.num===activeNum);
