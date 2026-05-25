@@ -2573,7 +2573,15 @@ function rgGenerate() {
   const opName      = val('rg-op-name').trim().toUpperCase();
   const stationCall = val('rg-station-call').trim().toUpperCase();
   const place       = val('rg-place').trim().toUpperCase();
-  const msgNum      = val('rg-msgnum').trim();
+  // Defensive: if the user never touched MSG #, fall back to
+  // (last sent + 1) here so the preamble can never lack a number.
+  // Write the value back to the field so it's visible on review.
+  let msgNum = val('rg-msgnum').trim();
+  if (!msgNum) {
+    const last = parseInt(LS.get('bpq_rg_last_sent')||'0', 10) || 0;
+    msgNum = String(last + 1);
+    document.getElementById('rg-msgnum').value = msgNum;
+  }
   const prec        = val('rg-prec');
   const hx          = val('rg-hx');
   const date        = val('rg-date').trim().toUpperCase();
