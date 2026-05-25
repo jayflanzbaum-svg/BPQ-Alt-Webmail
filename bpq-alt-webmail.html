@@ -704,16 +704,21 @@ body { font-family:var(--sans); font-size:1rem; background:var(--bg); color:var(
               <option value="P">PRIORITY (P)</option>
               <option value="EMERGENCY">EMERGENCY</option>
             </select></div>
-            <div class="field"><span class="field-lbl">Handling (HX)</span><select class="field-in" id="rg-hx">
-              <option value="">NONE</option>
-              <option value="HXA">HXA — Collect landline delivery authorized (within N miles)</option>
-              <option value="HXB">HXB — Cancel if not delivered within N hours of filing</option>
-              <option value="HXC">HXC — Report date &amp; time of delivery (TOD) to originator</option>
-              <option value="HXD">HXD — Report relay path and delivery method to originator</option>
-              <option value="HXE">HXE — Delivering station obtain reply from addressee</option>
-              <option value="HXF">HXF — Hold delivery until specified date</option>
-              <option value="HXG">HXG — No toll / mail delivery — cancel if expense involved</option>
-            </select></div>
+            <div class="field"><span class="field-lbl">Handling (HX)</span>
+              <div style="display:flex; gap:6px">
+                <select class="field-in" id="rg-hx" onchange="onRgHxChange()" style="flex:1; min-width:0">
+                  <option value="">NONE</option>
+                  <option value="HXA">HXA — Collect landline delivery within N miles</option>
+                  <option value="HXB">HXB — Cancel if not delivered within N hours of filing</option>
+                  <option value="HXC">HXC — Report date &amp; time of delivery (TOD) to originator</option>
+                  <option value="HXD">HXD — Report relay path and delivery method to originator</option>
+                  <option value="HXE">HXE — Delivering station obtain reply from addressee</option>
+                  <option value="HXF">HXF — Hold delivery until specified date</option>
+                  <option value="HXG">HXG — No toll / mail delivery — cancel if expense involved</option>
+                </select>
+                <input class="field-in" id="rg-hx-var" placeholder="N" style="display:none; flex:0 0 90px" title="Variable for HXA (miles), HXB (hours), or HXF (date as MMDD)">
+              </div>
+            </div>
             <div class="field"><span class="field-lbl">Date Filed</span><input class="field-in" id="rg-date" placeholder="MAY 24"></div>
             <div class="field"><span class="field-lbl">Time UTC &nbsp; <button type="button" class="rg-now" onclick="rgNowTime()" title="Fill with current UTC HHMM">⊙ NOW</button></span><input class="field-in" id="rg-time" placeholder="2237"></div>
           </div>
@@ -2531,6 +2536,23 @@ function rgSaveOrigin() {
     place: document.getElementById('rg-place').value,
   }));
 }
+// HX codes HXA/HXB/HXF take an inline variable (miles, hours, date)
+// appended to the code with no space (e.g. HXB48). All other codes
+// don't, so we hide the variable input to avoid operator confusion.
+function rgHxNeedsVar(code) { return ['HXA','HXB','HXF'].includes(code); }
+function onRgHxChange() {
+  const code = document.getElementById('rg-hx').value;
+  const v = document.getElementById('rg-hx-var');
+  if (rgHxNeedsVar(code)) {
+    v.style.display = '';
+    v.placeholder = code === 'HXA' ? 'miles'
+                  : code === 'HXB' ? 'hours'
+                  : code === 'HXF' ? 'MMDD' : 'N';
+  } else {
+    v.style.display = 'none';
+    v.value = '';
+  }
+}
 function rgNowTime() {
   const d = new Date();
   const h = String(d.getUTCHours()).padStart(2,'0');
@@ -2652,7 +2674,11 @@ function rgGenerate() {
     document.getElementById('rg-msgnum').value = msgNum;
   }
   const prec        = val('rg-prec');
-  const hx          = val('rg-hx');
+  const hxCode      = val('rg-hx');
+  const hxVar       = val('rg-hx-var').trim();
+  // HXA/HXB/HXF carry an inline variable (miles/hours/date); other
+  // codes don't. Concatenate with no space per ARRL convention.
+  const hx = hxCode && rgHxNeedsVar(hxCode) && hxVar ? (hxCode + hxVar) : hxCode;
   const date        = val('rg-date').trim().toUpperCase();
   const time        = val('rg-time').trim();
   const rcptName    = val('rg-rcpt-name').trim().toUpperCase();
@@ -2698,7 +2724,9 @@ function rgGenerate() {
 function rgParseRadiogram(body) {
   if (!body) return null;
   const lines = body.split(/\r?\n/).map(l => l.trim()).filter(l => l && !/^\/EX$/i.test(l));
-  const preRe = /^(\d+)\s+(R|W|P|EMERGENCY)(?:\s+(HX[A-Z]))?\s+(\S+)\s+(\d+)\s+(.+)$/i;
+  // HX can be a single letter (HXA), combined letters (HXAC), or
+  // letter(s) plus a digit-string argument (HXA50, HXB72, HXF1225).
+  const preRe = /^(\d+)\s+(R|W|P|EMERGENCY)(?:\s+(HX[A-Z]+\d*))?\s+(\S+)\s+(\d+)\s+(.+)$/i;
   let preIdx = -1, m = null;
   for (let i = 0; i < lines.length; i++) {
     m = lines[i].match(preRe);
@@ -2706,9 +2734,14 @@ function rgParseRadiogram(body) {
   }
   if (preIdx === -1) return null;
 
+  // Split HX like "HXA50" into the letters portion (HXA) and the
+  // numeric variable (50) so each populates its own form field.
+  const hxRaw = (m[3]||'').toUpperCase();
+  const hxLetters = (hxRaw.match(/^HX[A-Z]+/)||[''])[0];
+  const hxVar = hxRaw.slice(hxLetters.length);
   const out = {
     msgNum: m[1], prec: m[2].toUpperCase(),
-    hx: (m[3]||'').toUpperCase(), stationCall: m[4].toUpperCase(),
+    hx: hxLetters, hxVar, stationCall: m[4].toUpperCase(),
     wordCount: m[5], place: '', time: '', date: '',
     rcptName: '', rcptCall: '', street: '', apt: '',
     city: '', state: '', zip: '', phone: '', email: '', text: '',
@@ -2801,7 +2834,9 @@ function parseRadiogramToForm() {
   // parsed radiogram, so show its number rather than the auto-next)
   document.getElementById('rg-msgnum').value = p.msgNum || '';
   if (['R','W','P','EMERGENCY'].includes(p.prec)) document.getElementById('rg-prec').value = p.prec;
-  document.getElementById('rg-hx').value   = /^HX[A-G]$/.test(p.hx) ? p.hx : '';
+  document.getElementById('rg-hx').value     = /^HX[A-G]$/.test(p.hx) ? p.hx : '';
+  document.getElementById('rg-hx-var').value = p.hxVar || '';
+  onRgHxChange();   // sync variable-field visibility to the populated code
   document.getElementById('rg-date').value = p.date || '';
   document.getElementById('rg-time').value = p.time || '';
   // Recipient
