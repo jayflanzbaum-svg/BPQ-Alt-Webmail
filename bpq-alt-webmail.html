@@ -2597,7 +2597,15 @@ function rgGenerate() {
   const zip         = val('rg-zip').trim();
   const phone       = val('rg-phone').trim();
   const email       = val('rg-email').trim();
-  const text        = val('rg-text').trim().toUpperCase();
+  // Body text: uppercase, then substitute punctuation to NTS phonetic
+  // words. Standard practice spells out commas and question marks so
+  // CW/voice relay stations can transcribe unambiguously. "X" for
+  // end-of-sentence is intentionally NOT auto-inserted — that one is
+  // contextual and the operator handles it.
+  const text = val('rg-text').trim().toUpperCase()
+    .replace(/,/g, ' COMMA ')
+    .replace(/\?/g, ' QUERY ')
+    .replace(/\s+/g, ' ').trim();
   const words = text ? text.split(/\s+/).filter(Boolean).length : 0;
 
   // Preamble: NUM PREC [HX] STATION COUNT PLACE TIME DATE
@@ -2704,11 +2712,19 @@ function rgParseRadiogram(body) {
   }
 
   // Body lives between the two BTs; we ignore the trailing signature.
+  // Reverse the punctuation-to-NTS-word substitutions so the form
+  // displays readable text. X stays as-is (too ambiguous: also a
+  // letter and a common standalone token like "X 73 X").
   if (btStart >= 0) {
     let btEnd = -1;
     for (let j = btStart + 1; j < lines.length; j++) if (/^BT$/.test(lines[j])) { btEnd = j; break; }
     const bodyEnd = btEnd === -1 ? lines.length : btEnd;
-    out.text = lines.slice(btStart + 1, bodyEnd).join(' ').trim();
+    out.text = lines.slice(btStart + 1, bodyEnd).join(' ').trim()
+      .replace(/\bCOMMA\b/g, ',')
+      .replace(/\bQUERY\b/g, '?')
+      .replace(/\s+([,?])/g, '$1')     // tidy " ," and " ?" → joined punctuation
+      .replace(/\s{2,}/g, ' ')
+      .trim();
   }
   return out;
 }
