@@ -304,6 +304,9 @@ body { font-family:var(--sans); font-size:1rem; background:var(--bg); color:var(
 .rg-now:hover { background:var(--accent-bg); border-color:var(--accent); color:var(--accent) }
 .rg-hint { font-family:var(--mono); font-size:0.77rem; color:var(--text3); margin-top:8px; line-height:1.5 }
 .rg-hint code { background:var(--bg2); border:1px solid var(--border); padding:1px 4px; border-radius:3px; color:var(--text2) }
+.rg-credit { font-family:var(--mono); font-size:0.69rem; color:var(--text3); margin-top:10px; padding-top:8px; border-top:1px dashed var(--border); text-align:center; font-style:italic; line-height:1.5 }
+.rg-credit a { color:var(--text3); text-decoration:underline }
+.rg-credit a:hover { color:var(--accent) }
 .del-box { background:var(--bg2); border:1px solid var(--border2); border-radius:8px; padding:22px 26px; max-width:360px; width:90% }
 .del-ttl { font-family:var(--mono); font-size:0.92rem; font-weight:600; color:var(--red); margin-bottom:10px }
 .del-msg { font-size:1rem; color:var(--text2); margin-bottom:18px; line-height:1.5 }
@@ -747,6 +750,7 @@ body { font-family:var(--sans); font-size:1rem; background:var(--bg); color:var(
           <div class="rg-sec-hd">4 · The Text (Message Body)</div>
           <textarea class="field-ta" id="rg-text" style="min-height:120px" placeholder="DASH BECOMES 'DASH', # BECOMES 'NR', .COM BECOMES 'DOT COM'."></textarea>
           <div class="rg-hint">Click <strong>REVIEW</strong> to populate the standard compose form: To → <code>&lt;ZIP&gt;@NTS&lt;STATE&gt;</code>, Subject → <code>&lt;CITY&gt; &lt;RCPT-CALL&gt;</code>, Body = the formatted radiogram. Eyeball / edit, then SEND.</div>
+          <div class="rg-credit">Generator logic ported from N3MEL's TPRFN / RRI radiogram form — <a href="https://www.tprfn.net/radiogram-form" target="_blank" rel="noopener">tprfn.net/radiogram-form</a></div>
         </div>
       </div>
       <div id="cmp-pktnet" style="display:none">
@@ -786,6 +790,7 @@ body { font-family:var(--sans); font-size:1rem; background:var(--bg); color:var(
           <div class="rg-sec-hd">4 · Comments (max 500 chars)</div>
           <textarea class="field-ta" id="pk-comments" maxlength="500" style="min-height:100px" placeholder="Such as: On batteries. Need relief in 6 hours. A brief SitRep. Operators names. Special notes for next shift."></textarea>
           <div class="rg-hint">Click <strong>REVIEW</strong> to populate the standard compose form: To → the form's <code>To</code> field, Subject → <code>PKTNET CHECK-IN</code>, Body = the formatted check-in. Eyeball / edit, then SEND.</div>
+          <div class="rg-credit">Form concept: N3MEL &nbsp;·&nbsp; Form created: KN4LQN &nbsp;·&nbsp; v1.1 &nbsp;·&nbsp; <a href="https://vden.org/pktnet/check_in.html" target="_blank" rel="noopener">vden.org/pktnet</a></div>
         </div>
       </div>
     </div>
