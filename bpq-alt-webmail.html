@@ -680,7 +680,7 @@ body { font-family:var(--sans); font-size:1rem; background:var(--bg); color:var(
     <div class="modal-hd"><span class="modal-ttl" id="cmp-ttl">New Message</span><button class="modal-x" onclick="closeCompose()">×</button></div>
     <div class="modal-bd">
       <div class="field" id="cmp-to-field"><span class="field-lbl">To (callsign or routing)</span><input class="field-in" id="cmp-to" placeholder="K1AJD"></div>
-      <div class="field"><span class="field-lbl">Type</span><select class="field-in" id="cmp-type" style="width:auto" onchange="onComposeTypeChange()"><option value="P">P – Personal</option><option value="B">B – Bulletin</option><option value="T">T – NTS Traffic</option><option value="T/RRI">T/RRI – NTS Radiogram (form)</option></select></div>
+      <div class="field"><span class="field-lbl">Type</span><select class="field-in" id="cmp-type" style="width:auto" onchange="onComposeTypeChange()"><option value="P">P – Personal</option><option value="B">B – Bulletin</option><option value="B/PKTNET">B/PKTNET – PKTNET Check-In (form)</option><option value="T">T – NTS Traffic</option><option value="T/RRI">T/RRI – NTS Radiogram (form)</option></select></div>
       <div id="cmp-normal-fields">
         <div class="field"><span class="field-lbl">Subject</span><input class="field-in" id="cmp-subj" placeholder="subject line"></div>
         <div class="field"><span class="field-lbl">Message</span><textarea class="field-ta" id="cmp-body" placeholder="message text…"></textarea></div>
@@ -747,6 +747,45 @@ body { font-family:var(--sans); font-size:1rem; background:var(--bg); color:var(
           <div class="rg-sec-hd">4 · The Text (Message Body)</div>
           <textarea class="field-ta" id="rg-text" style="min-height:120px" placeholder="DASH BECOMES 'DASH', # BECOMES 'NR', .COM BECOMES 'DOT COM'."></textarea>
           <div class="rg-hint">Click <strong>REVIEW</strong> to populate the standard compose form: To → <code>&lt;ZIP&gt;@NTS&lt;STATE&gt;</code>, Subject → <code>&lt;CITY&gt; &lt;RCPT-CALL&gt;</code>, Body = the formatted radiogram. Eyeball / edit, then SEND.</div>
+        </div>
+      </div>
+      <div id="cmp-pktnet" style="display:none">
+        <div class="rg-sec">
+          <div class="rg-sec-hd">Agency / Group</div>
+          <div class="field"><span class="field-lbl">Agency or Group Name (optional)</span><input class="field-in" id="pk-agency" placeholder="e.g. VDEM REGION 1"></div>
+        </div>
+        <div class="rg-sec">
+          <div class="rg-sec-hd">1 · Station</div>
+          <div class="rg-row">
+            <div class="field"><span class="field-lbl">a. Date / Time</span><input class="field-in" id="pk-datetime" placeholder="YYYY-MM-DD HH:MM"></div>
+            <div class="field"><span class="field-lbl">b. To (net / callsign)</span><input class="field-in" id="pk-to" placeholder="W4EOC"></div>
+          </div>
+          <div class="rg-row">
+            <div class="field"><span class="field-lbl">c. From</span><input class="field-in" id="pk-from" placeholder="your call"></div>
+            <div class="field"><span class="field-lbl">d. Station Contact Name</span><input class="field-in" id="pk-contact" placeholder="JOHN DOE"></div>
+            <div class="field"><span class="field-lbl">e. Initial Operator(s)</span><input class="field-in" id="pk-operator" placeholder="W1ABC W2XYZ"></div>
+          </div>
+        </div>
+        <div class="rg-sec">
+          <div class="rg-sec-hd">2 · Session</div>
+          <div class="rg-row">
+            <div class="field"><span class="field-lbl">a. Type</span><select class="field-in" id="pk-session-type"><option>EXERCISE</option><option>REAL EVENT</option></select></div>
+            <div class="field"><span class="field-lbl">b. Service</span><select class="field-in" id="pk-service-type"><option>AMATEUR</option></select></div>
+            <div class="field"><span class="field-lbl">c. Band</span><select class="field-in" id="pk-band"><option>AXIP</option><option>HF</option><option selected>VHF</option><option>UHF</option><option>SHF</option></select></div>
+            <div class="field"><span class="field-lbl">d. Session (mode)</span><select class="field-in" id="pk-mode"><option>AXIP</option><option selected>AX25 Packet</option><option>Pactor</option><option>Robust Packet</option><option>Ardop</option><option>VARA HF</option><option>VARA FM</option><option>Mesh</option></select></div>
+          </div>
+        </div>
+        <div class="rg-sec">
+          <div class="rg-sec-hd">3 · Location</div>
+          <div class="rg-row">
+            <div class="field"><span class="field-lbl">a. Location</span><input class="field-in" id="pk-location" placeholder="Hope Hospital, parking lot C near ER entrance"></div>
+            <div class="field" style="flex:0 0 140px"><span class="field-lbl">b. Grid Square</span><input class="field-in" id="pk-gridsquare" placeholder="FM18lv"></div>
+          </div>
+        </div>
+        <div class="rg-sec">
+          <div class="rg-sec-hd">4 · Comments (max 500 chars)</div>
+          <textarea class="field-ta" id="pk-comments" maxlength="500" style="min-height:100px" placeholder="Such as: On batteries. Need relief in 6 hours. A brief SitRep. Operators names. Special notes for next shift."></textarea>
+          <div class="rg-hint">Click <strong>REVIEW</strong> to populate the standard compose form: To → the form's <code>To</code> field, Subject → <code>PKTNET CHECK-IN</code>, Body = the formatted check-in. Eyeball / edit, then SEND.</div>
         </div>
       </div>
     </div>
@@ -2380,9 +2419,9 @@ function openCompose(to='',subj='',body='',title=''){
   document.getElementById('cmp-body').value=body||`\n\n${sig}`;
   document.getElementById('cmp-ttl').textContent=title||(to?'Forward':'New Message');
   document.getElementById('cmp-status').textContent='';
-  // Reset to plain compose mode (in case a prior radiogram session left it active)
+  // Reset to plain compose mode (in case a prior form-style session left it active)
   const typeSel = document.getElementById('cmp-type');
-  if (typeSel.value === 'T/RRI') typeSel.value = 'P';
+  if (typeSel.value === 'T/RRI' || typeSel.value === 'B/PKTNET') typeSel.value = 'P';
   onComposeTypeChange();
   const modal=document.querySelector('#cmp-ov .modal');
   const saved=LS.get('bpq_compose_w');
@@ -2393,9 +2432,10 @@ function openCompose(to='',subj='',body='',title=''){
 function closeCompose(){
   const modal=document.querySelector('#cmp-ov .modal');
   if(modal.style.width) LS.set('bpq_compose_w',modal.style.width);
-  // Discard any pending radiogram number — only a completed send
-  // should bump the counter.
+  // Discard any pending form-style state — only a completed send
+  // should bump counters / clear form fields.
   rgPendingNum = null;
+  pkPendingClear = false;
   document.getElementById('cmp-ov').classList.remove('open');
 }
 // Open compose modal pre-populated from a URL hash, e.g.:
@@ -2441,9 +2481,10 @@ function doForward(){
 }
 function doSend(){
   let type=document.getElementById('cmp-type').value;
-  // In radiogram mode the button is REVIEW: stage values into the
-  // standard compose form and let the user click SEND a second time.
-  if (type === 'T/RRI') { rgReview(); return; }
+  // Form-style types use REVIEW instead of immediate send — stage
+  // values into the standard compose form, user clicks SEND again.
+  if (type === 'T/RRI')   { rgReview(); return; }
+  if (type === 'B/PKTNET'){ pkReview(); return; }
   const st=document.getElementById('cmp-status');
   let to=document.getElementById('cmp-to').value.trim().toUpperCase();
   const subj=document.getElementById('cmp-subj').value.trim();
@@ -2461,11 +2502,9 @@ function doSend(){
   for(const[k,v]of Object.entries(fields)){const inp=document.createElement('input');inp.type='hidden';inp.name=k;inp.value=v;f.appendChild(inp);}
   document.body.appendChild(f);
   ifr.onload=function(){
-    // If this send originated from the radiogram REVIEW flow, bump
-    // the persisted "last sent" counter and clear the per-message
-    // fields so the next form opens fresh with the next msg # ready.
-    // Section 1 (Station of Origin) and Precedence/HX/Date are
-    // intentionally preserved across messages.
+    // Radiogram-originated send: bump the persisted "last sent" msg
+    // # and clear the per-message radiogram fields. Section 1 (Station
+    // of Origin) and Precedence/HX/Date are intentionally preserved.
     if (rgPendingNum !== null && Number.isFinite(rgPendingNum)) {
       LS.set('bpq_rg_last_sent', String(rgPendingNum));
       rgPendingNum = null;
@@ -2476,6 +2515,18 @@ function doSend(){
       });
       const stateSel = document.getElementById('rg-state');
       if (stateSel) stateSel.value = '';
+    }
+    // PKTNET-originated send: persist user defaults and clear the
+    // per-message fields (To, Location, Comments). Station defaults
+    // (agency, from, contact, operator, grid, session/band/mode) are
+    // preserved across check-ins.
+    if (pkPendingClear) {
+      pkPendingClear = false;
+      pkSaveDefaults();
+      ['pk-to','pk-location','pk-comments'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = '';
+      });
     }
     closeCompose();toast(`Sent to ${to}`,'ok');
     document.getElementById('cmp-send').disabled=false;
@@ -2854,6 +2905,131 @@ function parseRadiogramToForm() {
   document.getElementById('rg-text').value  = p.text  || '';
   toast('Radiogram parsed into form', 'ok');
 }
+// ═══════════════════════════════════════════════════
+//  PKTNET CHECK-IN (B/PKTNET) FORM
+//  Ports the VDEN packet check-in form (vden.org/pktnet) into the
+//  compose modal as a second form-style type. Selecting "B/PKTNET"
+//  swaps the plain subject/body fields for a structured check-in
+//  form; clicking REVIEW pre-fills the standard compose form (To,
+//  Subject, Body) with type B (Bulletin) for a final look.
+// ═══════════════════════════════════════════════════
+let pkInited = false;
+let pkPendingClear = false;  // set on REVIEW, consumed on iframe.onload after a real send
+function pkInit() {
+  if (pkInited) return;
+  let d;
+  try { d = JSON.parse(LS.get('bpq_pk_defaults')||'null') || {}; } catch(_) { d = {}; }
+  const set = (id, v) => { if (v) document.getElementById(id).value = v; };
+  set('pk-agency',       d.agency);
+  set('pk-from',         d.from);
+  set('pk-contact',      d.contact);
+  set('pk-operator',     d.operator);
+  set('pk-gridsquare',   d.gridsquare);
+  if (d.sessionType) document.getElementById('pk-session-type').value = d.sessionType;
+  if (d.serviceType) document.getElementById('pk-service-type').value = d.serviceType;
+  if (d.band)        document.getElementById('pk-band').value         = d.band;
+  if (d.mode)        document.getElementById('pk-mode').value         = d.mode;
+  // Default From / Initial Operator(s) to user's BBS callsign
+  if (!d.from && CFG.callsign)     document.getElementById('pk-from').value     = CFG.callsign.toUpperCase();
+  if (!d.operator && CFG.callsign) document.getElementById('pk-operator').value = CFG.callsign.toUpperCase();
+  pkInited = true;
+}
+function pkSaveDefaults() {
+  const v = id => document.getElementById(id).value;
+  LS.set('bpq_pk_defaults', JSON.stringify({
+    agency:      v('pk-agency'),
+    from:        v('pk-from'),
+    contact:     v('pk-contact'),
+    operator:    v('pk-operator'),
+    gridsquare:  v('pk-gridsquare'),
+    sessionType: v('pk-session-type'),
+    serviceType: v('pk-service-type'),
+    band:        v('pk-band'),
+    mode:        v('pk-mode'),
+  }));
+}
+// Auto-populate Date/Time field with current local time (not UTC),
+// per the VDEN form's behavior. Format: YYYY-MM-DD HH:MM, 24-hour.
+function pkSetDateTimeNow() {
+  const d = new Date();
+  const fmt = d.getFullYear() + '-' +
+    String(d.getMonth()+1).padStart(2,'0') + '-' +
+    String(d.getDate()).padStart(2,'0') + ' ' +
+    String(d.getHours()).padStart(2,'0') + ':' +
+    String(d.getMinutes()).padStart(2,'0');
+  document.getElementById('pk-datetime').value = fmt;
+}
+// Build the formatted check-in body and return the three BPQ fields.
+// Subject auto-derives to "PKTNET CHECK-IN" (plus agency tag if set).
+// Body matches the VDEN form's plain-text layout verbatim.
+function pkGenerate() {
+  pkSaveDefaults();
+  const v = id => document.getElementById(id).value;
+  const agency      = v('pk-agency').trim();
+  const datetime    = v('pk-datetime').trim();
+  const to          = v('pk-to').trim();
+  const from        = v('pk-from').trim();
+  const contact     = v('pk-contact').trim();
+  const operator    = v('pk-operator').trim();
+  const sessionType = v('pk-session-type');
+  const serviceType = v('pk-service-type');
+  const band        = v('pk-band');
+  const mode        = v('pk-mode');
+  const location    = v('pk-location').trim();
+  const gridsquare  = v('pk-gridsquare').trim();
+  const comments    = v('pk-comments').trim();
+
+  const L = [];
+  L.push('PACKET CHECK-IN');
+  L.push('');
+  if (agency) { L.push(agency); L.push(''); }
+  L.push('1. STATION');
+  L.push('');
+  L.push(`a. Date/Time: ${datetime}`);
+  L.push('');
+  L.push(`b. To: ${to}`);
+  L.push('');
+  L.push(`c. From: ${from}    d. Station Contact Name: ${contact}    e. Initial Operator(s): ${operator}`);
+  L.push('');
+  L.push('');
+  L.push('2. SESSION');
+  L.push('');
+  L.push(`a. Type: ${sessionType}    b. Service: ${serviceType}    c. Band: ${band}`);
+  L.push('');
+  L.push(`d. Session: ${mode}`);
+  L.push('');
+  L.push('');
+  L.push('3. LOCATION');
+  L.push('');
+  L.push(`a. Location: ${location}`);
+  L.push('');
+  L.push(`b. GRID SQUARE: ${gridsquare}`);
+  L.push('');
+  L.push('');
+  L.push(`4. COMMENTS: ${comments}`);
+
+  return {
+    to,
+    subj: agency ? `PKTNET CHECK-IN — ${agency}` : 'PKTNET CHECK-IN',
+    body: L.join('\n'),
+  };
+}
+// REVIEW handler — same shape as rgReview, but switches the modal
+// to type B (Bulletin) for sending.
+function pkReview() {
+  const pk = pkGenerate();
+  pkPendingClear = true;
+  document.getElementById('cmp-type').value = 'B';
+  onComposeTypeChange();
+  document.getElementById('cmp-to').value   = pk.to;
+  document.getElementById('cmp-subj').value = pk.subj;
+  document.getElementById('cmp-body').value = pk.body;
+  document.getElementById('cmp-ttl').textContent = 'Review PKTNET Check-In → Send';
+  document.getElementById('cmp-status').style.color = 'var(--text3)';
+  document.getElementById('cmp-status').textContent = 'Review the bulletin, then click SEND.';
+  setTimeout(()=>document.getElementById('cmp-body').focus(), 60);
+}
+
 // Toggle compose modal body between the plain subj/body fields and
 // the radiogram form, based on the selected type. In radiogram mode
 // the To field is hidden (the form generates the routing) and the
@@ -2862,14 +3038,21 @@ function parseRadiogramToForm() {
 function onComposeTypeChange() {
   const type = document.getElementById('cmp-type').value;
   const isRg = (type === 'T/RRI');
-  document.getElementById('cmp-normal-fields').style.display = isRg ? 'none' : '';
+  const isPk = (type === 'B/PKTNET');
+  const isForm = isRg || isPk;
+  document.getElementById('cmp-normal-fields').style.display = isForm ? 'none' : '';
   document.getElementById('cmp-radiogram').style.display     = isRg ? '' : 'none';
-  document.getElementById('cmp-to-field').style.display      = isRg ? 'none' : '';
-  document.getElementById('cmp-send').textContent            = isRg ? 'REVIEW ▶' : 'SEND ▶';
+  document.getElementById('cmp-pktnet').style.display        = isPk ? '' : 'none';
+  document.getElementById('cmp-to-field').style.display      = isForm ? 'none' : '';
+  document.getElementById('cmp-send').textContent            = isForm ? 'REVIEW ▶' : 'SEND ▶';
   if (isRg) {
     rgInit();
     rgSuggestNextNum();
     document.getElementById('cmp-ttl').textContent = 'New Radiogram (T/RRI)';
+  } else if (isPk) {
+    pkInit();
+    pkSetDateTimeNow();
+    document.getElementById('cmp-ttl').textContent = 'New PKTNET Check-In (B/PKTNET)';
   } else {
     document.getElementById('cmp-ttl').textContent = 'New Message';
   }
