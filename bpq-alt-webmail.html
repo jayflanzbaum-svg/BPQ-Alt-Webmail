@@ -84,6 +84,10 @@ body.classic {
   --accent:#0033aa; --accent-bg:#f0e0c0; --accent-border:#c4a878;
   --unread-dot:#cc0000;
 }
+/* Classic: reader body sits on white so the monospace message text
+   reads like the "page" of a printed traffic form against the wheat
+   chrome around it. */
+body.classic .rv-body { background:#ffffff }
 * { box-sizing:border-box; margin:0; padding:0 }
 html,body { height:100%; overflow:hidden }
 body { font-family:var(--sans); font-size:1rem; background:var(--bg); color:var(--text); display:flex; flex-direction:column; transition:background .15s,color .15s }
