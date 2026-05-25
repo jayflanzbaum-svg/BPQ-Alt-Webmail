@@ -302,15 +302,8 @@ body { font-family:var(--sans); font-size:1rem; background:var(--bg); color:var(
 .rg-row .field { flex:1 1 140px; min-width:0 }
 .rg-now { background:var(--bg); border:1px solid var(--border); border-radius:3px; padding:1px 7px; font-family:var(--mono); font-size:0.69rem; cursor:pointer; color:var(--text2); text-transform:uppercase; letter-spacing:.05em }
 .rg-now:hover { background:var(--accent-bg); border-color:var(--accent); color:var(--accent) }
-.rg-output { background:#0a0d10; color:#00c98a; font-family:var(--mono); font-size:0.85rem; padding:12px 14px; border-radius:4px; min-height:200px; max-height:380px; overflow:auto; white-space:pre-wrap; line-height:1.5; border:1px solid #2a2f3a; margin:0 }
-.rg-actions { display:flex; gap:6px; margin-top:10px; flex-wrap:wrap }
-.rg-btn { padding:7px 14px; border:none; border-radius:4px; color:#fff; font-family:var(--mono); font-size:0.77rem; font-weight:700; cursor:pointer; letter-spacing:.05em }
-.rg-btn.rg-gen   { background:#00a86b }
-.rg-btn.rg-copy  { background:#2563eb }
-.rg-btn.rg-save  { background:#ea580c }
-.rg-btn.rg-reset { background:#dc2626 }
-.rg-btn:hover { filter:brightness(1.08) }
-.rg-credit { font-family:var(--mono); font-size:0.69rem; color:var(--text3); margin-top:8px; text-align:right }
+.rg-hint { font-family:var(--mono); font-size:0.77rem; color:var(--text3); margin-top:8px; line-height:1.5 }
+.rg-hint code { background:var(--bg2); border:1px solid var(--border); padding:1px 4px; border-radius:3px; color:var(--text2) }
 .del-box { background:var(--bg2); border:1px solid var(--border2); border-radius:8px; padding:22px 26px; max-width:360px; width:90% }
 .del-ttl { font-family:var(--mono); font-size:0.92rem; font-weight:600; color:var(--red); margin-bottom:10px }
 .del-msg { font-size:1rem; color:var(--text2); margin-bottom:18px; line-height:1.5 }
@@ -743,17 +736,7 @@ body { font-family:var(--sans); font-size:1rem; background:var(--bg); color:var(
         <div class="rg-sec">
           <div class="rg-sec-hd">4 · The Text (Message Body)</div>
           <textarea class="field-ta" id="rg-text" style="min-height:120px" placeholder="DASH BECOMES 'DASH', # BECOMES 'NR', .COM BECOMES 'DOT COM'."></textarea>
-        </div>
-        <div class="rg-sec">
-          <div class="rg-sec-hd">5 · RRI / ARRL ASCII Output</div>
-          <pre id="rg-output" class="rg-output">Ready for input...</pre>
-          <div class="rg-actions">
-            <button type="button" class="rg-btn rg-gen"   onclick="rgGenerate()">GENERATE RRI MESSAGE</button>
-            <button type="button" class="rg-btn rg-copy"  onclick="rgCopy()">COPY FOR TERMINAL</button>
-            <button type="button" class="rg-btn rg-save"  onclick="rgSaveTxt()">SAVE AS .TXT</button>
-            <button type="button" class="rg-btn rg-reset" onclick="rgResetMsg()">RESET RECIPIENT/MSG</button>
-          </div>
-          <div class="rg-credit">Generator logic ported from N3MEL's TPRFN/RRI radiogram form.</div>
+          <div class="rg-hint">On <strong>SEND</strong>: To → <code>&lt;ZIP&gt;@NTS&lt;STATE&gt;</code>, Subject → <code>&lt;CITY&gt; &lt;RCPT-CALL&gt;</code>, body = the formatted radiogram (preamble through /EX).</div>
         </div>
       </div>
     </div>
@@ -2448,13 +2431,12 @@ function doSend(){
   let to=document.getElementById('cmp-to').value.trim().toUpperCase();
   let subj, msg;
   if (type === 'T/RRI') {
-    // Generate the radiogram body; auto-fill subject + (if blank) the BBS to.
-    msg = rgGenerate();
-    const num = document.getElementById('rg-msgnum').value.trim() || '?';
-    const city = document.getElementById('rg-city').value.trim().toUpperCase();
-    const rcptCall = document.getElementById('rg-rcpt-call').value.trim().toUpperCase();
-    subj = `RADIOGRAM #${num}${city?` ${city}`:''}`;
-    if (!to) to = rcptCall;
+    // The form drives everything: TO = <ZIP>@NTS<STATE>, Subject = <CITY> <RCPT-CALL>,
+    // body = the formatted radiogram. Manually-typed TO field overrides routing.
+    const rg = rgGenerate();
+    msg  = rg.body;
+    subj = rg.subj;
+    if (!to) to = rg.to;
     type = 'T'; // send as plain NTS Traffic
   } else {
     subj=document.getElementById('cmp-subj').value.trim();
@@ -2529,29 +2511,32 @@ function rgFormatPhone(p) {
   if (digits.length === 11) return `${digits[0]} ${digits.slice(1,4)} ${digits.slice(4,7)} ${digits.slice(7)}`;
   return digits;  // fall back to raw digits when count is non-standard
 }
+// Phonetic substitution for the email line. Reference output shows
+// "KY2D@ARRL.NET" rendered as "KY2D ATSIGN ARRL DOT NET" — every "@"
+// becomes ATSIGN, every "." becomes DOT, plus DASH/NR for "-"/"#".
 function rgFormatEmail(e) {
   return (e||'').toUpperCase()
-    .replace(/\.COM/g, ' DOT COM')
-    .replace(/#/g, ' NR ')
+    .replace(/@/g, ' ATSIGN ')
+    .replace(/\./g, ' DOT ')
     .replace(/-/g, ' DASH ')
+    .replace(/#/g, ' NR ')
+    .replace(/_/g, ' UNDERSCORE ')
     .replace(/\s+/g, ' ').trim();
 }
-// Word-wrap on word boundaries with a per-line cap of ~25 chars, the
-// observed wrap width of the TPRFN form output. Single words longer
-// than the cap are emitted on their own line.
-function rgWrap25(text, max=25) {
+// NTS body wrap: 5 words per line on word boundaries. Matches the
+// observed output of the TPRFN form (e.g. 14-word body becomes
+// 5 / 5 / 4-word lines).
+function rgWrap5(text) {
   const words = (text||'').trim().split(/\s+/).filter(Boolean);
   if (!words.length) return '';
   const lines = [];
-  let cur = '';
-  for (const w of words) {
-    if (!cur) { cur = w; continue; }
-    if ((cur + ' ' + w).length <= max) cur += ' ' + w;
-    else { lines.push(cur); cur = w; }
-  }
-  if (cur) lines.push(cur);
+  for (let i = 0; i < words.length; i += 5) lines.push(words.slice(i, i+5).join(' '));
   return lines.join('\n');
 }
+// Build the radiogram and return the three BPQ fields:
+//   { to:   <ZIP>@NTS<STATE> (or rcpt call if zip/state blank)
+//     subj: <CITY> <RCPT-CALL>
+//     body: preamble + recipient + address + BT + text + BT + sig + /EX }
 function rgGenerate() {
   rgSaveOrigin();
   const val = id => document.getElementById(id).value;
@@ -2568,6 +2553,7 @@ function rgGenerate() {
   const street      = val('rg-street').trim().toUpperCase();
   const apt         = val('rg-apt').trim().toUpperCase();
   const city        = val('rg-city').trim().toUpperCase();
+  const state       = val('rg-state').trim().toUpperCase();
   const zip         = val('rg-zip').trim();
   const phone       = val('rg-phone').trim();
   const email       = val('rg-email').trim();
@@ -2580,56 +2566,23 @@ function rgGenerate() {
   preambleParts.push(stationCall, String(words), place, time, date);
   const preamble = preambleParts.join(' ').replace(/\s+/g,' ').trim();
 
-  const lines = [];
-  lines.push(`${city} ${rcptCall}`.replace(/\s+/g,' ').trim());
-  lines.push('');
-  lines.push(preamble);
-  lines.push(`${rcptName} ${rcptCall}`.replace(/\s+/g,' ').trim());
-  lines.push(street);
-  if (apt) lines.push(apt);
-  lines.push(`${city}  ${zip}`.trim());  // two spaces between city and zip, per spec
-  if (phone) lines.push(rgFormatPhone(phone));
-  if (email) lines.push(rgFormatEmail(email));
-  lines.push('BT');
-  if (text) lines.push(rgWrap25(text));
-  lines.push('BT');
-  lines.push(`${opName} ${stationCall}`.replace(/\s+/g,' ').trim());
-  lines.push('/EX');
+  const body = [];
+  body.push(preamble);
+  body.push(`${rcptName} ${rcptCall}`.replace(/\s+/g,' ').trim());
+  body.push(street);
+  if (apt) body.push(apt);
+  body.push(`${city} ${state} ${zip}`.replace(/\s+/g,' ').trim());
+  if (phone) body.push(rgFormatPhone(phone));
+  if (email) body.push(rgFormatEmail(email));
+  body.push('BT');
+  if (text) body.push(rgWrap5(text));
+  body.push('BT');
+  body.push(`${opName} ${stationCall}`.replace(/\s+/g,' ').trim());
+  body.push('/EX');
 
-  const output = lines.join('\n');
-  document.getElementById('rg-output').textContent = output;
-  return output;
-}
-function rgCopy() {
-  const out = document.getElementById('rg-output').textContent;
-  if (!out || out === 'Ready for input...') { toast('Generate first', 'info'); return; }
-  // Terminal-clean copy: strip leading whitespace on each line
-  const cleaned = out.split('\n').map(l => l.replace(/^\s+/,'').replace(/\s+$/,'')).join('\n');
-  navigator.clipboard.writeText(cleaned).then(
-    () => toast('Copied for terminal', 'ok'),
-    () => toast('Copy failed', 'err')
-  );
-}
-function rgSaveTxt() {
-  const out = document.getElementById('rg-output').textContent;
-  if (!out || out === 'Ready for input...') { toast('Generate first', 'info'); return; }
-  const num = document.getElementById('rg-msgnum').value.trim() || 'msg';
-  const a = Object.assign(document.createElement('a'), {
-    href: URL.createObjectURL(new Blob([out], {type:'text/plain'})),
-    download: `radiogram-${num}.txt`,
-  });
-  document.body.appendChild(a); a.click(); a.remove();
-  toast('Saved', 'ok');
-}
-function rgResetMsg() {
-  // Clears Sections 3 & 4 only — Section 1 (Station of Origin) and
-  // Section 2 (Preamble) are preserved so you can fire off the next
-  // message in a chain without re-entering your own info.
-  ['rg-rcpt-name','rg-rcpt-call','rg-street','rg-apt','rg-city','rg-zip','rg-phone','rg-email','rg-text'].forEach(id => {
-    document.getElementById(id).value = '';
-  });
-  document.getElementById('rg-state').value = '';
-  document.getElementById('rg-output').textContent = 'Ready for input...';
+  const to   = (zip && state) ? `${zip}@NTS${state}` : rcptCall;
+  const subj = `${city} ${rcptCall}`.replace(/\s+/g,' ').trim();
+  return { to, subj, body: body.join('\n') };
 }
 // Toggle compose modal body between the plain subj/body fields and
 // the radiogram form, based on the selected type.
