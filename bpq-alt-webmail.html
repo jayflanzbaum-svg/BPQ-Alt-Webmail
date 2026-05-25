@@ -678,7 +678,7 @@ body { font-family:var(--sans); font-size:1rem; background:var(--bg); color:var(
   <div class="modal">
     <div class="modal-hd"><span class="modal-ttl" id="cmp-ttl">New Message</span><button class="modal-x" onclick="closeCompose()">×</button></div>
     <div class="modal-bd">
-      <div class="field"><span class="field-lbl">To (callsign or routing)</span><input class="field-in" id="cmp-to" placeholder="K1AJD"></div>
+      <div class="field" id="cmp-to-field"><span class="field-lbl">To (callsign or routing)</span><input class="field-in" id="cmp-to" placeholder="K1AJD"></div>
       <div class="field"><span class="field-lbl">Type</span><select class="field-in" id="cmp-type" style="width:auto" onchange="onComposeTypeChange()"><option value="P">P – Personal</option><option value="B">B – Bulletin</option><option value="T">T – NTS Traffic</option><option value="T/RRI">T/RRI – NTS Radiogram (form)</option></select></div>
       <div id="cmp-normal-fields">
         <div class="field"><span class="field-lbl">Subject</span><input class="field-in" id="cmp-subj" placeholder="subject line"></div>
@@ -705,9 +705,13 @@ body { font-family:var(--sans); font-size:1rem; background:var(--bg); color:var(
             </select></div>
             <div class="field"><span class="field-lbl">Handling (HX)</span><select class="field-in" id="rg-hx">
               <option value="">NONE</option>
-              <option value="HXA">HXA</option><option value="HXB">HXB</option><option value="HXC">HXC</option>
-              <option value="HXD">HXD</option><option value="HXE">HXE</option><option value="HXF">HXF</option>
-              <option value="HXG">HXG</option>
+              <option value="HXA">HXA — Collect landline delivery authorized (within N miles)</option>
+              <option value="HXB">HXB — Cancel if not delivered within N hours of filing</option>
+              <option value="HXC">HXC — Report date &amp; time of delivery (TOD) to originator</option>
+              <option value="HXD">HXD — Report relay path and delivery method to originator</option>
+              <option value="HXE">HXE — Delivering station obtain reply from addressee</option>
+              <option value="HXF">HXF — Hold delivery until specified date</option>
+              <option value="HXG">HXG — No toll / mail delivery — cancel if expense involved</option>
             </select></div>
             <div class="field"><span class="field-lbl">Date Filed</span><input class="field-in" id="rg-date" placeholder="MAY 24"></div>
             <div class="field"><span class="field-lbl">Time UTC &nbsp; <button type="button" class="rg-now" onclick="rgNowTime()" title="Fill with current UTC HHMM">⊙ NOW</button></span><input class="field-in" id="rg-time" placeholder="2237"></div>
@@ -736,7 +740,7 @@ body { font-family:var(--sans); font-size:1rem; background:var(--bg); color:var(
         <div class="rg-sec">
           <div class="rg-sec-hd">4 · The Text (Message Body)</div>
           <textarea class="field-ta" id="rg-text" style="min-height:120px" placeholder="DASH BECOMES 'DASH', # BECOMES 'NR', .COM BECOMES 'DOT COM'."></textarea>
-          <div class="rg-hint">On <strong>SEND</strong>: To → <code>&lt;ZIP&gt;@NTS&lt;STATE&gt;</code>, Subject → <code>&lt;CITY&gt; &lt;RCPT-CALL&gt;</code>, body = the formatted radiogram (preamble through /EX).</div>
+          <div class="rg-hint">Click <strong>REVIEW</strong> to populate the standard compose form: To → <code>&lt;ZIP&gt;@NTS&lt;STATE&gt;</code>, Subject → <code>&lt;CITY&gt; &lt;RCPT-CALL&gt;</code>, Body = the formatted radiogram. Eyeball / edit, then SEND.</div>
         </div>
       </div>
     </div>
@@ -2427,21 +2431,13 @@ function doForward(){
 }
 function doSend(){
   let type=document.getElementById('cmp-type').value;
+  // In radiogram mode the button is REVIEW: stage values into the
+  // standard compose form and let the user click SEND a second time.
+  if (type === 'T/RRI') { rgReview(); return; }
   const st=document.getElementById('cmp-status');
   let to=document.getElementById('cmp-to').value.trim().toUpperCase();
-  let subj, msg;
-  if (type === 'T/RRI') {
-    // The form drives everything: TO = <ZIP>@NTS<STATE>, Subject = <CITY> <RCPT-CALL>,
-    // body = the formatted radiogram. Manually-typed TO field overrides routing.
-    const rg = rgGenerate();
-    msg  = rg.body;
-    subj = rg.subj;
-    if (!to) to = rg.to;
-    type = 'T'; // send as plain NTS Traffic
-  } else {
-    subj=document.getElementById('cmp-subj').value.trim();
-    msg=document.getElementById('cmp-body').value.trim();
-  }
+  const subj=document.getElementById('cmp-subj').value.trim();
+  const msg=document.getElementById('cmp-body').value.trim();
   if(!to||!subj||!msg){st.style.color='var(--red)';st.textContent='Fill in all fields';return;}
   st.style.color='var(--amber)';st.textContent='Sending…';
   document.getElementById('cmp-send').disabled=true;
@@ -2585,18 +2581,40 @@ function rgGenerate() {
   return { to, subj, body: body.join('\n') };
 }
 // Toggle compose modal body between the plain subj/body fields and
-// the radiogram form, based on the selected type.
+// the radiogram form, based on the selected type. In radiogram mode
+// the To field is hidden (the form generates the routing) and the
+// send button is relabeled REVIEW (clicking it staging the result
+// in the standard compose form for a final look before sending).
 function onComposeTypeChange() {
   const type = document.getElementById('cmp-type').value;
   const isRg = (type === 'T/RRI');
   document.getElementById('cmp-normal-fields').style.display = isRg ? 'none' : '';
   document.getElementById('cmp-radiogram').style.display     = isRg ? '' : 'none';
+  document.getElementById('cmp-to-field').style.display      = isRg ? 'none' : '';
+  document.getElementById('cmp-send').textContent            = isRg ? 'REVIEW ▶' : 'SEND ▶';
   if (isRg) {
     rgInit();
     document.getElementById('cmp-ttl').textContent = 'New Radiogram (T/RRI)';
   } else {
     document.getElementById('cmp-ttl').textContent = 'New Message';
   }
+}
+// REVIEW handler: generate the radiogram, switch the modal back to
+// plain compose mode (type T), and pre-fill the To/Subject/Body
+// fields with the generated routing + formatted body. The user can
+// then tweak anything before clicking the now-renamed SEND button.
+function rgReview() {
+  const rg = rgGenerate();
+  const typeSel = document.getElementById('cmp-type');
+  typeSel.value = 'T';
+  onComposeTypeChange();
+  document.getElementById('cmp-to').value   = rg.to;
+  document.getElementById('cmp-subj').value = rg.subj;
+  document.getElementById('cmp-body').value = rg.body;
+  document.getElementById('cmp-ttl').textContent = 'Review Radiogram → Send';
+  document.getElementById('cmp-status').style.color = 'var(--text3)';
+  document.getElementById('cmp-status').textContent = 'Review the formatted message, then click SEND.';
+  setTimeout(()=>document.getElementById('cmp-body').focus(), 60);
 }
 function doDownload(){
   const msg=allMsgs.find(m=>m.num===activeNum);
