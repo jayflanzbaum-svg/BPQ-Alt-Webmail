@@ -2386,6 +2386,9 @@ function openCompose(to='',subj='',body='',title=''){
 function closeCompose(){
   const modal=document.querySelector('#cmp-ov .modal');
   if(modal.style.width) LS.set('bpq_compose_w',modal.style.width);
+  // Discard any pending radiogram number — only a completed send
+  // should bump the counter.
+  rgPendingNum = null;
   document.getElementById('cmp-ov').classList.remove('open');
 }
 // Open compose modal pre-populated from a URL hash, e.g.:
@@ -2451,6 +2454,22 @@ function doSend(){
   for(const[k,v]of Object.entries(fields)){const inp=document.createElement('input');inp.type='hidden';inp.name=k;inp.value=v;f.appendChild(inp);}
   document.body.appendChild(f);
   ifr.onload=function(){
+    // If this send originated from the radiogram REVIEW flow, bump
+    // the persisted "last sent" counter and clear the per-message
+    // fields so the next form opens fresh with the next msg # ready.
+    // Section 1 (Station of Origin) and Precedence/HX/Date are
+    // intentionally preserved across messages.
+    if (rgPendingNum !== null && Number.isFinite(rgPendingNum)) {
+      LS.set('bpq_rg_last_sent', String(rgPendingNum));
+      rgPendingNum = null;
+      ['rg-msgnum','rg-time','rg-rcpt-name','rg-rcpt-call','rg-street','rg-apt',
+       'rg-city','rg-zip','rg-phone','rg-email','rg-text'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = '';
+      });
+      const stateSel = document.getElementById('rg-state');
+      if (stateSel) stateSel.value = '';
+    }
     closeCompose();toast(`Sent to ${to}`,'ok');
     document.getElementById('cmp-send').disabled=false;
     f.remove();
@@ -2472,6 +2491,12 @@ const RG_STATES = ['AL','AK','AZ','AR','CA','CO','CT','DE','FL','GA','HI','ID','
                    'NM','NY','NC','ND','OH','OK','OR','PA','RI','SC','SD','TN','TX','UT','VT',
                    'VA','WA','WV','WI','WY','DC','PR','VI','GU','AS','MP'];
 let rgInited = false;
+// Set when REVIEW is clicked, captures the msg # being sent so that
+// when the iframe load fires (= BPQ accepted the POST) we can mark
+// that number as the new "last sent" and bump the next suggestion.
+// Cleared on send completion, on closeCompose, and on switch out of
+// radiogram mode.
+let rgPendingNum = null;
 function rgInit() {
   if (rgInited) return;
   const sel = document.getElementById('rg-state');
@@ -2487,6 +2512,15 @@ function rgInit() {
     document.getElementById('rg-station-call').value = CFG.callsign.toUpperCase();
   }
   rgInited = true;
+}
+// Suggest the next msg # = (last successfully sent radiogram #) + 1,
+// or 1 if none have been sent yet. Only fills in when the field is
+// blank so user-typed overrides survive a type-toggle.
+function rgSuggestNextNum() {
+  const fld = document.getElementById('rg-msgnum');
+  if (fld.value.trim()) return;
+  const last = parseInt(LS.get('bpq_rg_last_sent')||'0', 10) || 0;
+  fld.value = String(last + 1);
 }
 function rgSaveOrigin() {
   LS.set('bpq_rg_origin', JSON.stringify({
@@ -2594,6 +2628,7 @@ function onComposeTypeChange() {
   document.getElementById('cmp-send').textContent            = isRg ? 'REVIEW ▶' : 'SEND ▶';
   if (isRg) {
     rgInit();
+    rgSuggestNextNum();
     document.getElementById('cmp-ttl').textContent = 'New Radiogram (T/RRI)';
   } else {
     document.getElementById('cmp-ttl').textContent = 'New Message';
@@ -2605,6 +2640,10 @@ function onComposeTypeChange() {
 // then tweak anything before clicking the now-renamed SEND button.
 function rgReview() {
   const rg = rgGenerate();
+  // Capture the msg # so that when the actual SEND completes we can
+  // record it as the new "last sent" and bump the auto-increment.
+  const num = parseInt(document.getElementById('rg-msgnum').value, 10);
+  rgPendingNum = Number.isFinite(num) ? num : null;
   const typeSel = document.getElementById('cmp-type');
   typeSel.value = 'T';
   onComposeTypeChange();
