@@ -1343,6 +1343,22 @@ function authHeaders() {
   return CFG.username ? { 'Authorization': 'Basic ' + btoa(CFG.username + ':' + CFG.password) } : {};
 }
 
+// ── REQUEST SERIALIZER ──────────────────────────────
+// LinBPQ's web server starts a new thread for every HTTP request, but
+// its WebMail code shares unlocked global state between threads
+// (templates are free()d and reloaded per request, the message database
+// and NNTP list are mutated without locks). Concurrent requests can
+// SIGSEGV the node — confirmed when killing messages. The stock webmail
+// never sends overlapping requests, so BPQ was never hardened for it.
+// Funnel EVERY request through this queue so only one is in flight at
+// a time, matching the request pattern BPQ was designed for.
+let _bpqChain = Promise.resolve();
+function queuedFetch(url, opts) {
+  const p = _bpqChain.then(() => fetch(url, opts));
+  _bpqChain = p.then(() => {}, () => {});   // keep chain alive on failure
+  return p;
+}
+
 // Detect if HTML is a BPQ login form (contains a password input + form POST, no WebMail links)
 // BPQ generates unquoted uppercase attributes (TYPE=PASSWORD), so use a case-insensitive regex
 function isLoginPage(html) {
@@ -1383,7 +1399,7 @@ async function bpqFormLogin(loginHtml, originUrl) {
   }
 
   console.debug('[BPQ] form login POST →', postUrl, '| fields:', formData.toString().replace(/password=[^&]*/i,'password=***'));
-  const r = await fetch(postUrl, {
+  const r = await queuedFetch(postUrl, {
     method: 'POST',
     credentials: 'include',
     headers: { ...authHeaders(), 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -1397,7 +1413,7 @@ async function bpqFormLogin(loginHtml, originUrl) {
 
 async function bpqGet(url) {
   console.debug('[BPQ] GET', url);
-  const r = await fetch(url, { credentials:'include', headers: authHeaders() });
+  const r = await queuedFetch(url, { credentials:'include', headers: authHeaders() });
   if (!r.ok) {
     console.debug('[BPQ] GET', url, '→ HTTP', r.status);
     throw new Error(`HTTP ${r.status}`);
@@ -1432,7 +1448,7 @@ async function bpqGet(url) {
     if (key) return postLoginHtml;
     // No key yet — retry the originally-requested URL now that we are authenticated
     console.debug('[BPQ] no key in post-login response, retrying original URL:', url);
-    const retry = await fetch(url, { credentials:'include', headers: authHeaders() });
+    const retry = await queuedFetch(url, { credentials:'include', headers: authHeaders() });
     if (retry.ok) {
       const retryHtml = await retry.text();
       console.debug('[BPQ] retry URL:', retry.url, '| loginPage:', isLoginPage(retryHtml), '| HTML (first 400):', retryHtml.slice(0,400));
@@ -1656,7 +1672,7 @@ async function fetchMsgHeader(msg) {
   if (msg.hdrFrom !== undefined) return;
   if (baseCall(msg.from) === 'SYSTEM') { msg.hdrFrom = 'SYSTEM'; return; }
   try {
-    let r = await fetch(msgUrl(msg.num), { credentials:'include', headers: authHeaders(), signal: headerFetchAbort?.signal });
+    let r = await queuedFetch(msgUrl(msg.num), { credentials:'include', headers: authHeaders(), signal: headerFetchAbort?.signal });
     // On 404 the session key probably rotated — re-detect and retry once
     if (r.status === 404) {
       const newKey = await autoDetectKey();
@@ -1664,7 +1680,7 @@ async function fetchMsgHeader(msg) {
         CFG.key = newKey; saveCFG();
         document.getElementById('cfg-key').value = newKey;
       }
-      r = await fetch(msgUrl(msg.num), { credentials:'include', headers: authHeaders(), signal: headerFetchAbort?.signal });
+      r = await queuedFetch(msgUrl(msg.num), { credentials:'include', headers: authHeaders(), signal: headerFetchAbort?.signal });
     }
     if (!r.ok) return;
     const html = await r.text();
@@ -2199,10 +2215,21 @@ async function doKill() {
     if (candidate) nextNum = candidate.num;
   }
 
-  // Kill all targets — fire requests concurrently
-  const results = await Promise.allSettled(toKill.map(n => bpqGet(killUrl(n))));
-  const killed = toKill.filter((_,i)=>results[i].status==='fulfilled');
-  const failed = toKill.length - killed.length;
+  // Kill targets ONE AT A TIME. Each kill mutates BPQ's message database
+  // (FlagAsKilled → SaveMessageDatabase → NNTP list rebuild) on a fresh
+  // server thread with no locking — concurrent kills crash linbpq with a
+  // SIGSEGV. queuedFetch already serializes, but keep this loop explicit
+  // and give the node a short breather between kills.
+  const killed = [];
+  let failed = 0;
+  for (let i = 0; i < toKill.length; i++) {
+    btn.textContent = `Killing ${i+1}/${toKill.length}…`;
+    try {
+      await bpqGet(killUrl(toKill[i]));
+      killed.push(toKill[i]);
+    } catch(_) { failed++; }
+    if (i < toKill.length - 1) await new Promise(r=>setTimeout(r,250));
+  }
 
   // Remove killed from state
   for (const n of killed) {
@@ -2372,7 +2399,7 @@ async function doReject(field, value) {
 
     // Step 4: POST the complete form back to BPQ with the mail session key
     const headers = {...authHdr, 'Content-Type': 'application/x-www-form-urlencoded'};
-    const r = await fetch(postUrl, {
+    const r = await queuedFetch(postUrl, {
       method: 'POST',
       credentials: 'include',
       headers,
