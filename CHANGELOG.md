@@ -1,5 +1,14 @@
 # Changelog
 
+## v1.5.10 — 2026-07-07
+
+### Fixed
+- **LinBPQ crash (SIGSEGV) when killing held mail** — LinBPQ handles every HTTP request on its own thread over shared, unlocked WebMail state, so overlapping requests from this interface (bulk kill fired all its kill requests at once) could segfault the node. All requests now go through a single-flight queue so only one is ever in flight, and bulk kill sends one request at a time with a short gap and live progress on the confirm button. The underlying thread-safety bug is in LinBPQ itself and is being reported upstream. (reported on the bpq32 group)
+
+### Added
+- **"remember" checkbox next to BBS Password** (⚙ Settings) — when unchecked, the password is kept only for the current browser session and you are prompted for it again on the next visit; any previously saved password is removed from browser storage. Default is checked, so existing setups are unchanged. Useful for public-facing reverse-proxy installs. (credit: KB1TAE)
+- **Compose deep links now work in already-open tabs** — the app reacts to `#compose?…` URL changes without needing a reload.
+
 ## v1.5.9 — 2026-04-29
 
 ### Added
