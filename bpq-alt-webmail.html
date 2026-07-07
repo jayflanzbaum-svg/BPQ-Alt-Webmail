@@ -517,6 +517,7 @@ body { font-family:var(--sans); font-size:1rem; background:var(--bg); color:var(
   <label>Port</label><input class="cfg-in" id="cfg-port" value="8010" style="width:50px">
   <label>BBS Callsign</label><input class="cfg-in" id="cfg-user" style="width:80px" placeholder="callsign">
   <label>BBS Password</label><input class="cfg-in" id="cfg-pass" type="password" style="width:80px" placeholder="password">
+  <label style="display:inline-flex;align-items:center;gap:4px;cursor:pointer" title="Unchecked: password is kept only for this browser session and you are prompted again next time"><input type="checkbox" id="cfg-remember" checked style="margin:0">remember</label>
   <label>Callsign</label><input class="cfg-in" id="cfg-call" value="" style="width:80px">
   <label>QTH</label><input class="cfg-in" id="cfg-qth" style="width:120px" placeholder="City, State">
   <label>Session key</label><input class="cfg-in" id="cfg-key" value="" style="width:100px" placeholder="auto-detect">
@@ -832,7 +833,15 @@ const LS = {
   getJ: k => { try { return JSON.parse(localStorage.getItem(k)||'null'); } catch(_){ return null; } },
   setJ: (k,v) => { try { localStorage.setItem(k,JSON.stringify(v)); } catch(_){} }
 };
+// sessionStorage twin — used for the password when "remember" is off,
+// so it survives reloads in this tab but dies with the browser session.
+const SS = {
+  get: k => { try { return sessionStorage.getItem(k); } catch(_){ return null; } },
+  set: (k,v) => { try { sessionStorage.setItem(k,v); } catch(_){} },
+  del: k => { try { sessionStorage.removeItem(k); } catch(_){} }
+};
 
+const _rememberPass = (LS.get('bpq_remember_pass') || '1') === '1';
 let CFG = {
   host:      LS.get('bpq_host')     || '127.0.0.1',
   port:      LS.get('bpq_port')     || '8080',
@@ -841,8 +850,9 @@ let CFG = {
   callsign:  LS.get('bpq_call')     || '',
   signature: LS.get('bpq_sig')      || '',
   username:  LS.get('bpq_user')     || '',
-  password:  LS.get('bpq_pass')     || '',
+  password:  _rememberPass ? (LS.get('bpq_pass') || '') : (SS.get('bpq_pass') || ''),
   qth:       LS.get('bpq_qth')      || '',
+  rememberPass: _rememberPass,      // off = prompt for password each browser session
 };
 
 function saveCFG() {
@@ -853,8 +863,15 @@ function saveCFG() {
   LS.set('bpq_call',  CFG.callsign);
   LS.set('bpq_sig',   CFG.signature);
   LS.set('bpq_user',  CFG.username);
-  LS.set('bpq_pass',  CFG.password);
   LS.set('bpq_qth',   CFG.qth);
+  LS.set('bpq_remember_pass', CFG.rememberPass ? '1' : '0');
+  if (CFG.rememberPass) {
+    LS.set('bpq_pass', CFG.password);
+    SS.del('bpq_pass');
+  } else {
+    SS.set('bpq_pass', CFG.password);
+    LS.del('bpq_pass');            // purge any previously-persisted copy
+  }
 }
 
 // ═══════════════════════════════════════════════════
@@ -1276,6 +1293,7 @@ function applyConfig() {
   CFG.username  = document.getElementById('cfg-user').value.trim();
   CFG.password  = document.getElementById('cfg-pass').value;
   CFG.qth       = document.getElementById('cfg-qth').value.trim();
+  CFG.rememberPass = document.getElementById('cfg-remember').checked;
   saveCFG();
   syncTopbar();
   // Close settings bar after applying
@@ -1302,6 +1320,8 @@ function syncTopbar() {
   document.getElementById('cfg-user').value = CFG.username;
   document.getElementById('cfg-pass').value = CFG.password;
   document.getElementById('cfg-qth').value  = CFG.qth;
+  const rememberBox = document.getElementById('cfg-remember');
+  if (rememberBox) rememberBox.checked = CFG.rememberPass;
 }
 
 // ═══════════════════════════════════════════════════
@@ -3283,6 +3303,16 @@ window.addEventListener('resize', checkMobile);
 //  BOOT
 // ═══════════════════════════════════════════════════
 async function connectAndLoad(){
+  // "Remember password" off and no password yet this browser session —
+  // open settings and ask for it instead of failing the login silently.
+  if (CFG.username && !CFG.password && !CFG.rememberPass) {
+    setStatus('err','✕ password needed');
+    const bar = document.getElementById('cfg-bar');
+    if (!bar.classList.contains('open')) toggleSettings();
+    document.getElementById('cfg-pass').focus();
+    toast('Enter your BBS password (not saved on this device)','info');
+    return;
+  }
   setStatus('busy','⏳ connecting');
   if(!CFG.key){
     const k=await autoDetectKey();
