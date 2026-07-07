@@ -2479,6 +2479,7 @@ function tryHashAction(attempt){
   setTimeout(function(){ tryHashAction(attempt + 1); }, 250);
 }
 window.addEventListener('load', function(){ tryHashAction(0); });
+window.addEventListener('hashchange', function(){ tryHashAction(0); });
 function doForward(){
   const msg=allMsgs.find(m=>m.num===activeNum); if(!msg)return;
   const sig = CFG.signature || `73 de ${CFG.callsign||'N4SFL'}`;
