@@ -1,5 +1,18 @@
 # Changelog
 
+## v1.6.0 — 2026-07-17
+
+### Added
+- **NTS Radiogram (T/RRI) composer** — full ARRL radiogram form: drives BPQ's To/Subject automatically, REVIEW step before send, HX handling-code meanings shown inline, HX variables (HXA miles, HXB hours, HXF date), auto-incrementing message number with never-blank fallback, full ARRL extended-punctuation table (X-RAY, COMMA, QUERY, "R" as decimal point) applied on send and reversed when reading, and parsing of received radiograms back into the form.
+- **PKTNET Check-In composer (B/PKTNET)** — form-style check-in message type. (form concept: N3MEL, form created: KN4LQN)
+- **NTS Delivered button** — green button on any T-prefixed message marks it delivered via BPQ's `WMNDel`, with delivered-state tracking, NTS sub-folders, and list pills.
+- **Classic theme** — recreates the stock BPQ32 look: wheat/tan background, cream content surfaces, tan sidebar, white reader body.
+- **Compose deep links** — `#compose?to=CALL&subject=...` opens a pre-filled compose window, so external dashboards can link straight into the webmail (documented in README-dashboard-links.md).
+- Attribution/version line at the bottom of each form.
+
+### Also includes (from v1.5.10)
+- The LinBPQ kill-crash fix (request serializer + sequential bulk kill) and the "remember password" option — see the v1.5.10 notes below.
+
 ## v1.5.10 — 2026-07-07
 
 ### Fixed
