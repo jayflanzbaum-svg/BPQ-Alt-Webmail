@@ -76,6 +76,18 @@ body.light-hc {
   --accent:#005500; --accent-bg:#e0f0e0; --accent-border:#88bb88;
   --unread-dot:#0044cc;
 }
+body.classic {
+  /* Stock BPQ32 WebMail uses bgcolor="wheat" — match it uniformly */
+  --bg:#f5deb3; --bg2:#f8e5c1; --bg3:#e8d099;
+  --border:#c4a878; --border2:#9b7a40;
+  --text:#1a1008; --text2:#3d2b0a; --text3:#6b5030;
+  --accent:#0033aa; --accent-bg:#f0e0c0; --accent-border:#c4a878;
+  --unread-dot:#cc0000;
+}
+/* Classic: reader body sits on white so the monospace message text
+   reads like the "page" of a printed traffic form against the wheat
+   chrome around it. */
+body.classic .rv-body { background:#ffffff }
 * { box-sizing:border-box; margin:0; padding:0 }
 html,body { height:100%; overflow:hidden }
 body { font-family:var(--sans); font-size:1rem; background:var(--bg); color:var(--text); display:flex; flex-direction:column; transition:background .15s,color .15s }
@@ -123,7 +135,7 @@ body { font-family:var(--sans); font-size:1rem; background:var(--bg); color:var(
 /* ── SIDEBAR ── */
 .sidebar { width:210px; flex-shrink:0; border-right:1px solid var(--border); background:var(--bg2); display:flex; flex-direction:column; overflow-y:auto; overflow-x:hidden }
 .cmp-wrap { padding:11px 10px 7px; flex-shrink:0 }
-.cmp-btn { width:100%; padding:7px 0; background:transparent; border:1px solid var(--green-dim); border-radius:5px; color:var(--accent); font-family:var(--mono); font-size:0.85rem; font-weight:600; cursor:pointer }
+.cmp-btn { width:100%; padding:7px 0; background:transparent; border:1px solid var(--accent); border-radius:5px; color:var(--accent); font-family:var(--mono); font-size:0.85rem; font-weight:600; cursor:pointer }
 .cmp-btn:hover { background:var(--accent-bg) }
 .fldr-sep { padding:10px 12px 3px; font-family:var(--mono); font-size:0.69rem; font-weight:600; letter-spacing:.15em; color:var(--text3); text-transform:uppercase; flex-shrink:0 }
 .fldr { display:flex; align-items:center; gap:6px; padding:7px 12px; font-size:0.92rem; color:var(--text2); cursor:pointer; border-left:2px solid transparent; user-select:none; flex-shrink:0 }
@@ -197,7 +209,9 @@ body { font-family:var(--sans); font-size:1rem; background:var(--bg); color:var(
 .tb-B { background:#00e5a012; color:var(--green);   border:1px solid #00e5a030 }
 .tb-P { background:#4da6ff12; color:var(--blue);    border:1px solid #4da6ff30 }
 .tb-N { background:#a78bfa12; color:var(--purple);  border:1px solid #a78bfa30 }
+.tb-T { background:#a78bfa12; color:var(--purple);  border:1px solid #a78bfa30 }
 .tb-X { background:#7b849920; color:var(--text2);   border:1px solid #7b849930 }
+.tb-delivered { background:#00c98a18; color:var(--green); border:1px solid #00c98a40 }
 .list-empty   { padding:28px 16px; text-align:center; font-family:var(--mono); font-size:0.85rem; color:var(--text3); line-height:1.8 }
 .list-loading { padding:20px; text-align:center; font-family:var(--mono); font-size:0.85rem; color:var(--amber) }
 /* bulk kill bar */
@@ -236,7 +250,7 @@ body { font-family:var(--sans); font-size:1rem; background:var(--bg); color:var(
 .reader-empty-txt { font-family:var(--mono); font-size:0.85rem }
 #rv { display:none; flex-direction:column; flex:1; min-height:0 }
 .rv-hd { padding:14px 20px 12px; border-bottom:1px solid var(--border); background:var(--bg2); flex-shrink:0 }
-.rv-subj { font-size:1.15rem; font-weight:500; color:var(--text); margin-bottom:10px; line-height:1.3 }
+.rv-subj { font-size:1.5rem; font-weight:700; color:var(--text); margin-bottom:10px; line-height:1.25 }
 .rv-fields { display:flex; flex-wrap:wrap; gap:0 18px }
 .rv-f { font-family:var(--mono); font-size:0.85rem; margin-bottom:3px }
 .rv-k { color:var(--text3); margin-right:4px }
@@ -249,6 +263,12 @@ body { font-family:var(--sans); font-size:1rem; background:var(--bg); color:var(
 .btn.primary:hover { background:#4da6ff12 }
 .btn.danger { color:var(--red); border-color:#e0525230 }
 .btn.danger:hover { background:#e0525210; border-color:var(--red) }
+.btn.success { color:var(--green); border-color:#00c98a30 }
+.btn.success:hover { background:#00c98a12; border-color:var(--green) }
+.btn.success.on { background:var(--green); color:#fff; border-color:var(--green) }
+.btn.success.on:hover { background:var(--green-dim); border-color:var(--green-dim) }
+.rv-banner { display:none; padding:8px 20px; font-family:var(--mono); font-size:0.85rem; background:#00c98a18; color:var(--green); border-bottom:1px solid #00c98a40; flex-shrink:0 }
+.rv-banner.on { display:block }
 .btn:disabled { opacity:.3; cursor:not-allowed }
 .btn-sp { flex:1 }
 .rv-body { flex:1; padding:20px 24px; overflow-y:auto; font-family:var(--mono); font-size:1rem; line-height:var(--body-lh,1.6); color:var(--text); white-space:pre-wrap; word-break:break-word }
@@ -274,6 +294,19 @@ body { font-family:var(--sans); font-size:1rem; background:var(--bg); color:var(
 .modal-hint { font-family:var(--mono); font-size:0.77rem; color:var(--text3) }
 .send-btn { padding:7px 20px; background:var(--green-dim); border:none; border-radius:4px; color:#fff; font-family:var(--mono); font-size:0.92rem; font-weight:700; cursor:pointer }
 .send-btn:hover { background:var(--green) }
+/* ── RADIOGRAM (T/RRI) FORM ── */
+.rg-sec { background:var(--bg3); border:1px solid var(--border); border-radius:5px; padding:10px 12px; margin-bottom:8px }
+.rg-sec-hd { font-family:var(--mono); font-size:0.77rem; font-weight:600; color:var(--accent); text-transform:uppercase; letter-spacing:.1em; margin-bottom:8px; display:flex; align-items:center; gap:8px }
+.rg-row { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:6px }
+.rg-row:last-child { margin-bottom:0 }
+.rg-row .field { flex:1 1 140px; min-width:0 }
+.rg-now { background:var(--bg); border:1px solid var(--border); border-radius:3px; padding:1px 7px; font-family:var(--mono); font-size:0.69rem; cursor:pointer; color:var(--text2); text-transform:uppercase; letter-spacing:.05em }
+.rg-now:hover { background:var(--accent-bg); border-color:var(--accent); color:var(--accent) }
+.rg-hint { font-family:var(--mono); font-size:0.77rem; color:var(--text3); margin-top:8px; line-height:1.5 }
+.rg-hint code { background:var(--bg2); border:1px solid var(--border); padding:1px 4px; border-radius:3px; color:var(--text2) }
+.rg-credit { font-family:var(--mono); font-size:0.69rem; color:var(--text3); margin-top:10px; padding-top:8px; border-top:1px dashed var(--border); text-align:center; font-style:italic; line-height:1.5 }
+.rg-credit a { color:var(--text3); text-decoration:underline }
+.rg-credit a:hover { color:var(--accent) }
 .del-box { background:var(--bg2); border:1px solid var(--border2); border-radius:8px; padding:22px 26px; max-width:360px; width:90% }
 .del-ttl { font-family:var(--mono); font-size:0.92rem; font-weight:600; color:var(--red); margin-bottom:10px }
 .del-msg { font-size:1rem; color:var(--text2); margin-bottom:18px; line-height:1.5 }
@@ -456,7 +489,7 @@ body { font-family:var(--sans); font-size:1rem; background:var(--bg); color:var(
 <!-- TOPBAR -->
 <div class="topbar">
   <div class="logo">BPQ-ALT-WEBMAIL</div>
-  <span style="font-family:var(--mono);font-size:0.69rem;color:var(--text3);margin-left:-6px">v1.5.9</span>
+  <span style="font-family:var(--mono);font-size:0.69rem;color:var(--text3);margin-left:-6px">v1.6.0</span>
   <div class="top-call" id="top-call">—</div>
   <span class="top-node" id="top-node">—</span>
   <div class="tspc"></div>
@@ -484,6 +517,7 @@ body { font-family:var(--sans); font-size:1rem; background:var(--bg); color:var(
   <label>Port</label><input class="cfg-in" id="cfg-port" value="8010" style="width:50px">
   <label>BBS Callsign</label><input class="cfg-in" id="cfg-user" style="width:80px" placeholder="callsign">
   <label>BBS Password</label><input class="cfg-in" id="cfg-pass" type="password" style="width:80px" placeholder="password">
+  <label style="display:inline-flex;align-items:center;gap:4px;cursor:pointer" title="Unchecked: password is kept only for this browser session and you are prompted again next time"><input type="checkbox" id="cfg-remember" checked style="margin:0">remember</label>
   <label>Callsign</label><input class="cfg-in" id="cfg-call" value="" style="width:80px">
   <label>QTH</label><input class="cfg-in" id="cfg-qth" style="width:120px" placeholder="City, State">
   <label>Session key</label><input class="cfg-in" id="cfg-key" value="" style="width:100px" placeholder="auto-detect">
@@ -496,7 +530,7 @@ body { font-family:var(--sans); font-size:1rem; background:var(--bg); color:var(
 <div class="main">
   <div class="sidebar" id="sidebar">
     <div class="cmp-wrap"><button class="cmp-btn" onclick="openCompose()">+ NEW MESSAGE</button></div>
-    <div class="fldr-sep">Folders</div>
+    <div class="fldr-sep">Mailbox</div>
 
     <div class="fldr active" id="fldr-Personal" onclick="activatePersonal()">
       <span class="fldr-ico">✉</span><span class="fldr-lbl">My Received</span>
@@ -510,10 +544,11 @@ body { font-family:var(--sans); font-size:1rem; background:var(--bg); color:var(
     </div>
     <div class="sf-wrap" id="sf-bulls-wrap"></div>
 
-    <div class="fldr" id="fldr-NTS" onclick="loadFolder('NTS','NTS Traffic')">
+    <div class="fldr" id="fldr-NTS" onclick="activateNts()">
       <span class="fldr-ico">⊕</span><span class="fldr-lbl">NTS Traffic</span>
       <span class="fldr-bdg bdg-purple" id="bdg-NTS" style="display:none"></span>
     </div>
+    <div class="sf-wrap" id="sf-nts-wrap"></div>
     <div class="fldr" id="fldr-Mine"   onclick="loadFolder('Mine','Mine')"><span class="fldr-ico">◎</span><span class="fldr-lbl">Mine</span></div>
     <div class="fldr" id="fldr-MySent" onclick="loadFolder('MySent','My Sent')"><span class="fldr-ico">▲</span><span class="fldr-lbl">My Sent</span></div>
     <div class="fldr" id="fldr-ALL" onclick="loadFolder('ALL','All Messages')">
@@ -521,9 +556,10 @@ body { font-family:var(--sans); font-size:1rem; background:var(--bg); color:var(
     </div>
 
     <div class="sidebar-footer">
-      <div>Node: <span id="si-node">—</span></div>
-      <div>QTH: <span id="si-qth">—</span></div>
-      <div>Msgs: <span id="si-count">—</span></div>
+      <div id="si-ver">v1.6.0</div>
+      <div>Node <span id="si-node">—</span></div>
+      <div>User <span id="si-user">—</span></div>
+      <div style="display:none">Msgs: <span id="si-count">—</span></div>
     </div>
   </div>
 
@@ -577,13 +613,16 @@ body { font-family:var(--sans); font-size:1rem; background:var(--bg); color:var(
       <div class="rv-tb">
         <button class="btn primary" onclick="doReply()">↩ Reply</button>
         <button class="btn" onclick="doForward()">→ Forward</button>
+        <button class="btn" id="btn-parse-rg" onclick="parseRadiogramToForm()" style="display:none" title="Parse this NTS radiogram into the T/RRI form">📋 Parse</button>
         <button class="btn" onclick="doDownload()">⤓ Save</button>
         <button class="btn" onclick="doPrev()">← Prev</button>
         <button class="btn" onclick="doNext()">Next →</button>
         <div class="btn-sp"></div>
         <button class="btn danger" id="btn-kill" onclick="confirmKill()">✕ Kill</button>
         <button class="btn danger" id="btn-reject" onclick="confirmReject()">⊘ Reject</button>
+        <button class="btn success" id="btn-nts-del" onclick="confirmNtsDel()" style="display:none" title="Mark NTS traffic as delivered to addressee">✓ Delivered</button>
       </div>
+      <div class="rv-banner" id="rv-banner"></div>
       <div class="rv-body" id="rv-body"></div>
     </div>
   </div>
@@ -627,15 +666,134 @@ body { font-family:var(--sans); font-size:1rem; background:var(--bg); color:var(
   </div>
 </div>
 
+<!-- NTS DELIVERED CONFIRM -->
+<div class="overlay" id="ntsdel-ov">
+  <div class="del-box">
+    <div class="del-ttl">✓ Mark NTS Delivered</div>
+    <div class="del-msg" id="ntsdel-msg"></div>
+    <div class="del-btns">
+      <button class="btn" onclick="closeNtsDel()">Cancel</button>
+      <button class="btn success" id="ntsdel-yes" onclick="doNtsDel()">Mark Delivered</button>
+    </div>
+  </div>
+</div>
+
 <!-- COMPOSE -->
 <div class="overlay" id="cmp-ov">
   <div class="modal">
     <div class="modal-hd"><span class="modal-ttl" id="cmp-ttl">New Message</span><button class="modal-x" onclick="closeCompose()">×</button></div>
     <div class="modal-bd">
-      <div class="field"><span class="field-lbl">To (callsign)</span><input class="field-in" id="cmp-to" placeholder="K1AJD"></div>
-      <div class="field"><span class="field-lbl">Subject</span><input class="field-in" id="cmp-subj" placeholder="subject line"></div>
-      <div class="field"><span class="field-lbl">Type</span><select class="field-in" id="cmp-type" style="width:auto"><option value="P">P – Personal</option><option value="B">B – Bulletin</option><option value="T">T – NTS Traffic</option></select></div>
-      <div class="field"><span class="field-lbl">Message</span><textarea class="field-ta" id="cmp-body" placeholder="message text…"></textarea></div>
+      <div class="field" id="cmp-to-field"><span class="field-lbl">To (callsign or routing)</span><input class="field-in" id="cmp-to" placeholder="K1AJD"></div>
+      <div class="field"><span class="field-lbl">Type</span><select class="field-in" id="cmp-type" style="width:auto" onchange="onComposeTypeChange()"><option value="P">P – Personal</option><option value="B">B – Bulletin</option><option value="B/PKTNET">B/PKTNET – PKTNET Check-In (form)</option><option value="T">T – NTS Traffic</option><option value="T/RRI">T/RRI – NTS Radiogram (form)</option></select></div>
+      <div id="cmp-normal-fields">
+        <div class="field"><span class="field-lbl">Subject</span><input class="field-in" id="cmp-subj" placeholder="subject line"></div>
+        <div class="field"><span class="field-lbl">Message</span><textarea class="field-ta" id="cmp-body" placeholder="message text…"></textarea></div>
+      </div>
+      <div id="cmp-radiogram" style="display:none">
+        <div class="rg-sec">
+          <div class="rg-sec-hd">1 · Station of Origin</div>
+          <div class="rg-row">
+            <div class="field"><span class="field-lbl">Op Name</span><input class="field-in" id="rg-op-name" placeholder="JOHN DOE"></div>
+            <div class="field"><span class="field-lbl">Station Callsign</span><input class="field-in" id="rg-station-call" placeholder="W1ABC"></div>
+            <div class="field"><span class="field-lbl">Place of Origin</span><input class="field-in" id="rg-place" placeholder="PHILADELPHIA PA"></div>
+          </div>
+        </div>
+        <div class="rg-sec">
+          <div class="rg-sec-hd">2 · Preamble (Header)</div>
+          <div class="rg-row">
+            <div class="field"><span class="field-lbl">Msg #</span><input class="field-in" id="rg-msgnum" placeholder="1"></div>
+            <div class="field"><span class="field-lbl">Precedence</span><select class="field-in" id="rg-prec">
+              <option value="R">ROUTINE (R)</option>
+              <option value="W">WELFARE (W)</option>
+              <option value="P">PRIORITY (P)</option>
+              <option value="EMERGENCY">EMERGENCY</option>
+            </select></div>
+            <div class="field"><span class="field-lbl">Handling (HX)</span>
+              <div style="display:flex; gap:6px">
+                <select class="field-in" id="rg-hx" onchange="onRgHxChange()" style="flex:1; min-width:0">
+                  <option value="">NONE</option>
+                  <option value="HXA">HXA — Collect landline delivery within N miles</option>
+                  <option value="HXB">HXB — Cancel if not delivered within N hours of filing</option>
+                  <option value="HXC">HXC — Report date &amp; time of delivery (TOD) to originator</option>
+                  <option value="HXD">HXD — Report relay path and delivery method to originator</option>
+                  <option value="HXE">HXE — Delivering station obtain reply from addressee</option>
+                  <option value="HXF">HXF — Hold delivery until specified date</option>
+                  <option value="HXG">HXG — No toll / mail delivery — cancel if expense involved</option>
+                </select>
+                <input class="field-in" id="rg-hx-var" placeholder="N" style="display:none; flex:0 0 90px" title="Variable for HXA (miles), HXB (hours), or HXF (date as MMDD)">
+              </div>
+            </div>
+            <div class="field"><span class="field-lbl">Date Filed</span><input class="field-in" id="rg-date" placeholder="MAY 24"></div>
+            <div class="field"><span class="field-lbl">Time UTC &nbsp; <button type="button" class="rg-now" onclick="rgNowTime()" title="Fill with current UTC HHMM">⊙ NOW</button></span><input class="field-in" id="rg-time" placeholder="2237"></div>
+          </div>
+        </div>
+        <div class="rg-sec">
+          <div class="rg-sec-hd">3 · The Address (Recipient)</div>
+          <div class="rg-row">
+            <div class="field"><span class="field-lbl">Recipient Name</span><input class="field-in" id="rg-rcpt-name" placeholder="JANE SMITH"></div>
+            <div class="field"><span class="field-lbl">Recipient Callsign</span><input class="field-in" id="rg-rcpt-call" placeholder="W2XYZ"></div>
+          </div>
+          <div class="rg-row">
+            <div class="field"><span class="field-lbl">Street Address</span><input class="field-in" id="rg-street" placeholder="123 MAIN ST"></div>
+            <div class="field"><span class="field-lbl">Apt / Suite / Box</span><input class="field-in" id="rg-apt" placeholder="(optional)"></div>
+          </div>
+          <div class="rg-row">
+            <div class="field"><span class="field-lbl">City</span><input class="field-in" id="rg-city" placeholder="TOWN"></div>
+            <div class="field" style="flex:0 0 90px"><span class="field-lbl">State</span><select class="field-in" id="rg-state"></select></div>
+            <div class="field" style="flex:0 0 110px"><span class="field-lbl">ZIP</span><input class="field-in" id="rg-zip" placeholder="ZIP"></div>
+          </div>
+          <div class="rg-row">
+            <div class="field"><span class="field-lbl">Phone</span><input class="field-in" id="rg-phone" placeholder="555-123-4567"></div>
+            <div class="field"><span class="field-lbl">Email (optional)</span><input class="field-in" id="rg-email" placeholder="JANE@EXAMPLE.COM"></div>
+          </div>
+        </div>
+        <div class="rg-sec">
+          <div class="rg-sec-hd">4 · The Text (Message Body)</div>
+          <textarea class="field-ta" id="rg-text" style="min-height:120px" placeholder="DASH BECOMES 'DASH', # BECOMES 'NR', .COM BECOMES 'DOT COM'."></textarea>
+          <div class="rg-hint">Click <strong>REVIEW</strong> to populate the standard compose form: To → <code>&lt;ZIP&gt;@NTS&lt;STATE&gt;</code>, Subject → <code>&lt;CITY&gt; &lt;RCPT-CALL&gt;</code>, Body = the formatted radiogram. Eyeball / edit, then SEND.</div>
+          <div class="rg-credit">Generator logic ported from N3MEL's TPRFN / RRI radiogram form — <a href="https://www.tprfn.net/radiogram-form" target="_blank" rel="noopener">tprfn.net/radiogram-form</a></div>
+        </div>
+      </div>
+      <div id="cmp-pktnet" style="display:none">
+        <div class="rg-sec">
+          <div class="rg-sec-hd">Agency / Group</div>
+          <div class="field"><span class="field-lbl">Agency or Group Name (optional)</span><input class="field-in" id="pk-agency" placeholder="e.g. VDEM REGION 1"></div>
+        </div>
+        <div class="rg-sec">
+          <div class="rg-sec-hd">1 · Station</div>
+          <div class="rg-row">
+            <div class="field"><span class="field-lbl">a. Date / Time</span><input class="field-in" id="pk-datetime" placeholder="YYYY-MM-DD HH:MM"></div>
+            <div class="field"><span class="field-lbl">b. To (net / callsign)</span><input class="field-in" id="pk-to" placeholder="W4EOC"></div>
+          </div>
+          <div class="rg-row">
+            <div class="field"><span class="field-lbl">c. From</span><input class="field-in" id="pk-from" placeholder="your call"></div>
+            <div class="field"><span class="field-lbl">d. Station Contact Name</span><input class="field-in" id="pk-contact" placeholder="JOHN DOE"></div>
+            <div class="field"><span class="field-lbl">e. Initial Operator(s)</span><input class="field-in" id="pk-operator" placeholder="W1ABC W2XYZ"></div>
+          </div>
+        </div>
+        <div class="rg-sec">
+          <div class="rg-sec-hd">2 · Session</div>
+          <div class="rg-row">
+            <div class="field"><span class="field-lbl">a. Type</span><select class="field-in" id="pk-session-type"><option>EXERCISE</option><option>REAL EVENT</option></select></div>
+            <div class="field"><span class="field-lbl">b. Service</span><select class="field-in" id="pk-service-type"><option>AMATEUR</option></select></div>
+            <div class="field"><span class="field-lbl">c. Band</span><select class="field-in" id="pk-band"><option>AXIP</option><option>HF</option><option selected>VHF</option><option>UHF</option><option>SHF</option></select></div>
+            <div class="field"><span class="field-lbl">d. Session (mode)</span><select class="field-in" id="pk-mode"><option>AXIP</option><option selected>AX25 Packet</option><option>Pactor</option><option>Robust Packet</option><option>Ardop</option><option>VARA HF</option><option>VARA FM</option><option>Mesh</option></select></div>
+          </div>
+        </div>
+        <div class="rg-sec">
+          <div class="rg-sec-hd">3 · Location</div>
+          <div class="rg-row">
+            <div class="field"><span class="field-lbl">a. Location</span><input class="field-in" id="pk-location" placeholder="Hope Hospital, parking lot C near ER entrance"></div>
+            <div class="field" style="flex:0 0 140px"><span class="field-lbl">b. Grid Square</span><input class="field-in" id="pk-gridsquare" placeholder="FM18lv"></div>
+          </div>
+        </div>
+        <div class="rg-sec">
+          <div class="rg-sec-hd">4 · Comments (max 500 chars)</div>
+          <textarea class="field-ta" id="pk-comments" maxlength="500" style="min-height:100px" placeholder="Such as: On batteries. Need relief in 6 hours. A brief SitRep. Operators names. Special notes for next shift."></textarea>
+          <div class="rg-hint">Click <strong>REVIEW</strong> to populate the standard compose form: To → the form's <code>To</code> field, Subject → <code>PKTNET CHECK-IN</code>, Body = the formatted check-in. Eyeball / edit, then SEND.</div>
+          <div class="rg-credit">Form concept: N3MEL &nbsp;·&nbsp; Form created: KN4LQN &nbsp;·&nbsp; v1.1 &nbsp;·&nbsp; <a href="https://vden.org/pktnet/check_in.html" target="_blank" rel="noopener">vden.org/pktnet</a></div>
+        </div>
+      </div>
     </div>
     <div class="modal-ft"><span class="modal-hint" id="cmp-status"></span><button class="send-btn" id="cmp-send" onclick="doSend()">SEND ▶</button></div>
   </div>
@@ -675,7 +833,15 @@ const LS = {
   getJ: k => { try { return JSON.parse(localStorage.getItem(k)||'null'); } catch(_){ return null; } },
   setJ: (k,v) => { try { localStorage.setItem(k,JSON.stringify(v)); } catch(_){} }
 };
+// sessionStorage twin — used for the password when "remember" is off,
+// so it survives reloads in this tab but dies with the browser session.
+const SS = {
+  get: k => { try { return sessionStorage.getItem(k); } catch(_){ return null; } },
+  set: (k,v) => { try { sessionStorage.setItem(k,v); } catch(_){} },
+  del: k => { try { sessionStorage.removeItem(k); } catch(_){} }
+};
 
+const _rememberPass = (LS.get('bpq_remember_pass') || '1') === '1';
 let CFG = {
   host:      LS.get('bpq_host')     || '127.0.0.1',
   port:      LS.get('bpq_port')     || '8080',
@@ -684,8 +850,9 @@ let CFG = {
   callsign:  LS.get('bpq_call')     || '',
   signature: LS.get('bpq_sig')      || '',
   username:  LS.get('bpq_user')     || '',
-  password:  LS.get('bpq_pass')     || '',
+  password:  _rememberPass ? (LS.get('bpq_pass') || '') : (SS.get('bpq_pass') || ''),
   qth:       LS.get('bpq_qth')      || '',
+  rememberPass: _rememberPass,      // off = prompt for password each browser session
 };
 
 function saveCFG() {
@@ -696,8 +863,15 @@ function saveCFG() {
   LS.set('bpq_call',  CFG.callsign);
   LS.set('bpq_sig',   CFG.signature);
   LS.set('bpq_user',  CFG.username);
-  LS.set('bpq_pass',  CFG.password);
   LS.set('bpq_qth',   CFG.qth);
+  LS.set('bpq_remember_pass', CFG.rememberPass ? '1' : '0');
+  if (CFG.rememberPass) {
+    LS.set('bpq_pass', CFG.password);
+    SS.del('bpq_pass');
+  } else {
+    SS.set('bpq_pass', CFG.password);
+    LS.del('bpq_pass');            // purge any previously-persisted copy
+  }
 }
 
 // ═══════════════════════════════════════════════════
@@ -880,6 +1054,14 @@ document.getElementById('rules-ov').addEventListener('click',e=>{if(e.target===e
 let killedSet = new Set(LS.getJ('bpq_killed')||[]);
 function saveKilled() { LS.setJ('bpq_killed',[...killedSet].slice(-500)); }
 
+// ── DELIVERED SET (NTS) ────────────────────────────
+// Persists which NTS messages we have marked delivered, so the green
+// banner / sub-filter / list pill survive page reloads. Independent
+// of BPQ's own state (we may also call WMNDel on the node, but that
+// is best-effort and not load-bearing for our UI).
+let deliveredSet = new Set(LS.getJ('bpq_delivered')||[]);
+function saveDelivered() { LS.setJ('bpq_delivered',[...deliveredSet].slice(-500)); }
+
 // ── BODY CACHE (FIFO 30) ───────────────────────────
 const BODY_MAX=30, bodyOrder=[];
 function cacheBody(msg,body) {
@@ -897,7 +1079,7 @@ let readSet = new Set();
 
 // ── STATE ──────────────────────────────────────────
 let allMsgs=[], activeNum=null, killTarget=null;
-let activeFolder='Personal', persFilter='ALL', bullFilter='ALL';
+let activeFolder='Personal', persFilter='ALL', bullFilter='ALL', ntsFilter='ALL';
 
 // ═══════════════════════════════════════════════════
 //  THEME
@@ -907,6 +1089,7 @@ const THEMES = [
   { key:'dark-hc',  label:'Dark Hi-Contrast', icon:'☀+' },
   { key:'light',    label:'Light',          icon:'🌙' },
   { key:'light-hc', label:'Light Hi-Contrast', icon:'🌙+' },
+  { key:'classic',  label:'Classic',        icon:'📻' },
 ];
 let themeIdx = Math.max(0, THEMES.findIndex(t => t.key === (LS.get('bpq_theme')||'dark')));
 
@@ -988,7 +1171,7 @@ function toggleSettings() {
     // Info row: version, callsign, status
     const info = document.createElement('div');
     info.className = 'm-cfg-info';
-    info.innerHTML = '<span>v1.5.9</span>' +
+    info.innerHTML = '<span>v1.6.0</span>' +
       '<span style="color:var(--accent);background:var(--accent-bg);border:1px solid var(--accent-border);padding:2px 7px;border-radius:4px">' + (callEl ? callEl.textContent : '—') + '</span>' +
       '<span id="m-status-pill" class="' + (statusPill ? statusPill.className : '') + '">' + (statusPill ? statusPill.textContent : '') + '</span>';
 
@@ -1110,6 +1293,7 @@ function applyConfig() {
   CFG.username  = document.getElementById('cfg-user').value.trim();
   CFG.password  = document.getElementById('cfg-pass').value;
   CFG.qth       = document.getElementById('cfg-qth').value.trim();
+  CFG.rememberPass = document.getElementById('cfg-remember').checked;
   saveCFG();
   syncTopbar();
   // Close settings bar after applying
@@ -1121,7 +1305,10 @@ function syncTopbar() {
   document.getElementById('top-call').textContent = CFG.callsign || '—';
   document.getElementById('top-node').textContent = base();
   document.getElementById('si-node').textContent  = CFG.callsign || '—';
-  document.getElementById('si-qth').textContent   = CFG.qth || '—';
+  const siUser = document.getElementById('si-user');
+  if (siUser) siUser.textContent = (CFG.username || CFG.callsign || '—').toUpperCase();
+  const siQth = document.getElementById('si-qth');
+  if (siQth) siQth.textContent = CFG.qth || '—';
   // Sync cfg bar fields
   document.getElementById('cfg-host').value = CFG.host;
   document.getElementById('cfg-port').value = CFG.port;
@@ -1133,6 +1320,8 @@ function syncTopbar() {
   document.getElementById('cfg-user').value = CFG.username;
   document.getElementById('cfg-pass').value = CFG.password;
   document.getElementById('cfg-qth').value  = CFG.qth;
+  const rememberBox = document.getElementById('cfg-remember');
+  if (rememberBox) rememberBox.checked = CFG.rememberPass;
 }
 
 // ═══════════════════════════════════════════════════
@@ -1159,6 +1348,7 @@ function base() {
 }
 function msgUrl(n)   { return `${base()}/WebMail/WM?${CFG.key}&${n}`; }
 function killUrl(n)  { return `${base()}/WebMail/WMDel/${n}?${CFG.key}`; }
+function ntsDelUrl(n){ return `${base()}/WebMail/WMNDel/${n}?${CFG.key}`; }
 function replyUrl(n) { return `${base()}/WebMail/Reply/${n}?${CFG.key}`; }
 function nextUrl()   { return `${base()}/WebMail/WMNext?${CFG.key}`; }
 function prevUrl()   { return `${base()}/WebMail/WMPrev?${CFG.key}`; }
@@ -1171,6 +1361,22 @@ function prevUrl()   { return `${base()}/WebMail/WMPrev?${CFG.key}`; }
 
 function authHeaders() {
   return CFG.username ? { 'Authorization': 'Basic ' + btoa(CFG.username + ':' + CFG.password) } : {};
+}
+
+// ── REQUEST SERIALIZER ──────────────────────────────
+// LinBPQ's web server starts a new thread for every HTTP request, but
+// its WebMail code shares unlocked global state between threads
+// (templates are free()d and reloaded per request, the message database
+// and NNTP list are mutated without locks). Concurrent requests can
+// SIGSEGV the node — confirmed when killing messages. The stock webmail
+// never sends overlapping requests, so BPQ was never hardened for it.
+// Funnel EVERY request through this queue so only one is in flight at
+// a time, matching the request pattern BPQ was designed for.
+let _bpqChain = Promise.resolve();
+function queuedFetch(url, opts) {
+  const p = _bpqChain.then(() => fetch(url, opts));
+  _bpqChain = p.then(() => {}, () => {});   // keep chain alive on failure
+  return p;
 }
 
 // Detect if HTML is a BPQ login form (contains a password input + form POST, no WebMail links)
@@ -1213,7 +1419,7 @@ async function bpqFormLogin(loginHtml, originUrl) {
   }
 
   console.debug('[BPQ] form login POST →', postUrl, '| fields:', formData.toString().replace(/password=[^&]*/i,'password=***'));
-  const r = await fetch(postUrl, {
+  const r = await queuedFetch(postUrl, {
     method: 'POST',
     credentials: 'include',
     headers: { ...authHeaders(), 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -1227,7 +1433,7 @@ async function bpqFormLogin(loginHtml, originUrl) {
 
 async function bpqGet(url) {
   console.debug('[BPQ] GET', url);
-  const r = await fetch(url, { credentials:'include', headers: authHeaders() });
+  const r = await queuedFetch(url, { credentials:'include', headers: authHeaders() });
   if (!r.ok) {
     console.debug('[BPQ] GET', url, '→ HTTP', r.status);
     throw new Error(`HTTP ${r.status}`);
@@ -1262,7 +1468,7 @@ async function bpqGet(url) {
     if (key) return postLoginHtml;
     // No key yet — retry the originally-requested URL now that we are authenticated
     console.debug('[BPQ] no key in post-login response, retrying original URL:', url);
-    const retry = await fetch(url, { credentials:'include', headers: authHeaders() });
+    const retry = await queuedFetch(url, { credentials:'include', headers: authHeaders() });
     if (retry.ok) {
       const retryHtml = await retry.text();
       console.debug('[BPQ] retry URL:', retry.url, '| loginPage:', isLoginPage(retryHtml), '| HTML (first 400):', retryHtml.slice(0,400));
@@ -1486,7 +1692,7 @@ async function fetchMsgHeader(msg) {
   if (msg.hdrFrom !== undefined) return;
   if (baseCall(msg.from) === 'SYSTEM') { msg.hdrFrom = 'SYSTEM'; return; }
   try {
-    let r = await fetch(msgUrl(msg.num), { credentials:'include', headers: authHeaders(), signal: headerFetchAbort?.signal });
+    let r = await queuedFetch(msgUrl(msg.num), { credentials:'include', headers: authHeaders(), signal: headerFetchAbort?.signal });
     // On 404 the session key probably rotated — re-detect and retry once
     if (r.status === 404) {
       const newKey = await autoDetectKey();
@@ -1494,7 +1700,7 @@ async function fetchMsgHeader(msg) {
         CFG.key = newKey; saveCFG();
         document.getElementById('cfg-key').value = newKey;
       }
-      r = await fetch(msgUrl(msg.num), { credentials:'include', headers: authHeaders(), signal: headerFetchAbort?.signal });
+      r = await queuedFetch(msgUrl(msg.num), { credentials:'include', headers: authHeaders(), signal: headerFetchAbort?.signal });
     }
     if (!r.ok) return;
     const html = await r.text();
@@ -1559,6 +1765,43 @@ function buildPersFilters(msgs) {
 function buildBullFilters(msgs) {
   buildSubfilters('sf-bulls-wrap', msgs, m=>m.to, bullFilter, 'setBullFilter', null);
 }
+// NTS routing area: the "@AREA" suffix on the to field, captured into msg.via.
+// Falls back to "NO AREA" when via is missing or duplicates the to field.
+function ntsAreaKey(m) {
+  if (m.via && m.via !== m.to) return m.via.toUpperCase();
+  return 'NO AREA';
+}
+// NTS sub-filters: All NTS (undelivered), per-area buckets, and ✓ Delivered.
+// Delivered messages are pulled out of All NTS and area buckets so the list
+// reads as "what still needs work" vs "already handled".
+function buildNtsFilters(msgs) {
+  const areaCounts={}, areaUnreads={};
+  let delivered=0, deliveredUnread=0, undelivered=0, undeliveredUnread=0;
+  for (const m of msgs) {
+    const isDel = deliveredSet.has(m.num);
+    const isUnread = !readSet.has(m.num);
+    if (isDel) { delivered++; if (isUnread) deliveredUnread++; }
+    else {
+      undelivered++; if (isUnread) undeliveredUnread++;
+      const a = ntsAreaKey(m);
+      areaCounts[a] = (areaCounts[a]||0) + 1;
+      if (isUnread) areaUnreads[a] = (areaUnreads[a]||0) + 1;
+    }
+  }
+  const items = [{ key:'ALL', label:'All NTS', count:undelivered, unread:undeliveredUnread }];
+  for (const k of Object.keys(areaCounts).sort()) {
+    items.push({ key:k, label:k, count:areaCounts[k], unread:areaUnreads[k]||0 });
+  }
+  if (delivered > 0) items.push({ key:'DELIVERED', label:'✓ Delivered', count:delivered, unread:deliveredUnread });
+
+  const wrap = document.getElementById('sf-nts-wrap');
+  wrap.innerHTML = items.map(it => `
+    <div class="sf${ntsFilter===it.key?' active':''}" onclick="setNtsFilter('${esc(it.key)}')">
+      <span class="sf-lbl">${esc(it.label)}</span>
+      <span class="sf-count">(${it.count})</span>
+      <span class="sf-unread${it.unread>0?' on':''}"></span>
+    </div>`).join('');
+}
 
 function setPersFilter(f) {
   persFilter=f;
@@ -1582,6 +1825,19 @@ function setBullFilter(f) {
   if (isMobile) { mobileNav('list'); }
   else if(filtered.length>0) openMsg(filtered[0].num);
 }
+function setNtsFilter(f) {
+  ntsFilter=f;
+  buildNtsFilters(allMsgs);
+  const label = f==='ALL' ? 'NTS Traffic'
+              : f==='DELIVERED' ? 'NTS Traffic · Delivered'
+              : `NTS Traffic · ${f}`;
+  document.getElementById('list-title').textContent=label;
+  const filtered=getFiltered();
+  renderList(filtered);
+  updateListCount(filtered);
+  if (isMobile) { mobileNav('list'); }
+  else if(filtered.length>0) openMsg(filtered[0].num);
+}
 
 // ═══════════════════════════════════════════════════
 //  FILTERING
@@ -1590,6 +1846,11 @@ function getFiltered() {
   let msgs=allMsgs;
   if(activeFolder==='Personal'&&persFilter!=='ALL') msgs=msgs.filter(m=>persFromKey(m)===persFilter);
   if(activeFolder==='Bulls'&&bullFilter!=='ALL') msgs=msgs.filter(m=>m.to===bullFilter);
+  if(activeFolder==='NTS') {
+    if(ntsFilter==='ALL')           msgs=msgs.filter(m=>!deliveredSet.has(m.num));
+    else if(ntsFilter==='DELIVERED') msgs=msgs.filter(m=> deliveredSet.has(m.num));
+    else                             msgs=msgs.filter(m=>!deliveredSet.has(m.num) && ntsAreaKey(m)===ntsFilter);
+  }
   if(starFilterOn) msgs=msgs.filter(m=>{ const {starred}=evalRules(m); return starred||manualStars.has(m.num); });
   const q=document.getElementById('srch').value.toLowerCase();
   if(q) msgs=msgs.filter(m=>[m.from,m.to,m.subject,m.type,m.num,m.via].some(v=>(v||'').toLowerCase().includes(q)));
@@ -1631,7 +1892,14 @@ function activatePersonal() {
 function activateBulletins() {
   document.getElementById('sf-bulls-wrap').classList.add('open');
   document.getElementById('sf-pers-wrap').classList.remove('open');
+  document.getElementById('sf-nts-wrap').classList.remove('open');
   loadFolder('Bulls','Bulletins');
+}
+function activateNts() {
+  document.getElementById('sf-nts-wrap').classList.add('open');
+  document.getElementById('sf-pers-wrap').classList.remove('open');
+  document.getElementById('sf-bulls-wrap').classList.remove('open');
+  loadFolder('NTS','NTS Traffic');
 }
 
 async function loadFolder(folder, label) {
@@ -1641,6 +1909,7 @@ async function loadFolder(folder, label) {
   if(fEl) fEl.classList.add('active');
   if(folder!=='Personal') document.getElementById('sf-pers-wrap').classList.remove('open');
   if(folder!=='Bulls')    document.getElementById('sf-bulls-wrap').classList.remove('open');
+  if(folder!=='NTS')      document.getElementById('sf-nts-wrap').classList.remove('open');
   document.getElementById('list-title').textContent=label||folder;
   document.getElementById('list-count').textContent='…';
   document.getElementById('list-body').innerHTML='<div class="list-loading">loading…</div>';
@@ -1685,6 +1954,11 @@ async function loadFolder(folder, label) {
       buildBullFilters(msgs);
       document.getElementById('sf-bulls-wrap').classList.add('open');
     }
+    if(folder==='NTS') {
+      ntsFilter='ALL';
+      buildNtsFilters(msgs);
+      document.getElementById('sf-nts-wrap').classList.add('open');
+    }
 
     allMsgs=msgs;
     const filtered=getFiltered();
@@ -1716,8 +1990,17 @@ function tcls(t) {
   const c=t[0].toUpperCase();
   if(c==='B') return 'tb tb-B';
   if(c==='P') return 'tb tb-P';
+  if(c==='T') return 'tb tb-T';
   if(c==='N') return 'tb tb-N';
   return 'tb tb-X';
+}
+// Display label for a type code in list cards.
+// Collapses NTS sub-types (TY/TN/TF/…) into a single "NTS" pill so the
+// list reads cleanly; the raw type stays visible in the reader header.
+function tlabel(t) {
+  if(!t) return '?';
+  if(t[0].toUpperCase()==='T') return 'NTS';
+  return t;
 }
 function renderList(msgs) {
   const el=document.getElementById('list-body');
@@ -1743,7 +2026,7 @@ function renderList(msgs) {
             ${esc(m.date)}
           </span>
         </div>
-        <div class="mr-subj">${tagHtml}<span class="${tcls(m.type)}">${esc(m.type)}</span>${esc(m.subject)}</div>
+        <div class="mr-subj">${tagHtml}<span class="${tcls(m.type)}">${esc(tlabel(m.type))}</span>${deliveredSet.has(m.num)?'<span class="tb tb-delivered">✓ Delivered</span>':''}${esc(m.subject)}</div>
         <div class="mr-meta">#${esc(m.num)} · to:${esc(m.to)}${m.via&&m.via!==m.to?` @${esc(m.via)}`:''} · ${esc(m.size)}b</div>
       </div>
     </div>`;
@@ -1768,6 +2051,7 @@ async function openMsg(num) {
     // Re-render subfilters to update unread dots/counts
     if(activeFolder==='Personal') buildPersFilters(allMsgs);
     if(activeFolder==='Bulls')    buildBullFilters(allMsgs);
+    if(activeFolder==='NTS')      buildNtsFilters(allMsgs);
     updateMobileNavBadge();
   }
 
@@ -1786,6 +2070,22 @@ async function openMsg(num) {
   updateMobileSummary(msg);
   document.getElementById('rv-body').textContent='Loading…';
   document.getElementById('btn-kill').disabled=false;
+  const isNts = msg.type && msg.type[0]==='T';
+  const isDelivered = deliveredSet.has(num);
+  document.getElementById('btn-parse-rg').style.display = isNts ? '' : 'none';
+  const ntsBtn = document.getElementById('btn-nts-del');
+  ntsBtn.style.display = isNts ? '' : 'none';
+  ntsBtn.classList.toggle('on', isNts && isDelivered);
+  ntsBtn.disabled = isDelivered;
+  ntsBtn.title = isDelivered ? 'Already marked delivered' : 'Mark NTS traffic as delivered to addressee';
+  const banner = document.getElementById('rv-banner');
+  if (isNts && isDelivered) {
+    banner.innerHTML = '✓ Marked as Delivered &nbsp;·&nbsp; this message is in NTS Traffic › Delivered';
+    banner.classList.add('on');
+  } else {
+    banner.classList.remove('on');
+    banner.innerHTML = '';
+  }
 
   try {
     if(!msg.body) {
@@ -1935,10 +2235,21 @@ async function doKill() {
     if (candidate) nextNum = candidate.num;
   }
 
-  // Kill all targets — fire requests concurrently
-  const results = await Promise.allSettled(toKill.map(n => bpqGet(killUrl(n))));
-  const killed = toKill.filter((_,i)=>results[i].status==='fulfilled');
-  const failed = toKill.length - killed.length;
+  // Kill targets ONE AT A TIME. Each kill mutates BPQ's message database
+  // (FlagAsKilled → SaveMessageDatabase → NNTP list rebuild) on a fresh
+  // server thread with no locking — concurrent kills crash linbpq with a
+  // SIGSEGV. queuedFetch already serializes, but keep this loop explicit
+  // and give the node a short breather between kills.
+  const killed = [];
+  let failed = 0;
+  for (let i = 0; i < toKill.length; i++) {
+    btn.textContent = `Killing ${i+1}/${toKill.length}…`;
+    try {
+      await bpqGet(killUrl(toKill[i]));
+      killed.push(toKill[i]);
+    } catch(_) { failed++; }
+    if (i < toKill.length - 1) await new Promise(r=>setTimeout(r,250));
+  }
 
   // Remove killed from state
   for (const n of killed) {
@@ -1954,6 +2265,7 @@ async function doKill() {
   // Update filters and list
   if(activeFolder==='Personal') buildPersFilters(allMsgs);
   if(activeFolder==='Bulls')    buildBullFilters(allMsgs);
+  if(activeFolder==='NTS')      buildNtsFilters(allMsgs);
   const f=getFiltered(); renderList(f); updateListCount(f);
 
   // Auto-advance to next message after single kill
@@ -1968,6 +2280,53 @@ async function doKill() {
   else toast(`${killed.length} message${killed.length>1?'s':''} killed`,'ok');
 
   closeKill(); btn.disabled=false;
+}
+
+// ═══════════════════════════════════════════════════
+//  NTS DELIVERED
+// ═══════════════════════════════════════════════════
+function confirmNtsDel() {
+  if (!activeNum) return;
+  const msg = allMsgs.find(m=>m.num===activeNum);
+  if (!msg) return;
+  document.getElementById('ntsdel-msg').innerHTML=
+    `Mark NTS message <strong>#${esc(msg.num)}</strong> to <strong>${esc(msg.to)}</strong> as delivered?<br>
+     <span style="font-family:var(--mono);font-size:0.85rem;color:var(--text3)">${esc(msg.subject)}</span><br>
+     <span style="font-size:0.85rem;color:var(--text3)">Use after you have delivered the message to the addressee (e.g. by phone).</span>`;
+  document.getElementById('ntsdel-yes').textContent='Mark Delivered';
+  document.getElementById('ntsdel-yes').disabled=false;
+  document.getElementById('ntsdel-ov').classList.add('open');
+}
+function closeNtsDel() { document.getElementById('ntsdel-ov').classList.remove('open'); }
+async function doNtsDel() {
+  if (!activeNum) { closeNtsDel(); return; }
+  const num = activeNum;
+  const btn = document.getElementById('ntsdel-yes');
+  btn.disabled=true; btn.textContent='Marking…';
+  try {
+    await bpqGet(ntsDelUrl(num));
+    deliveredSet.add(num); saveDelivered();
+    toast(`#${num} marked delivered`, 'ok');
+    closeNtsDel();
+    // Update the open message's banner + button state directly
+    if (activeNum === num) {
+      const ntsBtn = document.getElementById('btn-nts-del');
+      ntsBtn.classList.add('on');
+      ntsBtn.disabled = true;
+      ntsBtn.title = 'Already marked delivered';
+      const banner = document.getElementById('rv-banner');
+      banner.innerHTML = '✓ Marked as Delivered &nbsp;·&nbsp; this message is in NTS Traffic › Delivered';
+      banner.classList.add('on');
+    }
+    // Refresh the list (pills) and NTS sub-filters if visible
+    if (activeFolder === 'NTS' && typeof buildNtsFilters === 'function') {
+      buildNtsFilters(allMsgs);
+    }
+    renderList(getFiltered());
+  } catch(e) {
+    toast(`Delivered failed: ${e.message}`, 'err');
+    btn.disabled=false; btn.textContent='Mark Delivered';
+  }
 }
 
 // ═══════════════════════════════════════════════════
@@ -2060,7 +2419,7 @@ async function doReject(field, value) {
 
     // Step 4: POST the complete form back to BPQ with the mail session key
     const headers = {...authHdr, 'Content-Type': 'application/x-www-form-urlencoded'};
-    const r = await fetch(postUrl, {
+    const r = await queuedFetch(postUrl, {
       method: 'POST',
       credentials: 'include',
       headers,
@@ -2112,6 +2471,10 @@ function openCompose(to='',subj='',body='',title=''){
   document.getElementById('cmp-body').value=body||`\n\n${sig}`;
   document.getElementById('cmp-ttl').textContent=title||(to?'Forward':'New Message');
   document.getElementById('cmp-status').textContent='';
+  // Reset to plain compose mode (in case a prior form-style session left it active)
+  const typeSel = document.getElementById('cmp-type');
+  if (typeSel.value === 'T/RRI' || typeSel.value === 'B/PKTNET') typeSel.value = 'P';
+  onComposeTypeChange();
   const modal=document.querySelector('#cmp-ov .modal');
   const saved=LS.get('bpq_compose_w');
   if(saved && !isMobile) modal.style.width=saved;
@@ -2121,19 +2484,64 @@ function openCompose(to='',subj='',body='',title=''){
 function closeCompose(){
   const modal=document.querySelector('#cmp-ov .modal');
   if(modal.style.width) LS.set('bpq_compose_w',modal.style.width);
+  // Discard any pending form-style state — only a completed send
+  // should bump counters / clear form fields.
+  rgPendingNum = null;
+  pkPendingClear = false;
   document.getElementById('cmp-ov').classList.remove('open');
 }
+// Open compose modal pre-populated from a URL hash, e.g.:
+//   #compose?to=N4SFL&subject=Test&body=Hello&type=P
+// Designed for dashboard / external "send mail" buttons.
+function processHashAction(){
+  const hash = location.hash || '';
+  if (!hash.toLowerCase().startsWith('#compose')) return;
+  const qIdx = hash.indexOf('?');
+  const qs = qIdx >= 0 ? hash.slice(qIdx + 1) : '';
+  let params;
+  try { params = new URLSearchParams(qs); }
+  catch(e) { console.warn('Bad hash params:', e); return; }
+  const to   = (params.get('to')      || '').toUpperCase();
+  const subj = params.get('subject')  || '';
+  const body = params.get('body')     || '';
+  const type = (params.get('type')    || '').toUpperCase();
+  // Clear the hash so a reload doesn't re-fire the compose window
+  try { history.replaceState(null, '', location.pathname + location.search); }
+  catch(e) { location.hash = ''; }
+  openCompose(to, subj, body, 'New Message');
+  if (['P','B','T'].includes(type)) {
+    document.getElementById('cmp-type').value = type;
+  }
+}
+// Self-driving trigger: poll briefly until the compose modal exists in the DOM,
+// then process the hash. Independent of whether connectAndLoad() reaches its end.
+function tryHashAction(attempt){
+  attempt = attempt || 0;
+  const hash = location.hash || '';
+  if (!hash.toLowerCase().startsWith('#compose')) return;
+  const ready = document.getElementById('cmp-to') &&
+                document.getElementById('cmp-ov');
+  if (ready) { processHashAction(); return; }
+  if (attempt > 40) { console.warn('hash action gave up waiting for DOM'); return; }
+  setTimeout(function(){ tryHashAction(attempt + 1); }, 250);
+}
+window.addEventListener('load', function(){ tryHashAction(0); });
+window.addEventListener('hashchange', function(){ tryHashAction(0); });
 function doForward(){
   const msg=allMsgs.find(m=>m.num===activeNum); if(!msg)return;
   const sig = CFG.signature || `73 de ${CFG.callsign||'N4SFL'}`;
   openCompose('',`FWD: ${msg.subject}`,`\n\n${sig}\n\n--- Fwd #${msg.num} from ${msg.from} ---\n${msg.body||''}`,'Forward');
 }
 function doSend(){
-  const to=document.getElementById('cmp-to').value.trim().toUpperCase();
+  let type=document.getElementById('cmp-type').value;
+  // Form-style types use REVIEW instead of immediate send — stage
+  // values into the standard compose form, user clicks SEND again.
+  if (type === 'T/RRI')   { rgReview(); return; }
+  if (type === 'B/PKTNET'){ pkReview(); return; }
+  const st=document.getElementById('cmp-status');
+  let to=document.getElementById('cmp-to').value.trim().toUpperCase();
   const subj=document.getElementById('cmp-subj').value.trim();
   const msg=document.getElementById('cmp-body').value.trim();
-  const type=document.getElementById('cmp-type').value;
-  const st=document.getElementById('cmp-status');
   if(!to||!subj||!msg){st.style.color='var(--red)';st.textContent='Fill in all fields';return;}
   st.style.color='var(--amber)';st.textContent='Sending…';
   document.getElementById('cmp-send').disabled=true;
@@ -2147,12 +2555,581 @@ function doSend(){
   for(const[k,v]of Object.entries(fields)){const inp=document.createElement('input');inp.type='hidden';inp.name=k;inp.value=v;f.appendChild(inp);}
   document.body.appendChild(f);
   ifr.onload=function(){
+    // Radiogram-originated send: bump the persisted "last sent" msg
+    // # and clear the per-message radiogram fields. Section 1 (Station
+    // of Origin) and Precedence/HX/Date are intentionally preserved.
+    if (rgPendingNum !== null && Number.isFinite(rgPendingNum)) {
+      LS.set('bpq_rg_last_sent', String(rgPendingNum));
+      rgPendingNum = null;
+      ['rg-msgnum','rg-time','rg-rcpt-name','rg-rcpt-call','rg-street','rg-apt',
+       'rg-city','rg-zip','rg-phone','rg-email','rg-text'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = '';
+      });
+      const stateSel = document.getElementById('rg-state');
+      if (stateSel) stateSel.value = '';
+    }
+    // PKTNET-originated send: persist user defaults and clear the
+    // per-message fields (To, Location, Comments). Station defaults
+    // (agency, from, contact, operator, grid, session/band/mode) are
+    // preserved across check-ins.
+    if (pkPendingClear) {
+      pkPendingClear = false;
+      pkSaveDefaults();
+      ['pk-to','pk-location','pk-comments'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = '';
+      });
+    }
     closeCompose();toast(`Sent to ${to}`,'ok');
     document.getElementById('cmp-send').disabled=false;
     f.remove();
   };
   f.submit();
   setTimeout(()=>{document.getElementById('cmp-send').disabled=false;},5000);
+}
+
+// ═══════════════════════════════════════════════════
+//  RADIOGRAM (T/RRI) FORM
+//  Ports the client-side logic of N3MEL's TPRFN/RRI radiogram
+//  generator into the compose modal. Selecting the "T/RRI" type
+//  swaps the plain subject/body fields for this structured form;
+//  on Send, the assembled ASCII becomes the message body and the
+//  type is sent as plain T (NTS Traffic).
+// ═══════════════════════════════════════════════════
+const RG_STATES = ['AL','AK','AZ','AR','CA','CO','CT','DE','FL','GA','HI','ID','IL','IN','IA',
+                   'KS','KY','LA','ME','MD','MA','MI','MN','MS','MO','MT','NE','NV','NH','NJ',
+                   'NM','NY','NC','ND','OH','OK','OR','PA','RI','SC','SD','TN','TX','UT','VT',
+                   'VA','WA','WV','WI','WY','DC','PR','VI','GU','AS','MP'];
+let rgInited = false;
+// Set when REVIEW is clicked, captures the msg # being sent so that
+// when the iframe load fires (= BPQ accepted the POST) we can mark
+// that number as the new "last sent" and bump the next suggestion.
+// Cleared on send completion, on closeCompose, and on switch out of
+// radiogram mode.
+let rgPendingNum = null;
+function rgInit() {
+  if (rgInited) return;
+  const sel = document.getElementById('rg-state');
+  sel.innerHTML = '<option value="">ST</option>' + RG_STATES.map(s => `<option value="${s}">${s}</option>`).join('');
+  // Load persisted Station of Origin (op name, station call, place)
+  let origin;
+  try { origin = JSON.parse(LS.get('bpq_rg_origin')||'null') || {}; } catch(_) { origin = {}; }
+  if (origin.opName)      document.getElementById('rg-op-name').value     = origin.opName;
+  if (origin.stationCall) document.getElementById('rg-station-call').value = origin.stationCall;
+  if (origin.place)       document.getElementById('rg-place').value        = origin.place;
+  // Default station call to user's BBS callsign if origin not set
+  if (!origin.stationCall && CFG.callsign) {
+    document.getElementById('rg-station-call').value = CFG.callsign.toUpperCase();
+  }
+  rgInited = true;
+}
+// Suggest the next msg # = (last successfully sent radiogram #) + 1,
+// or 1 if none have been sent yet. Only fills in when the field is
+// blank so user-typed overrides survive a type-toggle.
+function rgSuggestNextNum() {
+  const fld = document.getElementById('rg-msgnum');
+  if (fld.value.trim()) return;
+  const last = parseInt(LS.get('bpq_rg_last_sent')||'0', 10) || 0;
+  fld.value = String(last + 1);
+}
+function rgSaveOrigin() {
+  LS.set('bpq_rg_origin', JSON.stringify({
+    opName: document.getElementById('rg-op-name').value,
+    stationCall: document.getElementById('rg-station-call').value,
+    place: document.getElementById('rg-place').value,
+  }));
+}
+// HX codes HXA/HXB/HXF take an inline variable (miles, hours, date)
+// appended to the code with no space (e.g. HXB48). All other codes
+// don't, so we hide the variable input to avoid operator confusion.
+function rgHxNeedsVar(code) { return ['HXA','HXB','HXF'].includes(code); }
+function onRgHxChange() {
+  const code = document.getElementById('rg-hx').value;
+  const v = document.getElementById('rg-hx-var');
+  if (rgHxNeedsVar(code)) {
+    v.style.display = '';
+    v.placeholder = code === 'HXA' ? 'miles'
+                  : code === 'HXB' ? 'hours'
+                  : code === 'HXF' ? 'MMDD' : 'N';
+  } else {
+    v.style.display = 'none';
+    v.value = '';
+  }
+}
+function rgNowTime() {
+  const d = new Date();
+  const h = String(d.getUTCHours()).padStart(2,'0');
+  const m = String(d.getUTCMinutes()).padStart(2,'0');
+  document.getElementById('rg-time').value = h+m;
+}
+function rgFormatPhone(p) {
+  const digits = (p||'').replace(/\D/g,'');
+  if (digits.length === 10) return `${digits.slice(0,3)} ${digits.slice(3,6)} ${digits.slice(6)}`;
+  if (digits.length === 11) return `${digits[0]} ${digits.slice(1,4)} ${digits.slice(4,7)} ${digits.slice(7)}`;
+  return digits;  // fall back to raw digits when count is non-standard
+}
+// ARRL extended-punctuation table (NTS phonetic spellings used on
+// phone/CW nets). Round-tripped: generator emits the WORD form,
+// parser reverses to the literal char. Order is unimportant for
+// char→word generation (every char is unique); for word→char
+// parsing we anchor each word with \b so substrings don't match.
+const RG_BODY_SUBS = [
+  { sym: ',',  word: 'COMMA' },
+  { sym: '?',  word: 'QUERY' },
+  { sym: '/',  word: 'SLASH' },
+  { sym: '@',  word: 'ATSIGN' },
+  { sym: '-',  word: 'DASH' },
+  { sym: '+',  word: 'PLUSSIGN' },
+  { sym: ':',  word: 'COLON' },
+  { sym: '~',  word: 'TILDE' },
+  { sym: '(',  word: 'OPENPAREN' },
+  { sym: ')',  word: 'CLOSEPAREN' },
+  { sym: '%',  word: 'PERCENTSIGN' },
+  { sym: "'",  word: 'APOSTROPHE' },
+  { sym: '!',  word: 'EXCLAMATION' },
+  { sym: '"',  word: 'QUOTE' },
+  { sym: '#',  word: 'NR' },
+];
+// Compatibility forms that parsers should accept but generators do
+// NOT emit (we emit the standard form). E.g. DECIMAL is an alias for
+// R between digits, PERIOD is an alias for end-of-sentence X, SLANT
+// is an older synonym for /.
+const RG_BODY_COMPAT = [
+  { word: 'DECIMAL', sym: '.' },
+  { word: 'PERIOD',  sym: '.' },
+  { word: 'SLANT',   sym: '/' },
+];
+function rgEscapeRe(s) { return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
+// Apply NTS body substitutions to outgoing message text.
+// Decimal between digits (146.52 → 146R52) is handled first so the
+// digit context survives the later @/./- passes. End-of-sentence "."
+// is left untouched — operators handle X manually because the X
+// convention is contextual.
+function rgBodyGenerate(text) {
+  let r = (text || '').toUpperCase();
+  r = r.replace(/(?<=\d)\.(?=\d)/g, 'R');
+  for (const { sym, word } of RG_BODY_SUBS) {
+    r = r.replace(new RegExp(rgEscapeRe(sym), 'g'), ' ' + word + ' ');
+  }
+  return r.replace(/\s+/g, ' ').trim();
+}
+// Reverse-apply NTS body substitutions on parsed incoming text, then
+// tidy up common punctuation spacing so it reads naturally in the
+// form ("WELL COMMA HELLO" → "WELL, HELLO" rather than "WELL , HELLO").
+function rgBodyParse(text) {
+  let r = text || '';
+  for (const { sym, word } of RG_BODY_SUBS) {
+    r = r.replace(new RegExp('\\b' + word + '\\b', 'g'), sym);
+  }
+  r = r.replace(/(?<=\d)R(?=\d)/g, '.');
+  for (const { word, sym } of RG_BODY_COMPAT) {
+    r = r.replace(new RegExp('\\b' + word + '\\b', 'g'), sym);
+  }
+  // Cosmetic cleanup — join displaced punctuation to adjacent words.
+  r = r.replace(/\s+([,?:;!%])/g, '$1')        // close punct → left
+       .replace(/\(\s+/g, '(')                 // ( → right
+       .replace(/\s+\)/g, ')')                 // ) → left
+       .replace(/(\w)\s+'\s+(\w)/g, "$1'$2")    // apostrophe between words
+       .replace(/@\s+/g, '@')                  // @ joins right (email-ish)
+       .replace(/\s{2,}/g, ' ').trim();
+  return r;
+}
+// Email-field phonetic substitution. Same set as the body but applied
+// unconditionally (no decimal-context check) since email addresses
+// have a constrained character set and any "." is a domain separator.
+function rgFormatEmail(e) {
+  return (e||'').toUpperCase()
+    .replace(/@/g, ' ATSIGN ')
+    .replace(/\./g, ' DOT ')
+    .replace(/-/g, ' DASH ')
+    .replace(/#/g, ' NR ')
+    .replace(/_/g, ' UNDERSCORE ')
+    .replace(/\+/g, ' PLUSSIGN ')
+    .replace(/\s+/g, ' ').trim();
+}
+// NTS body wrap: 5 words per line on word boundaries. Matches the
+// observed output of the TPRFN form (e.g. 14-word body becomes
+// 5 / 5 / 4-word lines).
+function rgWrap5(text) {
+  const words = (text||'').trim().split(/\s+/).filter(Boolean);
+  if (!words.length) return '';
+  const lines = [];
+  for (let i = 0; i < words.length; i += 5) lines.push(words.slice(i, i+5).join(' '));
+  return lines.join('\n');
+}
+// Build the radiogram and return the three BPQ fields:
+//   { to:   <ZIP>@NTS<STATE> (or rcpt call if zip/state blank)
+//     subj: <CITY> <RCPT-CALL>
+//     body: preamble + recipient + address + BT + text + BT + sig + /EX }
+function rgGenerate() {
+  rgSaveOrigin();
+  const val = id => document.getElementById(id).value;
+  const opName      = val('rg-op-name').trim().toUpperCase();
+  const stationCall = val('rg-station-call').trim().toUpperCase();
+  const place       = val('rg-place').trim().toUpperCase();
+  // Defensive: if the user never touched MSG #, fall back to
+  // (last sent + 1) here so the preamble can never lack a number.
+  // Write the value back to the field so it's visible on review.
+  let msgNum = val('rg-msgnum').trim();
+  if (!msgNum) {
+    const last = parseInt(LS.get('bpq_rg_last_sent')||'0', 10) || 0;
+    msgNum = String(last + 1);
+    document.getElementById('rg-msgnum').value = msgNum;
+  }
+  const prec        = val('rg-prec');
+  const hxCode      = val('rg-hx');
+  const hxVar       = val('rg-hx-var').trim();
+  // HXA/HXB/HXF carry an inline variable (miles/hours/date); other
+  // codes don't. Concatenate with no space per ARRL convention.
+  const hx = hxCode && rgHxNeedsVar(hxCode) && hxVar ? (hxCode + hxVar) : hxCode;
+  const date        = val('rg-date').trim().toUpperCase();
+  const time        = val('rg-time').trim();
+  const rcptName    = val('rg-rcpt-name').trim().toUpperCase();
+  const rcptCall    = val('rg-rcpt-call').trim().toUpperCase();
+  const street      = val('rg-street').trim().toUpperCase();
+  const apt         = val('rg-apt').trim().toUpperCase();
+  const city        = val('rg-city').trim().toUpperCase();
+  const state       = val('rg-state').trim().toUpperCase();
+  const zip         = val('rg-zip').trim();
+  const phone       = val('rg-phone').trim();
+  const email       = val('rg-email').trim();
+  const text = rgBodyGenerate(val('rg-text').trim());
+  const words = text ? text.split(/\s+/).filter(Boolean).length : 0;
+
+  // Preamble: NUM PREC [HX] STATION COUNT PLACE TIME DATE
+  const preambleParts = [msgNum, prec];
+  if (hx) preambleParts.push(hx);
+  preambleParts.push(stationCall, String(words), place, time, date);
+  const preamble = preambleParts.join(' ').replace(/\s+/g,' ').trim();
+
+  const body = [];
+  body.push(preamble);
+  body.push(`${rcptName} ${rcptCall}`.replace(/\s+/g,' ').trim());
+  body.push(street);
+  if (apt) body.push(apt);
+  body.push(`${city} ${state} ${zip}`.replace(/\s+/g,' ').trim());
+  if (phone) body.push(rgFormatPhone(phone));
+  if (email) body.push(rgFormatEmail(email));
+  body.push('BT');
+  if (text) body.push(rgWrap5(text));
+  body.push('BT');
+  body.push(`${opName} ${stationCall}`.replace(/\s+/g,' ').trim());
+
+  const to   = (zip && state) ? `${zip}@NTS${state}` : rcptCall;
+  const subj = `${city} ${rcptCall}`.replace(/\s+/g,' ').trim();
+  return { to, subj, body: body.join('\n') };
+}
+// Parse an incoming ARRL-format radiogram body into the form's
+// field shape. Skips BPQ envelope headers (From:/To:/Bid:/Title:/
+// R: routing lines) by scanning forward to the first preamble line
+// that matches "<NUM> <PREC> [<HX>] <STATION> <COUNT> ...". Returns
+// null when no preamble can be located.
+function rgParseRadiogram(body) {
+  if (!body) return null;
+  const lines = body.split(/\r?\n/).map(l => l.trim()).filter(l => l && !/^\/EX$/i.test(l));
+  // HX can be a single letter (HXA), combined letters (HXAC), or
+  // letter(s) plus a digit-string argument (HXA50, HXB72, HXF1225).
+  const preRe = /^(\d+)\s+(R|W|P|EMERGENCY)(?:\s+(HX[A-Z]+\d*))?\s+(\S+)\s+(\d+)\s+(.+)$/i;
+  let preIdx = -1, m = null;
+  for (let i = 0; i < lines.length; i++) {
+    m = lines[i].match(preRe);
+    if (m) { preIdx = i; break; }
+  }
+  if (preIdx === -1) return null;
+
+  // Split HX like "HXA50" into the letters portion (HXA) and the
+  // numeric variable (50) so each populates its own form field.
+  const hxRaw = (m[3]||'').toUpperCase();
+  const hxLetters = (hxRaw.match(/^HX[A-Z]+/)||[''])[0];
+  const hxVar = hxRaw.slice(hxLetters.length);
+  const out = {
+    msgNum: m[1], prec: m[2].toUpperCase(),
+    hx: hxLetters, hxVar, stationCall: m[4].toUpperCase(),
+    wordCount: m[5], place: '', time: '', date: '',
+    rcptName: '', rcptCall: '', street: '', apt: '',
+    city: '', state: '', zip: '', phone: '', email: '', text: '',
+  };
+
+  // Parse PLACE / [TIME] / DATE off the tail of the preamble.
+  // Date format: MMM (D|DD). Time format: 4 consecutive digits.
+  const rest = m[6].split(/\s+/);
+  const months = /^(JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC)$/i;
+  let end = rest.length - 1;
+  if (end >= 1 && /^\d{1,2}$/.test(rest[end]) && months.test(rest[end-1])) {
+    out.date = rest[end-1].toUpperCase() + ' ' + rest[end]; end -= 2;
+  }
+  if (end >= 0 && /^\d{4}$/.test(rest[end])) { out.time = rest[end]; end--; }
+  out.place = rest.slice(0, end+1).join(' ');
+
+  // Recipient line — peel a trailing callsign-shaped token if present.
+  let i = preIdx + 1;
+  if (i < lines.length) {
+    const tk = lines[i++].split(/\s+/);
+    const last = tk[tk.length-1];
+    if (tk.length > 1 && /^[A-Z][A-Z0-9]{2,5}$/.test(last) && /\d/.test(last)) {
+      out.rcptCall = last;
+      out.rcptName = tk.slice(0,-1).join(' ');
+    } else out.rcptName = tk.join(' ');
+  }
+
+  // Find the first BT (start of text). Address/contact block sits
+  // between the recipient line and this BT.
+  let btStart = -1;
+  for (let j = i; j < lines.length; j++) if (/^BT$/.test(lines[j])) { btStart = j; break; }
+  const addr = (btStart === -1 ? lines.slice(i) : lines.slice(i, btStart));
+
+  // Anchor on the city/state/zip line, then everything before is
+  // street (+ optional apt) and everything after is phone/email.
+  const czRe = /^(.+?)\s+([A-Z]{2})\s+(\d{5}(?:-\d{4})?)$/;
+  let cz = -1;
+  for (let j = addr.length - 1; j >= 0; j--) if (czRe.test(addr[j])) { cz = j; break; }
+  if (cz >= 0) {
+    const mm = addr[cz].match(czRe);
+    out.city = mm[1]; out.state = mm[2]; out.zip = mm[3];
+    if (cz >= 1) out.street = addr[0];
+    if (cz >= 2) out.apt    = addr[1];
+    for (let j = cz + 1; j < addr.length; j++) {
+      const l = addr[j];
+      if (/\bATSIGN\b/i.test(l) || /\bDOT\b/i.test(l)) {
+        out.email = l
+          .replace(/\s+ATSIGN\s+/gi, '@')
+          .replace(/\s+DOT\s+/gi, '.')
+          .replace(/\s+DASH\s+/gi, '-')
+          .replace(/\s+NR\s+/gi, '#')
+          .replace(/\s+UNDERSCORE\s+/gi, '_')
+          .replace(/\s+PLUSSIGN\s+/gi, '+')
+          .trim();
+      } else if (/^[\d\s]+$/.test(l)) {
+        out.phone = l.replace(/\s+/g, ' ').trim();
+      }
+    }
+  } else if (addr.length) {
+    out.street = addr[0];
+  }
+
+  // Body lives between the two BTs; we ignore the trailing signature.
+  // Reverse the punctuation-to-NTS-word substitutions so the form
+  // displays readable text. X stays as-is (too ambiguous: also a
+  // letter and a common standalone token like "X 73 X").
+  if (btStart >= 0) {
+    let btEnd = -1;
+    for (let j = btStart + 1; j < lines.length; j++) if (/^BT$/.test(lines[j])) { btEnd = j; break; }
+    const bodyEnd = btEnd === -1 ? lines.length : btEnd;
+    out.text = rgBodyParse(lines.slice(btStart + 1, bodyEnd).join(' ').trim());
+  }
+  return out;
+}
+// Called by the 📋 Parse button in the message-reader toolbar. Opens
+// the compose modal in T/RRI mode and pre-fills every parseable
+// field from the currently-open message. The user's Station of
+// Origin (op name, station call, place) is NOT overwritten — those
+// stay as the relay/forwarding station's own values.
+function parseRadiogramToForm() {
+  if (!activeNum) return;
+  const msg = allMsgs.find(m => m.num === activeNum);
+  if (!msg || !msg.body) { toast('Load message first', 'info'); return; }
+  const p = rgParseRadiogram(msg.body);
+  if (!p) { toast('Could not parse radiogram from this message', 'err'); return; }
+  openCompose();
+  document.getElementById('cmp-type').value = 'T/RRI';
+  onComposeTypeChange();
+  // Preamble (we DO overwrite msg # here — user explicitly opened a
+  // parsed radiogram, so show its number rather than the auto-next)
+  document.getElementById('rg-msgnum').value = p.msgNum || '';
+  if (['R','W','P','EMERGENCY'].includes(p.prec)) document.getElementById('rg-prec').value = p.prec;
+  document.getElementById('rg-hx').value     = /^HX[A-G]$/.test(p.hx) ? p.hx : '';
+  document.getElementById('rg-hx-var').value = p.hxVar || '';
+  onRgHxChange();   // sync variable-field visibility to the populated code
+  document.getElementById('rg-date').value = p.date || '';
+  document.getElementById('rg-time').value = p.time || '';
+  // Recipient
+  document.getElementById('rg-rcpt-name').value = p.rcptName || '';
+  document.getElementById('rg-rcpt-call').value = p.rcptCall || '';
+  document.getElementById('rg-street').value    = p.street   || '';
+  document.getElementById('rg-apt').value       = p.apt      || '';
+  document.getElementById('rg-city').value      = p.city     || '';
+  document.getElementById('rg-zip').value       = p.zip      || '';
+  // State select — only set if the parsed value is in our list
+  const stSel = document.getElementById('rg-state');
+  if (p.state && [...stSel.options].some(o => o.value === p.state)) stSel.value = p.state;
+  document.getElementById('rg-phone').value = p.phone || '';
+  document.getElementById('rg-email').value = p.email || '';
+  document.getElementById('rg-text').value  = p.text  || '';
+  toast('Radiogram parsed into form', 'ok');
+}
+// ═══════════════════════════════════════════════════
+//  PKTNET CHECK-IN (B/PKTNET) FORM
+//  Ports the VDEN packet check-in form (vden.org/pktnet) into the
+//  compose modal as a second form-style type. Selecting "B/PKTNET"
+//  swaps the plain subject/body fields for a structured check-in
+//  form; clicking REVIEW pre-fills the standard compose form (To,
+//  Subject, Body) with type B (Bulletin) for a final look.
+// ═══════════════════════════════════════════════════
+let pkInited = false;
+let pkPendingClear = false;  // set on REVIEW, consumed on iframe.onload after a real send
+function pkInit() {
+  if (pkInited) return;
+  let d;
+  try { d = JSON.parse(LS.get('bpq_pk_defaults')||'null') || {}; } catch(_) { d = {}; }
+  const set = (id, v) => { if (v) document.getElementById(id).value = v; };
+  set('pk-agency',       d.agency);
+  set('pk-from',         d.from);
+  set('pk-contact',      d.contact);
+  set('pk-operator',     d.operator);
+  set('pk-gridsquare',   d.gridsquare);
+  if (d.sessionType) document.getElementById('pk-session-type').value = d.sessionType;
+  if (d.serviceType) document.getElementById('pk-service-type').value = d.serviceType;
+  if (d.band)        document.getElementById('pk-band').value         = d.band;
+  if (d.mode)        document.getElementById('pk-mode').value         = d.mode;
+  // Default From / Initial Operator(s) to user's BBS callsign
+  if (!d.from && CFG.callsign)     document.getElementById('pk-from').value     = CFG.callsign.toUpperCase();
+  if (!d.operator && CFG.callsign) document.getElementById('pk-operator').value = CFG.callsign.toUpperCase();
+  pkInited = true;
+}
+function pkSaveDefaults() {
+  const v = id => document.getElementById(id).value;
+  LS.set('bpq_pk_defaults', JSON.stringify({
+    agency:      v('pk-agency'),
+    from:        v('pk-from'),
+    contact:     v('pk-contact'),
+    operator:    v('pk-operator'),
+    gridsquare:  v('pk-gridsquare'),
+    sessionType: v('pk-session-type'),
+    serviceType: v('pk-service-type'),
+    band:        v('pk-band'),
+    mode:        v('pk-mode'),
+  }));
+}
+// Auto-populate Date/Time field with current local time (not UTC),
+// per the VDEN form's behavior. Format: YYYY-MM-DD HH:MM, 24-hour.
+function pkSetDateTimeNow() {
+  const d = new Date();
+  const fmt = d.getFullYear() + '-' +
+    String(d.getMonth()+1).padStart(2,'0') + '-' +
+    String(d.getDate()).padStart(2,'0') + ' ' +
+    String(d.getHours()).padStart(2,'0') + ':' +
+    String(d.getMinutes()).padStart(2,'0');
+  document.getElementById('pk-datetime').value = fmt;
+}
+// Build the formatted check-in body and return the three BPQ fields.
+// Subject auto-derives to "PKTNET CHECK-IN" (plus agency tag if set).
+// Body matches the VDEN form's plain-text layout verbatim.
+function pkGenerate() {
+  pkSaveDefaults();
+  const v = id => document.getElementById(id).value;
+  const agency      = v('pk-agency').trim();
+  const datetime    = v('pk-datetime').trim();
+  const to          = v('pk-to').trim();
+  const from        = v('pk-from').trim();
+  const contact     = v('pk-contact').trim();
+  const operator    = v('pk-operator').trim();
+  const sessionType = v('pk-session-type');
+  const serviceType = v('pk-service-type');
+  const band        = v('pk-band');
+  const mode        = v('pk-mode');
+  const location    = v('pk-location').trim();
+  const gridsquare  = v('pk-gridsquare').trim();
+  const comments    = v('pk-comments').trim();
+
+  const L = [];
+  L.push('PACKET CHECK-IN');
+  L.push('');
+  if (agency) { L.push(agency); L.push(''); }
+  L.push('1. STATION');
+  L.push('');
+  L.push(`a. Date/Time: ${datetime}`);
+  L.push('');
+  L.push(`b. To: ${to}`);
+  L.push('');
+  L.push(`c. From: ${from}    d. Station Contact Name: ${contact}    e. Initial Operator(s): ${operator}`);
+  L.push('');
+  L.push('');
+  L.push('2. SESSION');
+  L.push('');
+  L.push(`a. Type: ${sessionType}    b. Service: ${serviceType}    c. Band: ${band}`);
+  L.push('');
+  L.push(`d. Session: ${mode}`);
+  L.push('');
+  L.push('');
+  L.push('3. LOCATION');
+  L.push('');
+  L.push(`a. Location: ${location}`);
+  L.push('');
+  L.push(`b. GRID SQUARE: ${gridsquare}`);
+  L.push('');
+  L.push('');
+  L.push(`4. COMMENTS: ${comments}`);
+
+  return {
+    to,
+    subj: agency ? `PKTNET CHECK-IN — ${agency}` : 'PKTNET CHECK-IN',
+    body: L.join('\n'),
+  };
+}
+// REVIEW handler — same shape as rgReview, but switches the modal
+// to type B (Bulletin) for sending.
+function pkReview() {
+  const pk = pkGenerate();
+  pkPendingClear = true;
+  document.getElementById('cmp-type').value = 'B';
+  onComposeTypeChange();
+  document.getElementById('cmp-to').value   = pk.to;
+  document.getElementById('cmp-subj').value = pk.subj;
+  document.getElementById('cmp-body').value = pk.body;
+  document.getElementById('cmp-ttl').textContent = 'Review PKTNET Check-In → Send';
+  document.getElementById('cmp-status').style.color = 'var(--text3)';
+  document.getElementById('cmp-status').textContent = 'Review the bulletin, then click SEND.';
+  setTimeout(()=>document.getElementById('cmp-body').focus(), 60);
+}
+
+// Toggle compose modal body between the plain subj/body fields and
+// the radiogram form, based on the selected type. In radiogram mode
+// the To field is hidden (the form generates the routing) and the
+// send button is relabeled REVIEW (clicking it staging the result
+// in the standard compose form for a final look before sending).
+function onComposeTypeChange() {
+  const type = document.getElementById('cmp-type').value;
+  const isRg = (type === 'T/RRI');
+  const isPk = (type === 'B/PKTNET');
+  const isForm = isRg || isPk;
+  document.getElementById('cmp-normal-fields').style.display = isForm ? 'none' : '';
+  document.getElementById('cmp-radiogram').style.display     = isRg ? '' : 'none';
+  document.getElementById('cmp-pktnet').style.display        = isPk ? '' : 'none';
+  document.getElementById('cmp-to-field').style.display      = isForm ? 'none' : '';
+  document.getElementById('cmp-send').textContent            = isForm ? 'REVIEW ▶' : 'SEND ▶';
+  if (isRg) {
+    rgInit();
+    rgSuggestNextNum();
+    document.getElementById('cmp-ttl').textContent = 'New Radiogram (T/RRI)';
+  } else if (isPk) {
+    pkInit();
+    pkSetDateTimeNow();
+    document.getElementById('cmp-ttl').textContent = 'New PKTNET Check-In (B/PKTNET)';
+  } else {
+    document.getElementById('cmp-ttl').textContent = 'New Message';
+  }
+}
+// REVIEW handler: generate the radiogram, switch the modal back to
+// plain compose mode (type T), and pre-fill the To/Subject/Body
+// fields with the generated routing + formatted body. The user can
+// then tweak anything before clicking the now-renamed SEND button.
+function rgReview() {
+  const rg = rgGenerate();
+  // Capture the msg # so that when the actual SEND completes we can
+  // record it as the new "last sent" and bump the auto-increment.
+  const num = parseInt(document.getElementById('rg-msgnum').value, 10);
+  rgPendingNum = Number.isFinite(num) ? num : null;
+  const typeSel = document.getElementById('cmp-type');
+  typeSel.value = 'T';
+  onComposeTypeChange();
+  document.getElementById('cmp-to').value   = rg.to;
+  document.getElementById('cmp-subj').value = rg.subj;
+  document.getElementById('cmp-body').value = rg.body;
+  document.getElementById('cmp-ttl').textContent = 'Review Radiogram → Send';
+  document.getElementById('cmp-status').style.color = 'var(--text3)';
+  document.getElementById('cmp-status').textContent = 'Review the formatted message, then click SEND.';
+  setTimeout(()=>document.getElementById('cmp-body').focus(), 60);
 }
 function doDownload(){
   const msg=allMsgs.find(m=>m.num===activeNum);
@@ -2195,6 +3172,7 @@ async function silentRefresh(){
     for(const m of removed) allMsgs=allMsgs.filter(x=>x.num!==m.num);
     if(activeFolder==='Personal') buildPersFilters(allMsgs);
     if(activeFolder==='Bulls') buildBullFilters(allMsgs);
+    if(activeFolder==='NTS') buildNtsFilters(allMsgs);
     const f=getFiltered(); renderList(f); updateListCount(f);
     lastRefresh=new Date();
     if(added.length) toast(`${added.length} new message${added.length>1?'s':''}`, 'info');
@@ -2325,6 +3303,16 @@ window.addEventListener('resize', checkMobile);
 //  BOOT
 // ═══════════════════════════════════════════════════
 async function connectAndLoad(){
+  // "Remember password" off and no password yet this browser session —
+  // open settings and ask for it instead of failing the login silently.
+  if (CFG.username && !CFG.password && !CFG.rememberPass) {
+    setStatus('err','✕ password needed');
+    const bar = document.getElementById('cfg-bar');
+    if (!bar.classList.contains('open')) toggleSettings();
+    document.getElementById('cfg-pass').focus();
+    toast('Enter your BBS password (not saved on this device)','info');
+    return;
+  }
   setStatus('busy','⏳ connecting');
   if(!CFG.key){
     const k=await autoDetectKey();

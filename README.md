@@ -16,14 +16,14 @@ The same single HTML file automatically adapts to phones and tablets — no sepa
 - **Three-pane layout** — folder sidebar, message list, message reader (desktop)
 - **Mobile responsive** — automatically adapts to phones and tablets (≤768px). Bottom navigation bar, full-screen stacked views (Folders → Messages → Reader), floating compose button, collapsible message headers, and touch-friendly sizing. Same single HTML file — no separate mobile version needed
 - **Mobile settings overlay** — tapping the gear icon opens a full-screen settings panel with quick-action buttons (Refresh, Theme, Font, Spacing, Rules), version/callsign/status info, and all config fields
-- **Light and dark themes** — toggle with ☀/🌙 button, preference saved. Four themes: Dark, Dark Hi-Contrast, Light, Light Hi-Contrast — all work on both desktop and mobile
+- **Light and dark themes** — toggle with ☀/🌙 button, preference saved. Five themes: Dark, Dark Hi-Contrast, Light, Light Hi-Contrast, and Classic (the stock-BPQ32 tan/wheat look) — all work on both desktop and mobile
 - **Adjustable font size** — A- / A+ buttons scale all text simultaneously
 - **Line spacing** — cycle between Compact, Normal, and Relaxed line height in the message reader. Click the spacing button in the topbar or mobile settings. Preference saved across sessions
 - **Draggable column widths** — drag the dividers between panes (desktop)
 - **Auto-refresh** — polls BPQ every 5 minutes, shows new messages silently
 - **Auto-detect host and port** — when served from BPQ, the setup screen automatically detects the correct host and port from the browser URL. No manual entry needed on first run
 - **Session key auto-detection** — no manual token entry needed; detects and recovers from key rotation automatically
-- **Remote access with login** — automatically handles BPQ's form-based login page when accessing remotely. Uses your BBS callsign and BBS password (not the sysop credentials from BPQ config `USER=` lines). Detects both quoted and unquoted HTML attributes. If credentials aren't configured, shows a clear error directing you to Settings
+- **Remote access with login** — automatically handles BPQ's form-based login page when accessing remotely. Uses your BBS callsign and BBS password (not the sysop credentials from BPQ config `USER=` lines). Detects both quoted and unquoted HTML attributes. If credentials aren't configured, shows a clear error directing you to Settings. An optional **"remember" checkbox** next to the password keeps it for the current browser session only — uncheck it on shared or public-facing machines and you'll be prompted each visit
 
 ### Folders
 - My Received (primary inbox), Bulletins, NTS Traffic, Mine, My Sent, All Messages
@@ -43,6 +43,12 @@ The same single HTML file automatically adapts to phones and tablets — no sepa
 - Reply, Forward, Save (.txt download), Prev/Next navigation
 - **Kill** — marks message deleted in BPQ; killed messages hidden immediately and persist across reloads
 - **Reject filter** — block future messages by FROM callsign or TO category directly from the message you're reading. Writes the entry into BPQ's native Mail config reject list (same as the Reject From / Reject To fields on the Configuration page) — no need to leave the webmail interface
+
+### NTS Traffic & Form Composers
+- **NTS Radiogram (T/RRI) composer** — full ARRL radiogram form with REVIEW step, HX handling-code meanings, HX variables (HXA/HXB/HXF), auto-incrementing message number, ARRL extended-punctuation substitution (X-RAY, COMMA, QUERY, R decimal), and parsing of received radiograms back into the form
+- **PKTNET Check-In composer (B/PKTNET)** — form-style check-in message (form concept N3MEL, form created KN4LQN)
+- **NTS Delivered button** — one click marks any T-type message delivered via BPQ's `WMNDel`, with delivered-state tracking and NTS sub-folders
+- **Compose deep links** — open a pre-filled compose window from any dashboard or bookmark via `#compose?to=CALL&subject=...` (see README-dashboard-links.md); works in already-open tabs too
 
 ### Star Rules
 - Built-in rule: stars SYSTEM messages with subject starting "New User" (new user notifications)

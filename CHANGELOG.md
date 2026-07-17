@@ -1,5 +1,27 @@
 # Changelog
 
+## v1.6.0 — 2026-07-17
+
+### Added
+- **NTS Radiogram (T/RRI) composer** — full ARRL radiogram form: drives BPQ's To/Subject automatically, REVIEW step before send, HX handling-code meanings shown inline, HX variables (HXA miles, HXB hours, HXF date), auto-incrementing message number with never-blank fallback, full ARRL extended-punctuation table (X-RAY, COMMA, QUERY, "R" as decimal point) applied on send and reversed when reading, and parsing of received radiograms back into the form.
+- **PKTNET Check-In composer (B/PKTNET)** — form-style check-in message type. (form concept: N3MEL, form created: KN4LQN)
+- **NTS Delivered button** — green button on any T-prefixed message marks it delivered via BPQ's `WMNDel`, with delivered-state tracking, NTS sub-folders, and list pills.
+- **Classic theme** — recreates the stock BPQ32 look: wheat/tan background, cream content surfaces, tan sidebar, white reader body.
+- **Compose deep links** — `#compose?to=CALL&subject=...` opens a pre-filled compose window, so external dashboards can link straight into the webmail (documented in README-dashboard-links.md).
+- Attribution/version line at the bottom of each form.
+
+### Also includes (from v1.5.10)
+- The LinBPQ kill-crash fix (request serializer + sequential bulk kill) and the "remember password" option — see the v1.5.10 notes below.
+
+## v1.5.10 — 2026-07-07
+
+### Fixed
+- **LinBPQ crash (SIGSEGV) when killing held mail** — LinBPQ handles every HTTP request on its own thread over shared, unlocked WebMail state, so overlapping requests from this interface (bulk kill fired all its kill requests at once) could segfault the node. All requests now go through a single-flight queue so only one is ever in flight, and bulk kill sends one request at a time with a short gap and live progress on the confirm button. The underlying thread-safety bug is in LinBPQ itself and is being reported upstream. (reported on the bpq32 group)
+
+### Added
+- **"remember" checkbox next to BBS Password** (⚙ Settings) — when unchecked, the password is kept only for the current browser session and you are prompted for it again on the next visit; any previously saved password is removed from browser storage. Default is checked, so existing setups are unchanged. Useful for public-facing reverse-proxy installs. (credit: KB1TAE)
+- **Compose deep links now work in already-open tabs** — the app reacts to `#compose?…` URL changes without needing a reload.
+
 ## v1.5.9 — 2026-04-29
 
 ### Added
