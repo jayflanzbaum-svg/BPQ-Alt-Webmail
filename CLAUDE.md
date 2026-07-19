@@ -28,3 +28,44 @@ summary: One sentence on what this project is right now.
 
 Use today's real date in ISO format. This file is a hand-off summary for an external
 knowledge vault, not a changelog: keep it current, not append-only.
+
+## Release checklist (keep everything in sync)
+
+There is no single command for this — a release touches git branches, a tag, and a
+GitHub Release object, which are three separate systems. When asked to "release vX.Y.Z",
+do all of the following, in order:
+
+1. **Bump the version string in `bpq-alt-webmail.html`** — it appears in exactly 3 places
+   (grep for the previous version to find them): the topbar `<span>`, the sidebar-footer
+   `#si-ver` div, and the mobile settings `info.innerHTML` line.
+2. **Add a `## vX.Y.Z — YYYY-MM-DD` entry to `CHANGELOG.md`** (top of file, above the
+   previous entry) describing what changed.
+3. **Update `STATUS.md`** per the Obsidian-sync rule above.
+4. **Commit** the above on `experimental/jay-dev` (this is where day-to-day work happens).
+5. **Merge into `main`** with `git merge --no-ff experimental/jay-dev -m "Merge experimental/jay-dev: vX.Y.Z release"` —
+   matches the merge-commit convention already in the history; do not fast-forward.
+6. **Push both branches**: `git push origin experimental/jay-dev` and `git push origin main`.
+7. **Tag `main`**: `git tag -a vX.Y.Z -m "vX.Y.Z -- <short summary>"` then `git push origin vX.Y.Z`.
+   A tag alone does NOT create a GitHub Release or update "Latest release" — step 8 does that.
+8. **Publish the GitHub Release** for that tag with the `gh` CLI (installed 2026-07-19), e.g.:
+   `gh release create vX.Y.Z bpq-alt-webmail.html --repo jayflanzbaum-svg/BPQ-Alt-Webmail --title "vX.Y.Z -- <short summary>" --notes-file <changelog-excerpt>`
+   This tags-if-needed, publishes the release notes, and attaches `bpq-alt-webmail.html` as a
+   downloadable asset all in one call. A tag alone does NOT create a GitHub Release or update
+   "Latest release" — this step is what does that.
+
+   **Auth gotcha**: `gh auth login --with-token` fails with `401 Bad credentials` against the
+   fine-grained PAT stored in Git Credential Manager, even though the token itself is valid
+   (confirmed working directly against the REST API) — this is a known gh limitation validating
+   fine-grained tokens, not a bad token. Workaround: skip `gh auth login` entirely and set the
+   `GH_TOKEN` env var for the command instead, pulling the token from Git Credential Manager
+   non-interactively (PATH must include Git's cmd dir first in this shell):
+   ```powershell
+   $env:PATH = "C:\Program Files\Git\cmd;C:\Program Files\Git\clangarm64\bin;C:\Program Files\GitHub CLI;" + $env:PATH
+   $env:GH_TOKEN = ("protocol=https`nhost=github.com`n`n" | git-credential-manager.exe get | Select-String "^password=").ToString().Substring(9)
+   gh release create vX.Y.Z bpq-alt-webmail.html --repo jayflanzbaum-svg/BPQ-Alt-Webmail --title "..." --notes-file "..."
+   ```
+   Both `$env:PATH` and `$env:GH_TOKEN` must be set in the same command block that calls `gh`,
+   since shell state does not persist between separate command invocations.
+9. **Verify**: `git status` clean on both branches, `git log --oneline -1 <branch>` matches
+   `origin/<branch>`, and `gh release list --repo jayflanzbaum-svg/BPQ-Alt-Webmail` shows the
+   new tag marked `Latest`.
