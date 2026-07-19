@@ -489,7 +489,7 @@ body { font-family:var(--sans); font-size:1rem; background:var(--bg); color:var(
 <!-- TOPBAR -->
 <div class="topbar">
   <div class="logo">BPQ-ALT-WEBMAIL</div>
-  <span style="font-family:var(--mono);font-size:0.69rem;color:var(--text3);margin-left:-6px">v1.6.0</span>
+  <span style="font-family:var(--mono);font-size:0.69rem;color:var(--text3);margin-left:-6px">v1.6.1</span>
   <div class="top-call" id="top-call">—</div>
   <span class="top-node" id="top-node">—</span>
   <div class="tspc"></div>
@@ -556,7 +556,7 @@ body { font-family:var(--sans); font-size:1rem; background:var(--bg); color:var(
     </div>
 
     <div class="sidebar-footer">
-      <div id="si-ver">v1.6.0</div>
+      <div id="si-ver">v1.6.1</div>
       <div>Node <span id="si-node">—</span></div>
       <div>User <span id="si-user">—</span></div>
       <div style="display:none">Msgs: <span id="si-count">—</span></div>
@@ -763,7 +763,7 @@ body { font-family:var(--sans); font-size:1rem; background:var(--bg); color:var(
           <div class="rg-sec-hd">1 · Station</div>
           <div class="rg-row">
             <div class="field"><span class="field-lbl">a. Date / Time</span><input class="field-in" id="pk-datetime" placeholder="YYYY-MM-DD HH:MM"></div>
-            <div class="field"><span class="field-lbl">b. To (net / callsign)</span><input class="field-in" id="pk-to" placeholder="W4EOC"></div>
+            <div class="field"><span class="field-lbl">b. To (net / callsign)</span><input class="field-in" id="pk-to" placeholder="PKTNET@USA"></div>
           </div>
           <div class="rg-row">
             <div class="field"><span class="field-lbl">c. From</span><input class="field-in" id="pk-from" placeholder="your call"></div>
@@ -786,11 +786,15 @@ body { font-family:var(--sans); font-size:1rem; background:var(--bg); color:var(
             <div class="field"><span class="field-lbl">a. Location</span><input class="field-in" id="pk-location" placeholder="Hope Hospital, parking lot C near ER entrance"></div>
             <div class="field" style="flex:0 0 140px"><span class="field-lbl">b. Grid Square</span><input class="field-in" id="pk-gridsquare" placeholder="FM18lv"></div>
           </div>
+          <div class="rg-row">
+            <div class="field"><span class="field-lbl">c. Town</span><input class="field-in" id="pk-town" placeholder="Orlando"></div>
+            <div class="field" style="flex:0 0 120px"><span class="field-lbl">d. State</span><input class="field-in" id="pk-state" placeholder="FL"></div>
+          </div>
         </div>
         <div class="rg-sec">
           <div class="rg-sec-hd">4 · Comments (max 500 chars)</div>
           <textarea class="field-ta" id="pk-comments" maxlength="500" style="min-height:100px" placeholder="Such as: On batteries. Need relief in 6 hours. A brief SitRep. Operators names. Special notes for next shift."></textarea>
-          <div class="rg-hint">Click <strong>REVIEW</strong> to populate the standard compose form: To → the form's <code>To</code> field, Subject → <code>PKTNET CHECK-IN</code>, Body = the formatted check-in. Eyeball / edit, then SEND.</div>
+          <div class="rg-hint">Click <strong>REVIEW</strong> to populate the standard compose form: To → <code>PKTNET@USA</code>, Subject → <code>Name, Call, Town, State</code>, Body = the formatted check-in. Eyeball / edit, then SEND.</div>
           <div class="rg-credit">Form concept: N3MEL &nbsp;·&nbsp; Form created: KN4LQN &nbsp;·&nbsp; v1.1 &nbsp;·&nbsp; <a href="https://vden.org/pktnet/check_in.html" target="_blank" rel="noopener">vden.org/pktnet</a></div>
         </div>
       </div>
@@ -1171,7 +1175,7 @@ function toggleSettings() {
     // Info row: version, callsign, status
     const info = document.createElement('div');
     info.className = 'm-cfg-info';
-    info.innerHTML = '<span>v1.6.0</span>' +
+    info.innerHTML = '<span>v1.6.1</span>' +
       '<span style="color:var(--accent);background:var(--accent-bg);border:1px solid var(--accent-border);padding:2px 7px;border-radius:4px">' + (callEl ? callEl.textContent : '—') + '</span>' +
       '<span id="m-status-pill" class="' + (statusPill ? statusPill.className : '') + '">' + (statusPill ? statusPill.textContent : '') + '</span>';
 
@@ -2576,7 +2580,7 @@ function doSend(){
     if (pkPendingClear) {
       pkPendingClear = false;
       pkSaveDefaults();
-      ['pk-to','pk-location','pk-comments'].forEach(id => {
+      ['pk-location','pk-comments'].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.value = '';
       });
@@ -2978,11 +2982,14 @@ function pkInit() {
   set('pk-contact',      d.contact);
   set('pk-operator',     d.operator);
   set('pk-gridsquare',   d.gridsquare);
+  set('pk-town',         d.town);
+  set('pk-state',        d.state);
   if (d.sessionType) document.getElementById('pk-session-type').value = d.sessionType;
   if (d.serviceType) document.getElementById('pk-service-type').value = d.serviceType;
   if (d.band)        document.getElementById('pk-band').value         = d.band;
   if (d.mode)        document.getElementById('pk-mode').value         = d.mode;
-  // Default From / Initial Operator(s) to user's BBS callsign
+  // Default To to PKTNET@USA; From / Initial Operator(s) to user's BBS callsign
+  document.getElementById('pk-to').value = d.to || 'PKTNET@USA';
   if (!d.from && CFG.callsign)     document.getElementById('pk-from').value     = CFG.callsign.toUpperCase();
   if (!d.operator && CFG.callsign) document.getElementById('pk-operator').value = CFG.callsign.toUpperCase();
   pkInited = true;
@@ -2991,10 +2998,13 @@ function pkSaveDefaults() {
   const v = id => document.getElementById(id).value;
   LS.set('bpq_pk_defaults', JSON.stringify({
     agency:      v('pk-agency'),
+    to:          v('pk-to'),
     from:        v('pk-from'),
     contact:     v('pk-contact'),
     operator:    v('pk-operator'),
     gridsquare:  v('pk-gridsquare'),
+    town:        v('pk-town'),
+    state:       v('pk-state'),
     sessionType: v('pk-session-type'),
     serviceType: v('pk-service-type'),
     band:        v('pk-band'),
@@ -3013,14 +3023,13 @@ function pkSetDateTimeNow() {
   document.getElementById('pk-datetime').value = fmt;
 }
 // Build the formatted check-in body and return the three BPQ fields.
-// Subject auto-derives to "PKTNET CHECK-IN" (plus agency tag if set).
-// Body matches the VDEN form's plain-text layout verbatim.
+// Subject: "Name, Call, Town, State". Body matches VDEN plain-text layout.
 function pkGenerate() {
   pkSaveDefaults();
   const v = id => document.getElementById(id).value;
   const agency      = v('pk-agency').trim();
   const datetime    = v('pk-datetime').trim();
-  const to          = v('pk-to').trim();
+  const to          = v('pk-to').trim() || 'PKTNET@USA';
   const from        = v('pk-from').trim();
   const contact     = v('pk-contact').trim();
   const operator    = v('pk-operator').trim();
@@ -3030,6 +3039,8 @@ function pkGenerate() {
   const mode        = v('pk-mode');
   const location    = v('pk-location').trim();
   const gridsquare  = v('pk-gridsquare').trim();
+  const town        = v('pk-town').trim();
+  const state       = v('pk-state').trim();
   const comments    = v('pk-comments').trim();
 
   const L = [];
@@ -3058,14 +3069,15 @@ function pkGenerate() {
   L.push('');
   L.push(`b. GRID SQUARE: ${gridsquare}`);
   L.push('');
+  L.push(`c. Town: ${town}`);
+  L.push('');
+  L.push(`d. State: ${state}`);
+  L.push('');
   L.push('');
   L.push(`4. COMMENTS: ${comments}`);
 
-  return {
-    to,
-    subj: agency ? `PKTNET CHECK-IN — ${agency}` : 'PKTNET CHECK-IN',
-    body: L.join('\n'),
-  };
+  const subj = [contact, from, town, state].filter(Boolean).join(', ') || 'PKTNET CHECK-IN';
+  return { to, subj, body: L.join('\n') };
 }
 // REVIEW handler — same shape as rgReview, but switches the modal
 // to type B (Bulletin) for sending.

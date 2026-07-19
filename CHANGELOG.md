@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.6.1 — 2026-07-18
+
+### Changed
+- **PKTNET Check-In — To field** now defaults to `PKTNET@USA` and persists across sessions (was cleared after each send).
+- **PKTNET Check-In — Subject** is now built from the form as `Name, Call, Town, State` (e.g. `John Doe, W4ABC, Orlando, FL`) instead of the fixed `PKTNET CHECK-IN` string.
+- **PKTNET Check-In — Location section** adds Town and State fields (saved as sticky defaults alongside call and grid square).
+
 ## v1.6.0 — 2026-07-17
 
 ### Added
