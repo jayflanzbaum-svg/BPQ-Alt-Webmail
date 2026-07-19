@@ -4,6 +4,7 @@ summary: Single-file HTML webmail client for BPQ32/LinBPQ packet-radio BBS nodes
 ---
 
 ## Recent work
+- 2026-07-18: v1.6.1 committed (d2ee09f) and pushed to origin/experimental/jay-dev. Set up git CLI + GitHub auth (PAT via Git Credential Manager) on this machine, since it had no git install at all.
 - 2026-07-18: v1.6.1 patch — PKTNET Check-In: To defaults to PKTNET@USA (sticky), subject now built as "Name, Call, Town, State", Town + State fields added to Location section.
 - 2026-07-17: v1.6.0 released and pushed — main, experimental/jay-dev, and tag v1.6.0 all on GitHub; HANDOFF-local-dev.md and stray tmp files deleted first. groups.io announcement drafted with attributions and a call for crash diagnostics; GitHub release page + posting still to do.
 - 2026-07-07: Committed v1.5.10 as four clean commits on experimental/jay-dev (hashchange deep links, request-serializer crash fix, remember-password option, release+CHANGELOG). File ready to hand to the two reporters for verification before the bigger v1.6.0 feature release.
@@ -18,7 +19,6 @@ summary: Single-file HTML webmail client for BPQ32/LinBPQ packet-radio BBS nodes
 - [ ] Post the v1.6.0 announcement to the bpq32 group (GitHub release is live: https://github.com/jayflanzbaum-svg/BPQ-Alt-Webmail/releases/tag/v1.6.0).
 - [ ] Fill in the held-mail crash reporter's callsign in the CHANGELOG v1.5.10 entry and the announcement before posting.
 - [ ] Collect addr2line output from anyone still seeing the LinBPQ kill crash; then send the upstream report to G8BPQ (NULL-Msg deref in KillWebMailMessage, thread-safety of WebMail globals, CheckUserMsg arg mismatch).
-- [ ] Three stray `bpq-alt-webmail.html.tmp.18376.*` editor temp files and an untracked `CLAUDE.md`/`STATUS.md` are sitting in the working tree.
 - [ ] NTS Delivered endpoint (`WMNDel`) was flagged in the handoff as "needs live test to confirm" — verify against a live node.
 - [ ] CHANGELOG.md and README still document only up to v1.5.9 (2026-04-29); none of the NTS/classic/PKTNET/deep-link work on this branch is reflected there.
 
