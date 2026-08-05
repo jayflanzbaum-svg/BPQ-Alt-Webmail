@@ -842,7 +842,9 @@ const LS = {
 const SS = {
   get: k => { try { return sessionStorage.getItem(k); } catch(_){ return null; } },
   set: (k,v) => { try { sessionStorage.setItem(k,v); } catch(_){} },
-  del: k => { try { sessionStorage.removeItem(k); } catch(_){} }
+  del: k => { try { sessionStorage.removeItem(k); } catch(_){} },
+  getJ: k => { try { return JSON.parse(sessionStorage.getItem(k)||'null'); } catch(_){ return null; } },
+  setJ: (k,v) => { try { sessionStorage.setItem(k,JSON.stringify(v)); } catch(_){} }
 };
 
 const _rememberPass = (LS.get('bpq_remember_pass') || '1') === '1';
@@ -1351,6 +1353,7 @@ function base() {
   return omitPort ? `${proto}://${CFG.host}` : `${proto}://${CFG.host}:${CFG.port}`;
 }
 function msgUrl(n)   { return `${base()}/WebMail/WM?${CFG.key}&${n}`; }
+function msgTextUrl(n){ return `${base()}/WebMail/DisplayText?${CFG.key}&${n}`; }
 function killUrl(n)  { return `${base()}/WebMail/WMDel/${n}?${CFG.key}`; }
 function ntsDelUrl(n){ return `${base()}/WebMail/WMNDel/${n}?${CFG.key}`; }
 function replyUrl(n) { return `${base()}/WebMail/Reply/${n}?${CFG.key}`; }
@@ -1623,6 +1626,14 @@ function parseBody(html) {
   if(ta&&ta.textContent.trim().length>5) return ta.textContent;
   for(const t of doc.querySelectorAll('textarea'))
     if(t.textContent.trim().length>5) return t.textContent;
+  // HTML-format messages: BPQ swaps the textarea for a raw <div id='main'> when the
+  // body contains </html> — extract the readable text, minus markup noise
+  const dv=doc.querySelector('div#main');
+  if(dv) {
+    for(const e of dv.querySelectorAll('script,style,title,meta,link')) e.remove();
+    const t=dv.textContent.replace(/\n{3,}/g,'\n\n').trim();
+    if(t.length>5) return t;
+  }
   const pre=doc.querySelector('pre');
   if(pre&&!pre.querySelector('a')) return pre.textContent;
   return null;
@@ -2094,7 +2105,11 @@ async function openMsg(num) {
   try {
     if(!msg.body) {
       const html=await bpqGet(msgUrl(num));
-      const body=parseBody(html);
+      let body=parseBody(html);
+      if(!(body&&body.trim().length>5)) {
+        // Last resort (e.g. RMS Express form pages): ask BPQ for its plain-text rendering
+        try { body=parseBody(await bpqGet(msgTextUrl(num))); } catch(_) {}
+      }
       if(body&&body.trim().length>5) {
         cacheBody(msg,body);
         // Backfill hdrFrom for free — we now have the real header
@@ -2475,9 +2490,11 @@ function openCompose(to='',subj='',body='',title=''){
   document.getElementById('cmp-body').value=body||`\n\n${sig}`;
   document.getElementById('cmp-ttl').textContent=title||(to?'Forward':'New Message');
   document.getElementById('cmp-status').textContent='';
-  // Reset to plain compose mode (in case a prior form-style session left it active)
-  const typeSel = document.getElementById('cmp-type');
-  if (typeSel.value === 'T/RRI' || typeSel.value === 'B/PKTNET') typeSel.value = 'P';
+  // Always default back to Personal — every caller that wants a different
+  // type (Bulletin, Traffic, a form mode) sets cmp-type explicitly right
+  // after calling openCompose(), so this dropdown must never carry over
+  // the type from whatever was sent last.
+  document.getElementById('cmp-type').value = 'P';
   onComposeTypeChange();
   const modal=document.querySelector('#cmp-ov .modal');
   const saved=LS.get('bpq_compose_w');
@@ -2493,7 +2510,42 @@ function closeCompose(){
   rgPendingNum = null;
   pkPendingClear = false;
   document.getElementById('cmp-ov').classList.remove('open');
+  clearDraft();
 }
+// ── COMPOSE DRAFT AUTOSAVE ────────────────────────────
+// Guards against losing an in-progress draft if the tab reloads
+// unexpectedly (mobile background-tab discard, accidental refresh, etc.
+// — reported by K5DAT Lee). Only covers the plain compose fields; the
+// radiogram/PKTNET forms already persist their own sticky fields.
+// Uses sessionStorage (not localStorage) deliberately: it survives a
+// reload of *this* tab but is never visible to a newly opened tab, so
+// opening a second tab mid-draft doesn't pop the draft open there too.
+let draftSaveT;
+function scheduleDraftSave(){
+  clearTimeout(draftSaveT);
+  draftSaveT = setTimeout(saveDraft, 800);
+}
+function saveDraft(){
+  if (document.getElementById('cmp-type').value !== 'P') return;
+  const to   = document.getElementById('cmp-to').value;
+  const subj = document.getElementById('cmp-subj').value;
+  const body = document.getElementById('cmp-body').value;
+  const sig  = CFG.signature || `73 de ${CFG.callsign||'N4SFL'}`;
+  if (!to.trim() && !subj.trim() && body.trim() === sig.trim()) { SS.del('bpq_draft'); return; }
+  SS.setJ('bpq_draft', {to, subj, body, title: document.getElementById('cmp-ttl').textContent});
+}
+function clearDraft(){ SS.del('bpq_draft'); }
+['cmp-to','cmp-subj','cmp-body'].forEach(id=>{
+  document.getElementById(id).addEventListener('input', scheduleDraftSave);
+});
+function restoreDraftIfAny(){
+  if ((location.hash||'').toLowerCase().startsWith('#compose')) return;
+  const d = SS.getJ('bpq_draft');
+  if (!d || (!d.to && !d.subj && !d.body)) return;
+  openCompose(d.to, d.subj, d.body, d.title || 'Recovered Draft');
+  toast('Recovered an unsent draft', 'info');
+}
+window.addEventListener('load', function(){ restoreDraftIfAny(); });
 // Open compose modal pre-populated from a URL hash, e.g.:
 //   #compose?to=N4SFL&subject=Test&body=Hello&type=P
 // Designed for dashboard / external "send mail" buttons.
