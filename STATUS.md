@@ -1,33 +1,25 @@
 ---
-updated: 2026-07-18
-summary: Single-file HTML webmail client for BPQ32/LinBPQ packet-radio BBS nodes — v1.6.1 patch improves the PKTNET Check-In form (default To, structured subject, Town/State fields).
+updated: 2026-08-05
+summary: Single-file HTML webmail client for BPQ32/LinBPQ packet-radio BBS nodes — v1.6.1 shipped; just fixed HTML-format (Winlink) messages showing "[Could not extract body]" in the reader.
 ---
 
 ## Recent work
-- 2026-07-18: v1.6.1 committed (d2ee09f) and pushed to origin/experimental/jay-dev. Set up git CLI + GitHub auth (PAT via Git Credential Manager) on this machine, since it had no git install at all.
-- 2026-07-18: v1.6.1 patch — PKTNET Check-In: To defaults to PKTNET@USA (sticky), subject now built as "Name, Call, Town, State", Town + State fields added to Location section.
-- 2026-07-17: v1.6.0 released and pushed — main, experimental/jay-dev, and tag v1.6.0 all on GitHub; HANDOFF-local-dev.md and stray tmp files deleted first. groups.io announcement drafted with attributions and a call for crash diagnostics; GitHub release page + posting still to do.
-- 2026-07-07: Committed v1.5.10 as four clean commits on experimental/jay-dev (hashchange deep links, request-serializer crash fix, remember-password option, release+CHANGELOG). File ready to hand to the two reporters for verification before the bigger v1.6.0 feature release.
-- 2026-07-06: Added "remember password" checkbox (Settings, next to BBS Password) after KB1TAE's forum request — unchecked keeps the password in sessionStorage only and prompts each browser session; supersedes his hand-patched copy in the groups.io files area.
-- 2026-07-06: Fixed reported linbpq SIGSEGV when killing held mail — added a global request serializer (`queuedFetch`) so only one HTTP request is ever in flight to the node, and made bulk kill sequential with a 250 ms gap; bumped to v1.5.10. Root cause is in linbpq itself (thread-per-request over unlocked WebMail globals); upstream report to G8BPQ drafted.
-- 2026-05-25: Added dashboard deep-link docs (README-dashboard-links.md) for URL-hash `#compose?` pre-filled messages; uncommitted working-tree change adds a `hashchange` listener so already-open tabs react to new compose links.
-- 2026-05-25: Added B/PKTNET PKTNET Check-In form-style message type and an attribution/version line at the bottom of each form.
-- 2026-05-25: Added HX-code variables (HXA miles, HXB hours, HXF date) and the full ARRL extended-punctuation table for radiogram body/email.
-- 2026-05-24: Built the NTS Radiogram (T/RRI) composer end-to-end — form drives BPQ To/Subject, REVIEW flow, HX-code meanings, auto-incrementing msg #, and parsing of incoming radiograms back into the form.
+- 2026-08-05: Consolidated to a single-branch workflow — `experimental/jay-dev` was byte-identical to `main` and only added merge ceremony, so it was deleted (local + origin). Day-to-day work now happens directly on `main`; tags + GitHub Releases define what's released. CLAUDE.md release checklist trimmed accordingly.
+- 2026-08-05: Fixed HTML-format messages failing to display ("[Could not extract body]"). Root cause: BPQ's WebMail.c swaps the usual `<textarea>` for a raw `<div id='main'>` whenever a message body contains `</html>` (common for Winlink/RMS Express traffic like `//WL2K R/` messages), a shape `parseBody()` didn't know. Fix: `parseBody()` now extracts readable text from that div (stripping script/style/meta noise), and `openMsg()` falls back to BPQ's `/WebMail/DisplayText` endpoint (forces plain-text textarea rendering) if parsing still fails — covers RMS Express form messages too. Verified against mock pages in a real browser DOM; needs a live-node check on message #3181.
+- 2026-07-25: Added compose-draft autosave (localStorage, debounced) to fix Lee K5DAT's lost-draft report — plain compose/reply/forward text now survives an unexpected reload and is offered back on next load with a toast. Scoped to the plain compose fields only; radiogram/PKTNET forms already persist their own sticky fields.
+- 2026-07-25: Wrote `UPSTREAM-REPORT-G8BPQ.md` — a ready-to-send report covering both the original kill-mail SIGSEGV and Bill PY2BIL/LU7ECX's new v1.6.1 crash (addr2line through `CreateMessage`/`GetMsg`/`RXCount`/`MONCount`, the RX/monitor path). Conclusion: our client already serializes all its own requests (`queuedFetch`), so this looks like LinBPQ's WebMail handlers racing its own RX thread on shared globals — not something a client-side fix can close. Not yet posted.
+- 2026-07-25: v1.6.0 announcement posted to the bpq32 groups.io group. Held-mail crash reporter's callsign question resolved by omission — CHANGELOG v1.5.10 entry stays attribution-free ("reported on the bpq32 group"), nothing to fill in.
 
 ## Open issues
-- [ ] Post the v1.6.0 announcement to the bpq32 group (GitHub release is live: https://github.com/jayflanzbaum-svg/BPQ-Alt-Webmail/releases/tag/v1.6.0).
-- [ ] Fill in the held-mail crash reporter's callsign in the CHANGELOG v1.5.10 entry and the announcement before posting.
-- [ ] Collect addr2line output from anyone still seeing the LinBPQ kill crash; then send the upstream report to G8BPQ (NULL-Msg deref in KillWebMailMessage, thread-safety of WebMail globals, CheckUserMsg arg mismatch).
-- [ ] NTS Delivered endpoint (`WMNDel`) was flagged in the handoff as "needs live test to confirm" — verify against a live node.
-- [ ] CHANGELOG.md and README still document only up to v1.5.9 (2026-04-29); none of the NTS/classic/PKTNET/deep-link work on this branch is reflected there.
+- [ ] Live-node check of the HTML-message fix: open message #3181 (`//WL2K R/ M18 & M12` from KN4KSW) and confirm readable text appears instead of the debug dump.
+- [ ] Post `UPSTREAM-REPORT-G8BPQ.md` to the bpq32 group / to John Wiseman directly — content is ready, just needs sending.
+- [ ] Compose-draft autosave (above) is untested against a live node/browser — exercise it once before the next release: start a plain compose, reload the tab mid-draft, confirm it's offered back.
+- [ ] NTS Delivered endpoint (`WMNDel`) still needs a live-node check — I can't reach a BPQ node from this environment, so this needs Jason directly. Steps: (1) open a T-type NTS message, click Delivered, confirm the success toast; (2) the risk is that `bpqGet()` only checks HTTP status, not response content, so a 200-OK error page would still look like success — reopen the app in a private/incognito window (no localStorage) and confirm the message *still* shows delivered, proving BPQ's own state changed and it wasn't just our client-side `deliveredSet`; (3) optionally hit `http://<host>:<port>/WebMail/WMNDel/<msgnum>?<sessionkey>` directly in a browser to see BPQ's raw response.
 
 ## Future ideas
-- [ ] Cherry-pick the strongest experimental features (classic theme, NTS tools, form composers) into main and ship a proper release.
 - [ ] Optional toggle to reformat raw NTS message bodies into labeled fields in the reader (raised as an open question in the handoff).
 
 ## Decisions & blockers
 - Intentionally a single self-contained HTML file: no build step, no toolchain, no runtime dependencies (fonts are local woff2 files). Editing means editing the one file and testing against a real BPQ node.
-- `experimental/jay-dev` is explicitly a personal sandbox: HANDOFF-local-dev.md says do not tag releases or touch main from here; promotion to main is by cherry-pick only.
 - Killed messages are hidden client-side and remembered in localStorage because BPQ marks-but-doesn't-purge; body cache capped at 30 (FIFO), killed list at 500.
-- Released as `v1.6.0` (2026-07-17): experimental/jay-dev merged to main and tagged, ending the branch's cherry-pick-only rule with Jason's sign-off.
+- Single-branch workflow since 2026-08-05: all work happens on `main`; releases are marked by tags + GitHub Releases (latest: `v1.6.1`, 2026-07-18). The old `experimental/jay-dev` dev branch was deleted once it had fully converged with `main`.

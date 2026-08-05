@@ -31,7 +31,7 @@ knowledge vault, not a changelog: keep it current, not append-only.
 
 ## Release checklist (keep everything in sync)
 
-There is no single command for this — a release touches git branches, a tag, and a
+There is no single command for this — a release touches the git branch, a tag, and a
 GitHub Release object, which are three separate systems. When asked to "release vX.Y.Z",
 do all of the following, in order:
 
@@ -41,13 +41,14 @@ do all of the following, in order:
 2. **Add a `## vX.Y.Z — YYYY-MM-DD` entry to `CHANGELOG.md`** (top of file, above the
    previous entry) describing what changed.
 3. **Update `STATUS.md`** per the Obsidian-sync rule above.
-4. **Commit** the above on `experimental/jay-dev` (this is where day-to-day work happens).
-5. **Merge into `main`** with `git merge --no-ff experimental/jay-dev -m "Merge experimental/jay-dev: vX.Y.Z release"` —
-   matches the merge-commit convention already in the history; do not fast-forward.
-6. **Push both branches**: `git push origin experimental/jay-dev` and `git push origin main`.
-7. **Tag `main`**: `git tag -a vX.Y.Z -m "vX.Y.Z -- <short summary>"` then `git push origin vX.Y.Z`.
-   A tag alone does NOT create a GitHub Release or update "Latest release" — step 8 does that.
-8. **Publish the GitHub Release** for that tag with the `gh` CLI (installed 2026-07-19), e.g.:
+4. **Commit** the above on `main` — day-to-day work happens directly on `main`
+   (consolidated 2026-08-05; the old `experimental/jay-dev` branch is gone). What counts
+   as "released" is defined by tags and GitHub Releases, not a branch. Use a short-lived
+   feature branch only for genuinely experimental work, and merge it when done.
+5. **Push**: `git push origin main`.
+6. **Tag `main`**: `git tag -a vX.Y.Z -m "vX.Y.Z -- <short summary>"` then `git push origin vX.Y.Z`.
+   A tag alone does NOT create a GitHub Release or update "Latest release" — step 7 does that.
+7. **Publish the GitHub Release** for that tag with the `gh` CLI (installed 2026-07-19), e.g.:
    `gh release create vX.Y.Z bpq-alt-webmail.html --repo jayflanzbaum-svg/BPQ-Alt-Webmail --title "vX.Y.Z -- <short summary>" --notes-file <changelog-excerpt>`
    This tags-if-needed, publishes the release notes, and attaches `bpq-alt-webmail.html` as a
    downloadable asset all in one call. A tag alone does NOT create a GitHub Release or update
@@ -66,6 +67,6 @@ do all of the following, in order:
    ```
    Both `$env:PATH` and `$env:GH_TOKEN` must be set in the same command block that calls `gh`,
    since shell state does not persist between separate command invocations.
-9. **Verify**: `git status` clean on both branches, `git log --oneline -1 <branch>` matches
-   `origin/<branch>`, and `gh release list --repo jayflanzbaum-svg/BPQ-Alt-Webmail` shows the
-   new tag marked `Latest`.
+8. **Verify**: `git status` clean, `git log --oneline -1 main` matches `origin/main`,
+   and `gh release list --repo jayflanzbaum-svg/BPQ-Alt-Webmail` shows the new tag
+   marked `Latest`.
