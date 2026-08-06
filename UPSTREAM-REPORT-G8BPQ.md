@@ -1,79 +1,77 @@
-# LinBPQ WebMail thread-safety report (for John Wiseman G8BPQ)
+# LinBPQ WebMail segfault reports (for John Wiseman G8BPQ)
 
-Draft — ready to post to the bpq32 groups.io group or send directly. Not yet sent.
+Send-ready — post to the bpq32 groups.io group or email John directly. Not yet sent.
+Reworded 2026-08-05: facts stay firm, interpretations are owned as guesses, and the
+"add a lock" prescription became questions — John knows his own architecture.
 
-## Summary
+---
 
-LinBPQ has segfaulted (SIGSEGV) more than once while its WebMail HTTP interface is in
-use. The first occurrences correlated with killing held mail and were mitigated
-client-side in BPQ-Alt-Webmail v1.5.10 (see below), but a fresh report on v1.6.1 shows
-the same class of crash with a *different* stack, in code that has nothing to do with
-killing a message. That points to a broader thread-safety issue in LinBPQ's shared
-WebMail/message-list state, not something a client can fully work around.
+**Subject: Two LinBPQ segfaults while WebMail was in use — traces and a question**
 
-## Report 1 — kill-held-mail crash (fixed client-side, root cause still open)
+Hi John,
 
-- **When:** reported ~2026-07-06, against BPQ-Alt-Webmail pre-v1.5.10.
-- **Trigger:** bulk-killing held mail from the WebMail interface fired multiple kill
-  requests concurrently.
-- **Cause (as best diagnosed):** LinBPQ services every HTTP request on its own thread,
-  reading/writing shared, unlocked WebMail globals. Overlapping kill requests raced on
-  that shared state (symbols implicated: `KillWebMailMessage`, a NULL `Msg` pointer
-  dereference, and a `CheckUserMsg` argument mismatch).
-- **Client-side mitigation (BPQ-Alt-Webmail v1.5.10):** all requests to the node now go
-  through a single-flight queue (`queuedFetch`) so this client never has more than one
-  HTTP request in flight, and bulk-kill sends its kill requests one at a time with a
-  short gap instead of firing them all at once.
-- **Result:** reduces exposure for this one client, but does not fix the underlying
-  race — any other concurrent access to the same WebMail globals (another browser tab,
-  another WebMail client, or LinBPQ's own background threads) can still trigger it.
+Two users of BPQ-Alt-Webmail have reported LinBPQ segfaults while using it, and I
+wanted to pass along what we've collected in case it's useful. I'll say up front: the
+crash data below is solid, but my guesses about the cause are exactly that — guesses
+from the outside. You know the internals, so please read the interpretation loosely
+and correct me where I'm off.
 
-## Report 2 — new crash on v1.6.1, different stack, not tied to killing mail
+**Report 1 (~6 July):** bulk-killing held mail from WebMail fired several kill
+requests in quick succession, and LinBPQ segfaulted. The trace at the time implicated
+`KillWebMailMessage` with what looked like a NULL `Msg` dereference. Since v1.5.10 my
+client only ever has one HTTP request in flight (a single-flight queue) and spaces
+bulk-kill requests out, and no kill-related crashes have been reported since — though
+I don't know whether that actually addressed the cause or just made it less likely to
+trigger.
 
-- **Reporter:** Bill, PY2BIL / LU7ECX.
-- **When:** 2026-07-17, running BPQ v6.0.25.32 (precompiled beta build) on a 32-bit
-  Raspberry Pi.
-- **Circumstances:** killed some held mail, then the crash happened **hours later** —
-  not while any kill action was in flight. He had previously stopped using
-  BPQ-Alt-Webmail for several days with no crashes, then resumed and hit this on the
-  first day back.
-- **addr2line output** (`addr2line -f -C -e linbpq 0xe744f 0x12bbd6 0x12bc6c 0x12bdfc`):
-  ```
-  CreateMessage
-  /mnt/Source/bpq32/CommonSource/BBSUtilities.c:5594
-  GetMsg
-  /mnt/Source/bpq32/CommonSource/CommonCode.c:1819
-  RXCount
-  /mnt/Source/bpq32/CommonSource/CommonCode.c:1836
-  MONCount
-  /mnt/Source/bpq32/CommonSource/CommonCode.c:1904
-  ```
-- **Why this matters:** this stack is in message creation / RX / monitor counting —
-  the live packet-receive path — not the kill-message path the v1.5.10 fix targeted.
-  Since the crash happened hours after any client-initiated kill request, it looks like
-  it's the RX thread creating/counting a newly received message while something else
-  (plausibly a WebMail HTTP handler thread doing a routine folder-list GET, which
-  BPQ-Alt-Webmail's auto-refresh issues every 5 minutes) is concurrently reading the
-  same shared message list/counters — the same unlocked-globals pattern as Report 1,
-  just a different pair of threads racing on it.
+**Report 2 (17 July):** Bill PY2BIL/LU7ECX, running the precompiled v6.0.25.32 beta
+on a 32-bit Raspberry Pi, got a segfault *hours* after any kill activity — nothing the
+client did was in flight at the time beyond its routine folder-list refresh (every 5
+minutes). His addr2line output
+(`addr2line -f -C -e linbpq 0xe744f 0x12bbd6 0x12bc6c 0x12bdfc`):
 
-## Ask
+```
+CreateMessage   BBSUtilities.c:5594
+GetMsg          CommonCode.c:1819
+RXCount         CommonCode.c:1836
+MONCount        CommonCode.c:1904
+```
 
-Could the WebMail HTTP handlers and the RX/monitor code share a lock (or otherwise
-synchronize) around the message list and its counters? From the outside it looks like
-any two threads touching that shared state concurrently — regardless of which HTTP
-endpoint or internal path triggered them — can race. A client-side request queue (as
-added in v1.5.10) only prevents one client's own requests from overlapping each other;
-it can't prevent a race against LinBPQ's own background RX activity.
+One caveat: since that's a precompiled build, I can't be certain the addresses
+resolved against exactly matching symbols.
 
-Happy to help gather more addr2line traces or test candidate fixes against a live node
-if useful.
+What made me wonder whether the two are related is that this stack is in the
+receive/monitor path — nothing my client touches directly — which made me guess at a
+WebMail HTTP request arriving while a message was being received. But that's
+speculation, and if the WebMail handlers are already synchronized with the BBS side
+then my theory is simply wrong and I'd be glad to know what else to look at.
 
-## Additional reports gathered while asking users for diagnostics
+So rather than propose anything, a few questions:
 
-- **Bill, PY2BIL / LU7ECX** — see Report 2 above.
-- **Lee, K5DAT** — separately reported losing an in-progress WebMail compose draft,
-  apparently tied to a page refresh. This is understood to be a client-side issue (the
-  draft lived only in browser memory with nothing to survive a reload) and has been
-  addressed independently in BPQ-Alt-Webmail with draft autosave — not part of this
-  LinBPQ report.
+- Is it expected to be safe for a WebMail HTTP request to arrive while a message is
+  being received, or is that something a client should try to avoid?
+- Is there anything a client like mine should do differently — pacing, ordering,
+  endpoints to avoid — to be gentler on the node?
+- Bill is willing to help reproduce, and I'm happy to gather more traces or test
+  anything against a live node.
+
+Thanks for all your work on BPQ — this client only exists because the WebMail
+interface is there to build on.
+
+73,
+Jason
+
+---
+
+## Internal notes (not part of the message)
+
+- Additional report gathered while asking users for diagnostics: **Lee, K5DAT** —
+  separately reported losing an in-progress WebMail compose draft, apparently tied to
+  a page refresh. Client-side issue (the draft lived only in browser memory); fixed
+  independently in BPQ-Alt-Webmail with draft autosave — intentionally excluded from
+  the message to John.
+- Dropped from the earlier draft as unverified assumptions: that LinBPQ services each
+  HTTP request on its own thread over unlocked shared globals, the `CheckUserMsg`
+  argument-mismatch claim, and the assertion that Reports 1 and 2 share the same
+  root-cause pattern. The facts (triggers, timing, traces) are retained above; the
+  theories are now framed as questions.
