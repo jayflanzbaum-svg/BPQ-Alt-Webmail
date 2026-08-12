@@ -1,5 +1,14 @@
 # Changelog
 
+## v1.6.2 — 2026-08-11
+
+### Fixed
+- **"[Could not extract body]" when opening a message — stale session key.** BPQ's WebMail session key expires after a period of idle time; when the app sends a now-stale key to fetch a specific message, BPQ doesn't error, it silently serves the message-*list* page instead (rendered under its own current key), which the reader couldn't parse as a message body. `bpqGet()` now compares the key it sent against the key BPQ embedded in the response's own links and, on a mismatch, updates the stored key and retries the same request once, transparently.
+- **"[Could not extract body]" for HTML-format (Winlink) messages.** BPQ swaps the usual `<textarea>` for a raw `<div id='main'>` whenever a message body contains `</html>` (common for Winlink/RMS Express traffic like `//WL2K R/` messages). `parseBody()` now extracts readable text from that div (stripping script/style/meta noise), and the reader falls back to BPQ's `/WebMail/DisplayText` endpoint (plain-text rendering) if parsing still fails — covers RMS Express form messages too.
+
+### Added
+- **Compose draft autosave** — plain compose/reply/forward text now survives an unexpected reload and is offered back on next load with a toast. Scoped to the plain compose fields; radiogram/PKTNET forms already persist their own sticky fields.
+
 ## v1.6.1 — 2026-07-18
 
 ### Changed

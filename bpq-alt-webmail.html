@@ -489,7 +489,7 @@ body { font-family:var(--sans); font-size:1rem; background:var(--bg); color:var(
 <!-- TOPBAR -->
 <div class="topbar">
   <div class="logo">BPQ-ALT-WEBMAIL</div>
-  <span style="font-family:var(--mono);font-size:0.69rem;color:var(--text3);margin-left:-6px">v1.6.1</span>
+  <span style="font-family:var(--mono);font-size:0.69rem;color:var(--text3);margin-left:-6px">v1.6.2</span>
   <div class="top-call" id="top-call">—</div>
   <span class="top-node" id="top-node">—</span>
   <div class="tspc"></div>
@@ -556,7 +556,7 @@ body { font-family:var(--sans); font-size:1rem; background:var(--bg); color:var(
     </div>
 
     <div class="sidebar-footer">
-      <div id="si-ver">v1.6.1</div>
+      <div id="si-ver">v1.6.2</div>
       <div>Node <span id="si-node">—</span></div>
       <div>User <span id="si-user">—</span></div>
       <div style="display:none">Msgs: <span id="si-count">—</span></div>
@@ -1177,7 +1177,7 @@ function toggleSettings() {
     // Info row: version, callsign, status
     const info = document.createElement('div');
     info.className = 'm-cfg-info';
-    info.innerHTML = '<span>v1.6.1</span>' +
+    info.innerHTML = '<span>v1.6.2</span>' +
       '<span style="color:var(--accent);background:var(--accent-bg);border:1px solid var(--accent-border);padding:2px 7px;border-radius:4px">' + (callEl ? callEl.textContent : '—') + '</span>' +
       '<span id="m-status-pill" class="' + (statusPill ? statusPill.className : '') + '">' + (statusPill ? statusPill.textContent : '') + '</span>';
 
@@ -1438,7 +1438,7 @@ async function bpqFormLogin(loginHtml, originUrl) {
   return { html, finalUrl: r.url };
 }
 
-async function bpqGet(url) {
+async function bpqGet(url, isRetry) {
   console.debug('[BPQ] GET', url);
   const r = await queuedFetch(url, { credentials:'include', headers: authHeaders() });
   if (!r.ok) {
@@ -1454,6 +1454,20 @@ async function bpqGet(url) {
     console.debug('[BPQ] session key found in redirect URL:', redirectKey);
     CFG.key = redirectKey; saveCFG();
     try { document.getElementById('cfg-key').value = redirectKey; } catch(_){}
+  }
+
+  // BPQ session keys can rotate server-side between page loads. If the key we
+  // sent doesn't match the key BPQ embedded in this response's own links, our
+  // key was stale and BPQ silently served different content under its current
+  // key (e.g. the message list, ignoring the requested message number) rather
+  // than erroring — swap in the fresh key and retry once with the same request.
+  const requestedKey = extractKey(url);
+  const htmlKey = extractKey(html);
+  if (!isRetry && requestedKey && htmlKey && htmlKey !== requestedKey) {
+    console.debug('[BPQ] stale key detected — requested', requestedKey, 'but page uses', htmlKey);
+    CFG.key = htmlKey; saveCFG();
+    try { document.getElementById('cfg-key').value = htmlKey; } catch(_){}
+    return bpqGet(url.replace(requestedKey, htmlKey), true);
   }
 
   // If BPQ returned a login form instead of the requested page, log in and retry
