@@ -339,6 +339,10 @@ body { font-family:var(--sans); font-size:1rem; background:var(--bg); color:var(
 .rv-sum-text .sum-dim { color:var(--text3) }
 .rv-sum-chev { color:var(--text3); font-size:0.69rem; flex-shrink:0; transition:transform .15s }
 
+@media (min-width: 769px) {
+  #ab-modal { width:640px }
+}
+
 /* ── MOBILE RESPONSIVE ── */
 @media (max-width: 768px) {
   /* Hide desktop resize handles */
@@ -489,7 +493,7 @@ body { font-family:var(--sans); font-size:1rem; background:var(--bg); color:var(
 <!-- TOPBAR -->
 <div class="topbar">
   <div class="logo">BPQ-ALT-WEBMAIL</div>
-  <span style="font-family:var(--mono);font-size:0.69rem;color:var(--text3);margin-left:-6px">v1.6.2</span>
+  <span style="font-family:var(--mono);font-size:0.69rem;color:var(--text3);margin-left:-6px">v1.6.3</span>
   <div class="top-call" id="top-call">—</div>
   <span class="top-node" id="top-node">—</span>
   <div class="tspc"></div>
@@ -503,6 +507,7 @@ body { font-family:var(--sans); font-size:1rem; background:var(--bg); color:var(
   <button class="tbtn" id="lh-lbl" onclick="cycleLineSpacing()" title="Cycle line spacing">Normal</button>
   <button class="tbtn" onclick="toggleSettings()" title="Settings" style="color:var(--amber);border-color:var(--amber);font-weight:600">⚙ Settings</button>
   <button class="tbtn" onclick="openRules()" title="Star rules">★ Rules</button>
+  <button class="tbtn" onclick="openAddressBook()" title="Address Book">📇 Address Book</button>
   <div id="status-pill">● connecting</div>
 </div>
 
@@ -556,7 +561,7 @@ body { font-family:var(--sans); font-size:1rem; background:var(--bg); color:var(
     </div>
 
     <div class="sidebar-footer">
-      <div id="si-ver">v1.6.2</div>
+      <div id="si-ver">v1.6.3</div>
       <div>Node <span id="si-node">—</span></div>
       <div>User <span id="si-user">—</span></div>
       <div style="display:none">Msgs: <span id="si-count">—</span></div>
@@ -613,6 +618,7 @@ body { font-family:var(--sans); font-size:1rem; background:var(--bg); color:var(
       <div class="rv-tb">
         <button class="btn primary" onclick="doReply()">↩ Reply</button>
         <button class="btn" onclick="doForward()">→ Forward</button>
+        <button class="btn" onclick="addContactFromMessage()" title="Save sender to address book">📇 Add Contact</button>
         <button class="btn" id="btn-parse-rg" onclick="parseRadiogramToForm()" style="display:none" title="Parse this NTS radiogram into the T/RRI form">📋 Parse</button>
         <button class="btn" onclick="doDownload()">⤓ Save</button>
         <button class="btn" onclick="doPrev()">← Prev</button>
@@ -683,7 +689,14 @@ body { font-family:var(--sans); font-size:1rem; background:var(--bg); color:var(
   <div class="modal">
     <div class="modal-hd"><span class="modal-ttl" id="cmp-ttl">New Message</span><button class="modal-x" onclick="closeCompose()">×</button></div>
     <div class="modal-bd">
-      <div class="field" id="cmp-to-field"><span class="field-lbl">To (callsign or routing)</span><input class="field-in" id="cmp-to" placeholder="K1AJD"></div>
+      <div class="field" id="cmp-to-field">
+        <span class="field-lbl">To (callsign or routing)</span>
+        <div style="display:flex;gap:6px">
+          <input class="field-in" id="cmp-to" list="ab-datalist" placeholder="K1AJD" style="flex:1">
+          <datalist id="ab-datalist"></datalist>
+          <button type="button" class="btn" onclick="openAddressBook()" title="Address Book" style="flex:0 0 auto">📇</button>
+        </div>
+      </div>
       <div class="field"><span class="field-lbl">Type</span><select class="field-in" id="cmp-type" style="width:auto" onchange="onComposeTypeChange()"><option value="P">P – Personal</option><option value="B">B – Bulletin</option><option value="B/PKTNET">B/PKTNET – PKTNET Check-In (form)</option><option value="T">T – NTS Traffic</option><option value="T/RRI">T/RRI – NTS Radiogram (form)</option></select></div>
       <div id="cmp-normal-fields">
         <div class="field"><span class="field-lbl">Subject</span><input class="field-in" id="cmp-subj" placeholder="subject line"></div>
@@ -824,6 +837,64 @@ body { font-family:var(--sans); font-size:1rem; background:var(--bg); color:var(
   </div>
 </div>
 
+<!-- ADDRESS BOOK -->
+<div class="overlay" id="ab-ov">
+  <div class="rules-modal" id="ab-modal">
+    <div class="modal-hd">
+      <span class="modal-ttl">📇 Address Book</span>
+      <button class="modal-x" onclick="closeAddressBook()">×</button>
+    </div>
+    <div class="modal-bd">
+      <div class="rg-sec">
+        <div class="rg-sec-hd">QRZ Lookup <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--text3)">— optional, your own QRZ.com XML subscription login</span></div>
+        <div class="rg-row" id="ab-qrz-view" style="align-items:center;display:none">
+          <span class="modal-hint" id="ab-qrz-summary"></span>
+          <div class="btn-sp"></div>
+          <button class="btn" onclick="editQrzCreds()">Update</button>
+        </div>
+        <div class="rg-row" id="ab-qrz-edit">
+          <div class="field"><span class="field-lbl">QRZ Username</span><input class="field-in" id="ab-qrz-user" placeholder="callsign" autocomplete="off"></div>
+          <div class="field"><span class="field-lbl">QRZ Password</span><input class="field-in" id="ab-qrz-pass" type="password" placeholder="password" autocomplete="off"></div>
+          <button class="btn" style="align-self:flex-end" onclick="saveQrzCreds()">Save</button>
+        </div>
+        <div class="rg-hint">Requires a paid QRZ.com XML Data subscription (separate from a regular QRZ login). Stored only in this browser and used to auto-fill Name / City / State when adding a contact. Leave blank to enter contacts by hand.</div>
+      </div>
+
+      <div class="rg-sec">
+        <div class="rg-sec-hd">Add / Edit Contact</div>
+        <div class="rg-row">
+          <div class="field" style="flex:0 0 110px"><span class="field-lbl">Callsign</span><input class="field-in" id="ab-f-call" placeholder="K1AJD" style="text-transform:uppercase"></div>
+          <div class="field"><span class="field-lbl">Full Name</span><input class="field-in" id="ab-f-name" placeholder="John Doe"></div>
+          <div class="field"><span class="field-lbl">City</span><input class="field-in" id="ab-f-city" placeholder="Boston"></div>
+          <div class="field" style="flex:0 0 70px"><span class="field-lbl">State</span><input class="field-in" id="ab-f-state" placeholder="MA"></div>
+        </div>
+        <div class="rg-row" style="align-items:center">
+          <button class="btn" onclick="qrzLookupIntoForm()" title="Fill Name/City/State from QRZ using the callsign above">🔍 QRZ Lookup</button>
+          <span class="modal-hint" id="ab-lookup-status"></span>
+          <div class="btn-sp"></div>
+          <button class="btn" id="ab-cancel-edit" onclick="cancelEditContact()" style="display:none">Cancel</button>
+          <button class="send-btn" onclick="saveContact()">Save Contact</button>
+        </div>
+      </div>
+
+      <div class="rg-sec" style="flex:1;display:flex;flex-direction:column;min-height:0">
+        <div class="rg-sec-hd" style="display:flex;align-items:center;gap:8px">
+          <span style="flex:1">Contacts</span>
+          <select class="field-in" id="ab-sort" style="width:auto" onchange="setAbSort(this.value)">
+            <option value="alpha">Sort: A–Z</option>
+            <option value="most">Sort: Most used</option>
+            <option value="last">Sort: Last used</option>
+          </select>
+          <input class="field-in" id="ab-search" placeholder="filter…" style="width:160px" oninput="renderAddressBook()">
+        </div>
+        <div id="ab-list" style="overflow-y:auto;min-height:120px;max-height:280px"></div>
+      </div>
+      <div class="rg-credit">Address Book concept: N3MEL</div>
+    </div>
+    <div class="modal-ft"><span class="modal-hint" id="ab-status"></span><span class="modal-hint" id="ab-count"></span></div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -878,6 +949,272 @@ function saveCFG() {
     SS.set('bpq_pass', CFG.password);
     LS.del('bpq_pass');            // purge any previously-persisted copy
   }
+}
+
+// ═══════════════════════════════════════════════════
+//  ADDRESS BOOK
+//
+//  A contact is: { call, name, city, state }, keyed by callsign.
+//  Stored in localStorage. QRZ XML lookup (optional, requires the
+//  user's own paid QRZ.com XML Data subscription login) can fill in
+//  name/city/state from just a callsign.
+// ═══════════════════════════════════════════════════
+function loadContacts() { return LS.getJ('bpq_contacts') || []; }
+function saveContacts(list) { LS.setJ('bpq_contacts', list); }
+
+let abEditingCall = null; // callsign currently loaded into the edit form, or null = new contact
+
+function escAttr(s) { return esc(s).replace(/'/g, '&#39;'); }
+
+function openAddressBook() {
+  renderQrzCredsUI();
+  document.getElementById('ab-search').value = '';
+  document.getElementById('ab-sort').value = abSort();
+  cancelEditContact();
+  renderAddressBook();
+  document.getElementById('ab-ov').classList.add('open');
+}
+function closeAddressBook() { document.getElementById('ab-ov').classList.remove('open'); }
+
+// Shows saved QRZ credentials as read-only text (with an Update button) once
+// set, instead of leaving password-filled input boxes sitting open with no
+// visible confirmation that Save actually did anything. Falls back to the
+// editable fields when nothing is saved yet.
+function renderQrzCredsUI() {
+  const user = LS.get('bpq_qrz_user') || '';
+  const view = document.getElementById('ab-qrz-view');
+  const edit = document.getElementById('ab-qrz-edit');
+  if (user) {
+    document.getElementById('ab-qrz-summary').textContent = `Saved — username ${user}, password ••••••••`;
+    view.style.display = '';
+    edit.style.display = 'none';
+  } else {
+    document.getElementById('ab-qrz-user').value = '';
+    document.getElementById('ab-qrz-pass').value = '';
+    view.style.display = 'none';
+    edit.style.display = '';
+  }
+}
+function editQrzCreds() {
+  document.getElementById('ab-qrz-user').value = LS.get('bpq_qrz_user') || '';
+  document.getElementById('ab-qrz-pass').value = LS.get('bpq_qrz_pass') || '';
+  document.getElementById('ab-qrz-view').style.display = 'none';
+  document.getElementById('ab-qrz-edit').style.display = '';
+}
+function saveQrzCreds() {
+  LS.set('bpq_qrz_user', document.getElementById('ab-qrz-user').value.trim().toUpperCase());
+  LS.set('bpq_qrz_pass', document.getElementById('ab-qrz-pass').value);
+  // Credentials changed — any cached session key is now stale.
+  LS.del('bpq_qrz_session'); LS.del('bpq_qrz_session_exp');
+  renderQrzCredsUI();
+  const st = document.getElementById('ab-status');
+  st.style.color = 'var(--green)'; st.textContent = 'QRZ credentials saved';
+  setTimeout(() => { st.textContent = ''; }, 2500);
+}
+
+function abSort() { return LS.get('bpq_ab_sort') || 'alpha'; }
+function setAbSort(v) {
+  LS.set('bpq_ab_sort', v);
+  renderAddressBook();
+}
+const AB_SORTERS = {
+  alpha: (a, b) => a.call.localeCompare(b.call),
+  most:  (a, b) => (b.useCount || 0) - (a.useCount || 0) || a.call.localeCompare(b.call),
+  last:  (a, b) => (b.lastUsed || 0) - (a.lastUsed || 0) || a.call.localeCompare(b.call),
+};
+function renderAddressBook() {
+  const q = (document.getElementById('ab-search').value || '').toUpperCase();
+  const list = loadContacts().slice().sort(AB_SORTERS[abSort()] || AB_SORTERS.alpha);
+  const filtered = list.filter(c => !q ||
+    c.call.includes(q) || (c.name || '').toUpperCase().includes(q) ||
+    (c.city || '').toUpperCase().includes(q) || (c.state || '').toUpperCase().includes(q));
+  const el = document.getElementById('ab-list');
+  document.getElementById('ab-count').textContent = `${list.length} contact${list.length === 1 ? '' : 's'}`;
+  el.innerHTML = filtered.length ? filtered.map(c => `
+    <div class="rule-row">
+      <div class="rule-summary"><b>${esc(c.call)}</b>${c.name ? ' — ' + esc(c.name) : ''}${(c.city || c.state) ? ' · ' + esc([c.city, c.state].filter(Boolean).join(', ')) : ''}</div>
+      <div class="rule-actions">
+        <button class="rule-edit" onclick="abUseContact('${escAttr(c.call)}')" title="Compose to this contact">✉</button>
+        <button class="rule-edit" onclick="editContact('${escAttr(c.call)}')" title="Edit">✎</button>
+        <button class="rule-del" onclick="deleteContact('${escAttr(c.call)}')" title="Delete">✕</button>
+      </div>
+    </div>`).join('') : `<div class="list-empty">${list.length ? 'No matches' : 'No contacts yet — add one above'}</div>`;
+}
+
+function findContact(call) { return loadContacts().find(c => c.call === call); }
+
+function editContact(call) {
+  const c = findContact(call); if (!c) return;
+  abEditingCall = call;
+  document.getElementById('ab-f-call').value = c.call;
+  document.getElementById('ab-f-name').value = c.name || '';
+  document.getElementById('ab-f-city').value = c.city || '';
+  document.getElementById('ab-f-state').value = c.state || '';
+  document.getElementById('ab-lookup-status').textContent = '';
+  document.getElementById('ab-cancel-edit').style.display = '';
+}
+function cancelEditContact() {
+  abEditingCall = null;
+  document.getElementById('ab-f-call').value = '';
+  document.getElementById('ab-f-name').value = '';
+  document.getElementById('ab-f-city').value = '';
+  document.getElementById('ab-f-state').value = '';
+  document.getElementById('ab-lookup-status').textContent = '';
+  document.getElementById('ab-cancel-edit').style.display = 'none';
+}
+function saveContact() {
+  const call = document.getElementById('ab-f-call').value.trim().toUpperCase();
+  const name = document.getElementById('ab-f-name').value.trim();
+  const city = document.getElementById('ab-f-city').value.trim();
+  const state = document.getElementById('ab-f-state').value.trim().toUpperCase();
+  const st = document.getElementById('ab-status');
+  if (!call) { st.style.color = 'var(--red)'; st.textContent = 'Callsign is required'; return; }
+  const list = loadContacts();
+  const targetCall = abEditingCall || call;
+  const idx = list.findIndex(c => c.call === targetCall);
+  if (idx < 0 && list.some(c => c.call === call)) {
+    // New contact but that callsign already exists — load it for editing instead of duplicating.
+    st.style.color = 'var(--red)'; st.textContent = 'Contact already exists — editing it instead';
+    editContact(call);
+    return;
+  }
+  const prev = idx >= 0 ? list[idx] : null;
+  const rec = { call, name, city, state, useCount: prev?.useCount || 0, lastUsed: prev?.lastUsed || 0 };
+  if (idx >= 0) list[idx] = rec; else list.push(rec);
+  saveContacts(list);
+  refreshAbDatalist();
+  cancelEditContact();
+  renderAddressBook();
+  st.style.color = 'var(--green)'; st.textContent = 'Saved';
+  setTimeout(() => { st.textContent = ''; }, 2000);
+}
+function deleteContact(call) {
+  if (!confirm(`Delete contact ${call}?`)) return;
+  saveContacts(loadContacts().filter(c => c.call !== call));
+  refreshAbDatalist();
+  renderAddressBook();
+}
+function bumpContactUsage(call) {
+  const list = loadContacts();
+  const c = list.find(x => x.call === call);
+  if (!c) return;
+  c.useCount = (c.useCount || 0) + 1;
+  c.lastUsed = Date.now();
+  saveContacts(list);
+}
+function abUseContact(call) {
+  bumpContactUsage(call);
+  if (document.getElementById('cmp-ov').classList.contains('open')) {
+    document.getElementById('cmp-to').value = call;
+    scheduleDraftSave();
+    closeAddressBook();
+  } else {
+    closeAddressBook();
+    openCompose(call);
+  }
+}
+// Save the sender of the currently open message as a contact (or load them
+// for editing if already saved). Called from the reader toolbar.
+function addContactFromMessage() {
+  const msg = allMsgs.find(m => m.num === activeNum);
+  if (!msg) return;
+  const call = persFromKey(msg);
+  if (!call || call === 'SYSTEM') { toast('No callsign to add', 'err'); return; }
+  openAddressBook();
+  const existing = findContact(call);
+  if (existing) {
+    editContact(call);
+  } else {
+    cancelEditContact();
+    document.getElementById('ab-f-call').value = call;
+    // If QRZ creds are already on file, save a click and look them up now.
+    if (LS.get('bpq_qrz_user') && LS.get('bpq_qrz_pass')) qrzLookupIntoForm();
+  }
+}
+function refreshAbDatalist() {
+  const dl = document.getElementById('ab-datalist');
+  if (!dl) return;
+  dl.innerHTML = loadContacts().map(c => {
+    const desc = [c.name, [c.city, c.state].filter(Boolean).join(', ')].filter(Boolean).join(' — ');
+    return `<option value="${escAttr(c.call)}">${esc(desc)}</option>`;
+  }).join('');
+}
+
+// ── QRZ.com XML lookup ──
+// Uses the standard QRZ XML Data API: log in with username/password to get a
+// session key (valid ~24h), then query by callsign with that key. Requires a
+// paid QRZ.com XML subscription (separate from a plain QRZ.com login).
+const QRZ_XML = 'https://xmldata.qrz.com/xml/current/';
+
+function qrzParseXml(text) {
+  const doc = new DOMParser().parseFromString(text, 'text/xml');
+  if (doc.getElementsByTagName('parsererror').length) throw new Error('Bad XML from QRZ');
+  return doc;
+}
+function qrzTag(doc, tag) {
+  const els = doc.getElementsByTagName(tag);
+  return els.length ? (els[0].textContent || '').trim() : '';
+}
+function qrzGetSession(user, pass, force) {
+  const cachedKey = LS.get('bpq_qrz_session');
+  const cachedExp = parseInt(LS.get('bpq_qrz_session_exp') || '0', 10);
+  if (!force && cachedKey && Date.now() < cachedExp) return Promise.resolve(cachedKey);
+  const url = `${QRZ_XML}?username=${encodeURIComponent(user)}&password=${encodeURIComponent(pass)}&agent=bpq-alt-webmail`;
+  return fetch(url).then(r => r.text()).then(text => {
+    const doc = qrzParseXml(text);
+    const err = qrzTag(doc, 'Error');
+    if (err) throw new Error(err);
+    const key = qrzTag(doc, 'Key');
+    if (!key) throw new Error('No session key returned');
+    LS.set('bpq_qrz_session', key);
+    LS.set('bpq_qrz_session_exp', String(Date.now() + 23 * 3600 * 1000)); // sessions last ~24h; refresh a bit early
+    return key;
+  });
+}
+function qrzExtract(doc) {
+  const name = [qrzTag(doc, 'fname'), qrzTag(doc, 'name')].filter(Boolean).join(' ');
+  const city = qrzTag(doc, 'addr2');
+  const state = qrzTag(doc, 'state');
+  if (!name && !city && !state) return null;
+  return { name, city, state };
+}
+function qrzLookup(call, user, pass) {
+  return qrzGetSession(user, pass).then(session => {
+    const url = `${QRZ_XML}?s=${encodeURIComponent(session)}&callsign=${encodeURIComponent(call)}`;
+    return fetch(url).then(r => r.text()).then(text => {
+      const doc = qrzParseXml(text);
+      const err = qrzTag(doc, 'Error');
+      if (!err) return qrzExtract(doc);
+      if (/not found/i.test(err)) return null;
+      // Likely an expired/invalid session key — re-authenticate once and retry.
+      return qrzGetSession(user, pass, true).then(newSession => {
+        const retryUrl = `${QRZ_XML}?s=${encodeURIComponent(newSession)}&callsign=${encodeURIComponent(call)}`;
+        return fetch(retryUrl).then(r2 => r2.text()).then(text2 => {
+          const doc2 = qrzParseXml(text2);
+          const err2 = qrzTag(doc2, 'Error');
+          if (err2) { if (/not found/i.test(err2)) return null; throw new Error(err2); }
+          return qrzExtract(doc2);
+        });
+      });
+    });
+  });
+}
+function qrzLookupIntoForm() {
+  const call = document.getElementById('ab-f-call').value.trim().toUpperCase();
+  const status = document.getElementById('ab-lookup-status');
+  if (!call) { status.style.color = 'var(--red)'; status.textContent = 'Enter a callsign first'; return; }
+  const user = LS.get('bpq_qrz_user'), pass = LS.get('bpq_qrz_pass');
+  if (!user || !pass) { status.style.color = 'var(--red)'; status.textContent = 'Add your QRZ login above first'; return; }
+  status.style.color = 'var(--amber)'; status.textContent = `Looking up ${call}…`;
+  qrzLookup(call, user, pass).then(info => {
+    if (!info) { status.style.color = 'var(--red)'; status.textContent = 'Not found on QRZ'; return; }
+    if (info.name) document.getElementById('ab-f-name').value = info.name;
+    if (info.city) document.getElementById('ab-f-city').value = info.city;
+    if (info.state) document.getElementById('ab-f-state').value = info.state;
+    status.style.color = 'var(--green)'; status.textContent = 'Filled from QRZ — review and save';
+  }).catch(err => {
+    status.style.color = 'var(--red)'; status.textContent = 'QRZ lookup failed: ' + (err.message || err);
+  });
 }
 
 // ═══════════════════════════════════════════════════
@@ -1055,6 +1392,7 @@ function saveRules() {
 }
 
 document.getElementById('rules-ov').addEventListener('click',e=>{if(e.target===e.currentTarget)closeRules();});
+document.getElementById('ab-ov').addEventListener('click',e=>{if(e.target===e.currentTarget)closeAddressBook();});
 
 // ── KILLED SET ─────────────────────────────────────
 let killedSet = new Set(LS.getJ('bpq_killed')||[]);
@@ -1177,7 +1515,7 @@ function toggleSettings() {
     // Info row: version, callsign, status
     const info = document.createElement('div');
     info.className = 'm-cfg-info';
-    info.innerHTML = '<span>v1.6.2</span>' +
+    info.innerHTML = '<span>v1.6.3</span>' +
       '<span style="color:var(--accent);background:var(--accent-bg);border:1px solid var(--accent-border);padding:2px 7px;border-radius:4px">' + (callEl ? callEl.textContent : '—') + '</span>' +
       '<span id="m-status-pill" class="' + (statusPill ? statusPill.className : '') + '">' + (statusPill ? statusPill.textContent : '') + '</span>';
 
@@ -1191,7 +1529,8 @@ function toggleSettings() {
       '<button class="tbtn" onclick="adjustFont(1)">A+</button>' +
       '<button class="tbtn" onclick="resetFont()">Reset Font</button>' +
       '<button class="tbtn" onclick="cycleLineSpacing()">↕ Spacing</button>' +
-      '<button class="tbtn" onclick="toggleSettings();openRules()">★ Rules</button>';
+      '<button class="tbtn" onclick="toggleSettings();openRules()">★ Rules</button>' +
+      '<button class="tbtn" onclick="toggleSettings();openAddressBook()">📇 Address Book</button>';
 
     bar.prepend(actions);
     bar.prepend(info);
@@ -1771,10 +2110,16 @@ async function lazyFetchPersonalHeaders(msgs) {
   }
 }
 
-// Extract clean base callsign — strips @domain suffix
+// Extract clean base callsign — strips @domain suffix.
+// Internet-mail headers use "SMTP:user@domain" instead of a callsign —
+// that @ is part of the address, not a BBS routing suffix, so it must
+// be preserved whole (including case) for replies to route back out.
 function baseCall(s) {
   if (!s) return '?';
-  return (s.split('@')[0].trim().toUpperCase()) || '?';
+  const trimmed = s.trim();
+  const smtp = trimmed.match(/^smtp:/i);
+  if (smtp) return 'SMTP:' + trimmed.slice(smtp[0].length).trim();
+  return (trimmed.split('@')[0].trim().toUpperCase()) || '?';
 }
 
 // Use hdrFrom (from body) when available, else fall back to list row from.
@@ -2495,7 +2840,11 @@ function doReply(){
   const msg=allMsgs.find(m=>m.num===activeNum); if(!msg)return;
   const sig = CFG.signature || `73 de ${CFG.callsign||'N4SFL'}`;
   const re=msg.subject.replace(/^RE:\s*/i,'');
-  openCompose(msg.from,`RE: ${re}`,`\n\n${sig}\n\n--- #${msg.num} from ${msg.from} ---\n${msg.body||''}`,'Reply');
+  // Use persFromKey(), not the raw list-row msg.from — the list column is
+  // unreliable (see LAZY HEADER FETCH comment above) and for internet mail
+  // it never carries the full "SMTP:user@domain" address anyway.
+  const replyTo=persFromKey(msg);
+  openCompose(replyTo,`RE: ${re}`,`\n\n${sig}\n\n--- #${msg.num} from ${replyTo} ---\n${msg.body||''}`,'Reply');
 }
 function openCompose(to='',subj='',body='',title=''){
   document.getElementById('cmp-to').value=to;
@@ -2514,7 +2863,13 @@ function openCompose(to='',subj='',body='',title=''){
   const saved=LS.get('bpq_compose_w');
   if(saved && !isMobile) modal.style.width=saved;
   document.getElementById('cmp-ov').classList.add('open');
-  setTimeout(()=>document.getElementById(to?'cmp-body':'cmp-to').focus(),60);
+  setTimeout(()=>{
+    const el=document.getElementById(to?'cmp-body':'cmp-to');
+    el.focus();
+    // Reply/forward pre-fill quoted text below the cursor — without this
+    // the browser parks the caret at the end of that text, off-screen.
+    if(to){ el.setSelectionRange(0,0); el.scrollTop=0; }
+  },60);
 }
 function closeCompose(){
   const modal=document.querySelector('#cmp-ov .modal');
@@ -2600,7 +2955,7 @@ window.addEventListener('hashchange', function(){ tryHashAction(0); });
 function doForward(){
   const msg=allMsgs.find(m=>m.num===activeNum); if(!msg)return;
   const sig = CFG.signature || `73 de ${CFG.callsign||'N4SFL'}`;
-  openCompose('',`FWD: ${msg.subject}`,`\n\n${sig}\n\n--- Fwd #${msg.num} from ${msg.from} ---\n${msg.body||''}`,'Forward');
+  openCompose('',`FWD: ${msg.subject}`,`\n\n${sig}\n\n--- Fwd #${msg.num} from ${persFromKey(msg)} ---\n${msg.body||''}`,'Forward');
 }
 function doSend(){
   let type=document.getElementById('cmp-type').value;
@@ -2609,7 +2964,11 @@ function doSend(){
   if (type === 'T/RRI')   { rgReview(); return; }
   if (type === 'B/PKTNET'){ pkReview(); return; }
   const st=document.getElementById('cmp-status');
-  let to=document.getElementById('cmp-to').value.trim().toUpperCase();
+  // Callsigns are conventionally upper-case, but an "SMTP:user@domain"
+  // address must keep its original case — force-uppercasing it can break
+  // delivery to case-sensitive mail systems.
+  let to=document.getElementById('cmp-to').value.trim();
+  to = /^smtp:/i.test(to) ? ('SMTP:' + to.slice(5).trim()) : to.toUpperCase();
   const subj=document.getElementById('cmp-subj').value.trim();
   const msg=document.getElementById('cmp-body').value.trim();
   if(!to||!subj||!msg){st.style.color='var(--red)';st.textContent='Fill in all fields';return;}
@@ -3438,6 +3797,7 @@ async function init(){
   applyTheme();
   applyFont();
   applyLineSpacing();
+  refreshAbDatalist();
   initResize('rh1','sidebar',140,'bpq_sb_width');
   initResize('rh2','list-pane',160,'bpq_lp_width');
 

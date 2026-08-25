@@ -1,5 +1,18 @@
 # Changelog
 
+## v1.6.3 — 2026-08-25
+
+### Added
+- **Address Book** — callsign/name/city/state contacts, reachable from the compose window's To field (📇 button + autocomplete) and a topbar "📇 Address Book" button. Includes an optional QRZ.com XML Data lookup (requires your own paid QRZ subscription login, stored only in that browser) to auto-fill name/city/state from a callsign, and a reader-toolbar "📇 Add Contact" button to save a message's sender directly. (concept: N3MEL)
+- **Address Book — sort order** — Contacts list can be sorted A–Z, by most-used, or by last-used, persisted across sessions.
+
+### Changed
+- **QRZ credentials UI** — once saved, QRZ username/password now display as read-only text with an Update button instead of leaving password fields sitting open with no visible confirmation that Save worked.
+
+### Fixed
+- **Reply/Forward on internet-gated mail put your own callsign in the To field instead of the sender's `SMTP:user@domain` address.** `doReply()`/`doForward()` were reading the raw, unreliable message-list `from` column instead of the already-corrected header value the app computes elsewhere; separately, the address-cleanup helper was truncating `SMTP:user@domain` down to `SMTP:user` on every message, discarding the domain needed to route a reply back out. Also fixed Send force-uppercasing the To field, which could mangle an `SMTP:` address's case. (credit: Chris AE7GE)
+- **Reply cursor landed at the bottom of the quoted text instead of the top.** Compose now explicitly places the cursor at the start of the message body on Reply/Forward. (credit: Chris AE7GE)
+
 ## v1.6.2 — 2026-08-11
 
 ### Fixed

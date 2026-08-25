@@ -54,19 +54,25 @@ do all of the following, in order:
    downloadable asset all in one call. A tag alone does NOT create a GitHub Release or update
    "Latest release" — this step is what does that.
 
-   **Auth gotcha**: `gh auth login --with-token` fails with `401 Bad credentials` against the
-   fine-grained PAT stored in Git Credential Manager, even though the token itself is valid
-   (confirmed working directly against the REST API) — this is a known gh limitation validating
-   fine-grained tokens, not a bad token. Workaround: skip `gh auth login` entirely and set the
-   `GH_TOKEN` env var for the command instead, pulling the token from Git Credential Manager
-   non-interactively (PATH must include Git's cmd dir first in this shell):
+   **Auth (current, confirmed working 2026-08-11)**: `gh` is authenticated via its own OAuth
+   session in the Windows keyring (`gh auth status` shows `Logged in ... (keyring)`, token
+   scopes `gist`, `read:org`, `repo`) — this is separate from the fine-grained PAT used for
+   plain `git push`/`git pull` (that one lives in the `git:https://github.com` Credential
+   Manager entry). Because of this, `gh release create`/`gh release list` just work with no
+   extra setup — do NOT run `gh auth login --with-token` or set `GH_TOKEN` manually unless
+   `gh auth status` shows you're logged out.
+
+   **Historical gotcha (superseded, kept for reference)**: earlier, `gh auth login --with-token`
+   failed with `401 Bad credentials` against the fine-grained PAT even though the token was
+   valid (confirmed directly against the REST API) — a known gh limitation validating
+   fine-grained tokens. The workaround at the time was to skip `gh auth login` and pull the
+   PAT from Git Credential Manager into `GH_TOKEN` for the single command:
    ```powershell
    $env:PATH = "C:\Program Files\Git\cmd;C:\Program Files\Git\clangarm64\bin;C:\Program Files\GitHub CLI;" + $env:PATH
    $env:GH_TOKEN = ("protocol=https`nhost=github.com`n`n" | git-credential-manager.exe get | Select-String "^password=").ToString().Substring(9)
    gh release create vX.Y.Z bpq-alt-webmail.html --repo jayflanzbaum-svg/BPQ-Alt-Webmail --title "..." --notes-file "..."
    ```
-   Both `$env:PATH` and `$env:GH_TOKEN` must be set in the same command block that calls `gh`,
-   since shell state does not persist between separate command invocations.
+   Only fall back to this if keyring auth breaks again (`gh auth status` shows logged out).
 8. **Verify**: `git status` clean, `git log --oneline -1 main` matches `origin/main`,
    and `gh release list --repo jayflanzbaum-svg/BPQ-Alt-Webmail` shows the new tag
    marked `Latest`.

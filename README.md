@@ -50,6 +50,12 @@ The same single HTML file automatically adapts to phones and tablets — no sepa
 - **NTS Delivered button** — one click marks any T-type message delivered via BPQ's `WMNDel`, with delivered-state tracking and NTS sub-folders
 - **Compose deep links** — open a pre-filled compose window from any dashboard or bookmark via `#compose?to=CALL&subject=...` (see README-dashboard-links.md); works in already-open tabs too
 
+### Address Book
+- Callsign/name/city/state contacts — reachable from compose's To field (📇 button + autocomplete) or the topbar **📇 Address Book** button
+- Optional QRZ.com XML Data lookup (your own paid QRZ subscription login, stored only in your browser) auto-fills name/city/state from a callsign
+- "📇 Add Contact" button in the message reader saves the open message's sender directly
+- Sort the contact list A–Z, by most-used, or by last-used (concept: N3MEL)
+
 ### Star Rules
 - Built-in rule: stars SYSTEM messages with subject starting "New User" (new user notifications)
 - Custom rules — click **★ Rules** to add your own: match on FROM, TO, SUBJECT, or TYPE with contains / starts with / equals logic
@@ -173,6 +179,8 @@ Node: `N4SFL.#SFL.FL.USA.NOAM`
 GitHub: [jayflanzbaum-svg](https://github.com/jayflanzbaum-svg)
 
 BPQ32 by John Wiseman G8BPQ — [cantab.net/users/john.wiseman](https://www.cantab.net/users/john.wiseman/Documents/BPQ32%20Documents.htm)
+
+Address Book concept: N3MEL. Internet-mail reply-to and compose-cursor fixes: Chris AE7GE.
 
 ---
 
