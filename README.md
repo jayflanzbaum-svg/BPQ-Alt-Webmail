@@ -33,7 +33,8 @@ The same single HTML file automatically adapts to phones and tablets — no sepa
 - Message counts and unread indicators on every filter
 
 ### Message List
-- Unread dot indicators
+- Unread dot indicators, persisted across reloads
+- **↓/↑ Sort order** — click in the list header to switch between newest-first (default) and oldest-first
 - **★ Star filter** — click ★ in list header to show only starred messages
 - **Multi-select** — hover a message to reveal checkbox; select multiple and bulk kill
 - Search/filter box works across callsign, subject, type, message number

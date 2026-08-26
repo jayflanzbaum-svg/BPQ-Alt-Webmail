@@ -1,5 +1,14 @@
 # Changelog
 
+## v1.6.4 — 2026-08-26
+
+### Added
+- **Sort order toggle** — the ↓/↑ button next to the message list title switches between newest-first (BPQ's default order) and oldest-first, persisted per browser.
+
+### Fixed
+- **Read messages showed as unread again after every page reload**, and the blue "My Received" sidebar badge (unread count) didn't match the total shown above the message list. Both were caused by the same bug: the read-message tracking (`readSet`) was intentionally never persisted, so a reload forgot everything you'd already opened — every message counted as unread again until re-clicked. Now persisted to `localStorage` like the killed-message list. (credit: Chris AE7GE)
+- **Compose cursor jumped to the end of the signature line when tabbing into the message body** on a brand-new message (not just Reply/Forward, which was fixed in v1.6.3). Root cause: setting the textarea's `.value` moves the browser's caret to the end of the new text; the previous fix only corrected this for Reply/Forward. Now applied unconditionally on every compose open. (credit: Chris AE7GE)
+
 ## v1.6.3 — 2026-08-25
 
 ### Added

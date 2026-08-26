@@ -174,6 +174,8 @@ body { font-family:var(--sans); font-size:1rem; background:var(--bg); color:var(
 .list-count { font-family:var(--mono); font-size:0.77rem; color:var(--text3) }
 #star-filter-btn { color:var(--text3) }
 #star-filter-btn.on { color:var(--amber); filter:drop-shadow(0 0 4px var(--amber)) }
+#sort-order-btn { color:var(--text3) }
+#sort-order-btn.on { color:var(--blue) }
 .srch-wrap { padding:6px 8px; border-bottom:1px solid var(--border); flex-shrink:0 }
 .srch-in { width:100%; padding:5px 8px; background:var(--bg); border:1px solid var(--border); border-radius:4px; color:var(--text); font-family:var(--mono); font-size:0.85rem; outline:none }
 .srch-in::placeholder { color:var(--text3) }
@@ -493,7 +495,7 @@ body { font-family:var(--sans); font-size:1rem; background:var(--bg); color:var(
 <!-- TOPBAR -->
 <div class="topbar">
   <div class="logo">BPQ-ALT-WEBMAIL</div>
-  <span style="font-family:var(--mono);font-size:0.69rem;color:var(--text3);margin-left:-6px">v1.6.3</span>
+  <span style="font-family:var(--mono);font-size:0.69rem;color:var(--text3);margin-left:-6px">v1.6.4</span>
   <div class="top-call" id="top-call">—</div>
   <span class="top-node" id="top-node">—</span>
   <div class="tspc"></div>
@@ -561,7 +563,7 @@ body { font-family:var(--sans); font-size:1rem; background:var(--bg); color:var(
     </div>
 
     <div class="sidebar-footer">
-      <div id="si-ver">v1.6.3</div>
+      <div id="si-ver">v1.6.4</div>
       <div>Node <span id="si-node">—</span></div>
       <div>User <span id="si-user">—</span></div>
       <div style="display:none">Msgs: <span id="si-count">—</span></div>
@@ -573,6 +575,8 @@ body { font-family:var(--sans); font-size:1rem; background:var(--bg); color:var(
   <div class="list-pane" id="list-pane">
     <div class="list-hd">
       <span class="list-title" id="list-title">My Received</span>
+      <button id="sort-order-btn" onclick="toggleSortOrder()" title="Newest first — click for oldest first"
+        style="background:none;border:none;cursor:pointer;font-size:0.92rem;color:var(--text3);padding:0 4px;line-height:1;transition:color .15s">↓</button>
       <button id="star-filter-btn" onclick="toggleStarFilter()" title="Filter by starred"
         style="background:none;border:none;cursor:pointer;font-size:0.92rem;color:var(--text3);padding:0 4px;line-height:1;transition:color .15s">★</button>
       <span class="list-count" id="list-count">—</span>
@@ -1417,9 +1421,11 @@ function cacheBody(msg,body) {
 }
 
 // ── READ TRACKING ──────────────────────────────────
-// Track which message numbers have been opened this session
-// Simple Set — no persistence needed, resets on reload which is fine
-let readSet = new Set();
+// Persisted like killedSet — without this, every reload forgot which
+// messages had been opened, so the unread dot (and the My Received
+// folder badge, which counts the same set) came back for everything.
+let readSet = new Set(LS.getJ('bpq_read')||[]);
+function saveRead() { LS.setJ('bpq_read',[...readSet].slice(-1000)); }
 
 // ── STATE ──────────────────────────────────────────
 let allMsgs=[], activeNum=null, killTarget=null;
@@ -1515,7 +1521,7 @@ function toggleSettings() {
     // Info row: version, callsign, status
     const info = document.createElement('div');
     info.className = 'm-cfg-info';
-    info.innerHTML = '<span>v1.6.3</span>' +
+    info.innerHTML = '<span>v1.6.4</span>' +
       '<span style="color:var(--accent);background:var(--accent-bg);border:1px solid var(--accent-border);padding:2px 7px;border-radius:4px">' + (callEl ? callEl.textContent : '—') + '</span>' +
       '<span id="m-status-pill" class="' + (statusPill ? statusPill.className : '') + '">' + (statusPill ? statusPill.textContent : '') + '</span>';
 
@@ -2228,6 +2234,7 @@ function getFiltered() {
   if(starFilterOn) msgs=msgs.filter(m=>{ const {starred}=evalRules(m); return starred||manualStars.has(m.num); });
   const q=document.getElementById('srch').value.toLowerCase();
   if(q) msgs=msgs.filter(m=>[m.from,m.to,m.subject,m.type,m.num,m.via].some(v=>(v||'').toLowerCase().includes(q)));
+  if(sortOldestFirst) msgs=[...msgs].reverse();
   return msgs;
 }
 function updateListCount(filtered) {
@@ -2242,6 +2249,19 @@ function filterList() {
 // Sort personal: SYSTEM floats to top
 // No auto-sort by starred — preserve natural message order
 function sortPersonal(msgs) { return [...msgs]; }
+
+// ── SORT ORDER ─────────────────────────────────────
+// BPQ's own list order (newest first) is the default; persisted per browser.
+let sortOldestFirst = LS.get('bpq_sort_oldest') === '1';
+function toggleSortOrder() {
+  sortOldestFirst = !sortOldestFirst;
+  LS.set('bpq_sort_oldest', sortOldestFirst ? '1' : '0');
+  const btn = document.getElementById('sort-order-btn');
+  btn.textContent = sortOldestFirst ? '↑' : '↓';
+  btn.title = sortOldestFirst ? 'Oldest first — click for newest first' : 'Newest first — click for oldest first';
+  btn.classList.toggle('on', sortOldestFirst);
+  const f = getFiltered(); renderList(f); updateListCount(f);
+}
 
 // ── STAR FILTER ────────────────────────────────────
 let starFilterOn = false;
@@ -2422,6 +2442,7 @@ async function openMsg(num) {
   const wasUnread=!readSet.has(num);
   readSet.add(num);
   if(wasUnread) {
+    saveRead();
     // Re-render subfilters to update unread dots/counts
     if(activeFolder==='Personal') buildPersFilters(allMsgs);
     if(activeFolder==='Bulls')    buildBullFilters(allMsgs);
@@ -2850,7 +2871,14 @@ function openCompose(to='',subj='',body='',title=''){
   document.getElementById('cmp-to').value=to;
   document.getElementById('cmp-subj').value=subj;
   const sig = CFG.signature || `73 de ${CFG.callsign||'N4SFL'}`;
-  document.getElementById('cmp-body').value=body||`\n\n${sig}`;
+  const bodyEl=document.getElementById('cmp-body');
+  bodyEl.value=body||`\n\n${sig}`;
+  // Assigning .value moves the browser's caret to the end of the new
+  // text (true whether this is a blank signature or quoted reply text) —
+  // reset it to the top so typing starts above that text, whether the
+  // user clicks into the body directly or tabs into it later.
+  bodyEl.setSelectionRange(0,0);
+  bodyEl.scrollTop=0;
   document.getElementById('cmp-ttl').textContent=title||(to?'Forward':'New Message');
   document.getElementById('cmp-status').textContent='';
   // Always default back to Personal — every caller that wants a different
@@ -2863,13 +2891,7 @@ function openCompose(to='',subj='',body='',title=''){
   const saved=LS.get('bpq_compose_w');
   if(saved && !isMobile) modal.style.width=saved;
   document.getElementById('cmp-ov').classList.add('open');
-  setTimeout(()=>{
-    const el=document.getElementById(to?'cmp-body':'cmp-to');
-    el.focus();
-    // Reply/forward pre-fill quoted text below the cursor — without this
-    // the browser parks the caret at the end of that text, off-screen.
-    if(to){ el.setSelectionRange(0,0); el.scrollTop=0; }
-  },60);
+  setTimeout(()=>document.getElementById(to?'cmp-body':'cmp-to').focus(),60);
 }
 function closeCompose(){
   const modal=document.querySelector('#cmp-ov .modal');
@@ -3798,6 +3820,12 @@ async function init(){
   applyFont();
   applyLineSpacing();
   refreshAbDatalist();
+  if (sortOldestFirst) {
+    const btn = document.getElementById('sort-order-btn');
+    btn.textContent = '↑';
+    btn.title = 'Oldest first — click for newest first';
+    btn.classList.add('on');
+  }
   initResize('rh1','sidebar',140,'bpq_sb_width');
   initResize('rh2','list-pane',160,'bpq_lp_width');
 
