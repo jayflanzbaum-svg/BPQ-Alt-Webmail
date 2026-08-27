@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.6.5 — 2026-08-27
+
+### Fixed
+- **"My Received" sidebar unread badge didn't update when a message was read or killed** — it stayed on the old count until the next auto-refresh or a full page reload. It only recomputed from a server round-trip (`updateFolderBadges()`), which nothing local triggered. Now a lightweight local recompute (`updateActiveFolderBadge()`) runs immediately after marking a message read and after killing a message. (credit: Chris AE7GE)
+- **Manual refresh (↻) gave no feedback when there was nothing new** — it silently re-fetched and diffed the list but showed no toast unless new mail arrived, and the "Xm ago" label only updated on a lazy 60-second timer, so clicking it looked like it did nothing. It now shows "No new messages" or the error, and updates the "ago" label immediately, on manual clicks only (the background auto-refresh stays silent). Also added a hover tooltip to the ↻ button.
+
 ## v1.6.4 — 2026-08-26
 
 ### Added

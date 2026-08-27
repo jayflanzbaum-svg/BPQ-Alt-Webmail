@@ -495,12 +495,12 @@ body { font-family:var(--sans); font-size:1rem; background:var(--bg); color:var(
 <!-- TOPBAR -->
 <div class="topbar">
   <div class="logo">BPQ-ALT-WEBMAIL</div>
-  <span style="font-family:var(--mono);font-size:0.69rem;color:var(--text3);margin-left:-6px">v1.6.4</span>
+  <span style="font-family:var(--mono);font-size:0.69rem;color:var(--text3);margin-left:-6px">v1.6.5</span>
   <div class="top-call" id="top-call">—</div>
   <span class="top-node" id="top-node">—</span>
   <div class="tspc"></div>
   <span id="refresh-lbl"></span>
-  <button class="tbtn" onclick="silentRefresh()">↻</button>
+  <button class="tbtn" onclick="silentRefresh(true)" title="Refresh messages">↻</button>
   <button class="tbtn" id="theme-btn" onclick="toggleTheme()">☀</button>
   <!-- font size controls -->
   <button class="tbtn" onclick="adjustFont(-1)" title="Decrease font size">A-</button>
@@ -563,7 +563,7 @@ body { font-family:var(--sans); font-size:1rem; background:var(--bg); color:var(
     </div>
 
     <div class="sidebar-footer">
-      <div id="si-ver">v1.6.4</div>
+      <div id="si-ver">v1.6.5</div>
       <div>Node <span id="si-node">—</span></div>
       <div>User <span id="si-user">—</span></div>
       <div style="display:none">Msgs: <span id="si-count">—</span></div>
@@ -1521,7 +1521,7 @@ function toggleSettings() {
     // Info row: version, callsign, status
     const info = document.createElement('div');
     info.className = 'm-cfg-info';
-    info.innerHTML = '<span>v1.6.4</span>' +
+    info.innerHTML = '<span>v1.6.5</span>' +
       '<span style="color:var(--accent);background:var(--accent-bg);border:1px solid var(--accent-border);padding:2px 7px;border-radius:4px">' + (callEl ? callEl.textContent : '—') + '</span>' +
       '<span id="m-status-pill" class="' + (statusPill ? statusPill.className : '') + '">' + (statusPill ? statusPill.textContent : '') + '</span>';
 
@@ -1529,7 +1529,7 @@ function toggleSettings() {
     const actions = document.createElement('div');
     actions.className = 'm-cfg-actions';
     actions.innerHTML =
-      '<button class="tbtn" onclick="silentRefresh()">↻ Refresh</button>' +
+      '<button class="tbtn" onclick="silentRefresh(true)" title="Refresh messages">↻ Refresh</button>' +
       '<button class="tbtn" onclick="toggleTheme()">☀ Theme</button>' +
       '<button class="tbtn" onclick="adjustFont(-1)">A-</button>' +
       '<button class="tbtn" onclick="adjustFont(1)">A+</button>' +
@@ -2448,6 +2448,7 @@ async function openMsg(num) {
     if(activeFolder==='Bulls')    buildBullFilters(allMsgs);
     if(activeFolder==='NTS')      buildNtsFilters(allMsgs);
     updateMobileNavBadge();
+    updateActiveFolderBadge();
   }
 
   const filtered=getFiltered();
@@ -2656,6 +2657,7 @@ async function doKill() {
     allMsgs = allMsgs.filter(m=>m.num!==n);
   }
   saveKilled();
+  updateActiveFolderBadge();
 
   // Clear selection
   selectedNums.clear();
@@ -3608,14 +3610,15 @@ const REFRESH_MS=5*60*1000;
 let refreshTimer=null, lastRefresh=null;
 function startRefresh(){ stopRefresh(); refreshTimer=setInterval(silentRefresh,REFRESH_MS); }
 function stopRefresh(){ if(refreshTimer){clearInterval(refreshTimer);refreshTimer=null;} }
-setInterval(()=>{
+function updateRefreshLbl(){
   const el=document.getElementById('refresh-lbl');
   if(!el||!lastRefresh) return;
   const m=Math.round((Date.now()-lastRefresh)/60000);
   el.textContent=m<1?'just refreshed':`${m}m ago`;
-},60000);
+}
+setInterval(updateRefreshLbl,60000);
 
-async function silentRefresh(){
+async function silentRefresh(manual=false){
   if(!CFG.key) return;
   try {
     const k=await autoDetectKey();
@@ -3626,20 +3629,38 @@ async function silentRefresh(){
     const freshNums=new Set(fresh.map(m=>m.num));
     const added=fresh.filter(m=>!oldNums.has(m.num));
     const removed=allMsgs.filter(m=>!freshNums.has(m.num)&&!killedSet.has(m.num));
-    if(!added.length&&!removed.length){lastRefresh=new Date();return;}
+    if(!added.length&&!removed.length){
+      lastRefresh=new Date(); updateRefreshLbl();
+      if(manual) toast('No new messages','info');
+      return;
+    }
     for(const m of added) allMsgs.unshift(m);
     for(const m of removed) allMsgs=allMsgs.filter(x=>x.num!==m.num);
     if(activeFolder==='Personal') buildPersFilters(allMsgs);
     if(activeFolder==='Bulls') buildBullFilters(allMsgs);
     if(activeFolder==='NTS') buildNtsFilters(allMsgs);
     const f=getFiltered(); renderList(f); updateListCount(f);
-    lastRefresh=new Date();
+    lastRefresh=new Date(); updateRefreshLbl();
     if(added.length) toast(`${added.length} new message${added.length>1?'s':''}`, 'info');
     updateFolderBadges();
-  }catch(_){}
+  }catch(e){
+    if(manual) toast('Refresh failed: '+e.message,'err');
+  }
 }
 
 // ── SIDEBAR UNREAD BADGES ─────────────────────────────
+// Update the sidebar unread badge for the currently open folder from local
+// state (allMsgs/readSet/killedSet), without a server round-trip — keeps the
+// count in sync the instant a message is read or killed instead of waiting
+// for the next full updateFolderBadges() poll.
+function updateActiveFolderBadge(){
+  const el=document.getElementById('bdg-'+activeFolder);
+  if(!el) return;
+  const unread=allMsgs.filter(m=>!killedSet.has(m.num)&&!readSet.has(m.num)).length;
+  if(unread>0){ el.textContent=unread; el.style.display=''; }
+  else { el.style.display='none'; }
+}
+
 async function updateFolderBadges(){
   if(!CFG.key) return;
   const folders = [
