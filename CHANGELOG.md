@@ -1,5 +1,13 @@
 # Changelog
 
+## v1.6.6 — 2026-08-30
+
+### Fixed
+- **Sent messages appeared in "My Received" after a LinBPQ restart** (credit: Chris AE7GE, with a full step-by-step repro). Three bugs stacked up:
+  1. **The login-recovery path in `bpqGet()` returned the wrong page.** A LinBPQ restart invalidates the saved WebMail session key; on the next page load BPQ answers the `WMtoMe` request with its login form, the app logs back in — and then returned BPQ's *post-signon landing page* as if it were the requested `WMtoMe` list. That landing page includes mail **from** the user, which is how sent messages entered the received list. Now, after a successful login, the originally requested URL is re-fetched under the fresh key (mirroring what the stale-key-rotation path already did).
+  2. **The client-side "addressed to me" safety filter was a substring match**, so a sent message whose destination *email address contains the user's callsign* (e.g. `to:CHRIS.AE7GE@gmail.com` for AE7GE) slipped through — which is why only internet-bound sent mail leaked, never BBS-to-BBS sent mail. The filter (`filterPersonal()`) now token-matches the `to` field: exact callsign, `CALL@route`, or `CALL-SSID` only.
+  3. **The topbar "● N msgs" status pill was only written by a full folder load**, so after auto/manual refresh pruned the leaked messages the pill kept showing the stale count until the folder was clicked again. `silentRefresh()` now updates it, applies the same Personal filter to refreshed lists, and `updateFolderBadges()` applies it to the sidebar unread badge too.
+
 ## v1.6.5 — 2026-08-27
 
 ### Fixed

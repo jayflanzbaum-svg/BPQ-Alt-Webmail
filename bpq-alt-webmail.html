@@ -495,7 +495,7 @@ body { font-family:var(--sans); font-size:1rem; background:var(--bg); color:var(
 <!-- TOPBAR -->
 <div class="topbar">
   <div class="logo">BPQ-ALT-WEBMAIL</div>
-  <span style="font-family:var(--mono);font-size:0.69rem;color:var(--text3);margin-left:-6px">v1.6.5</span>
+  <span style="font-family:var(--mono);font-size:0.69rem;color:var(--text3);margin-left:-6px">v1.6.6</span>
   <div class="top-call" id="top-call">—</div>
   <span class="top-node" id="top-node">—</span>
   <div class="tspc"></div>
@@ -563,7 +563,7 @@ body { font-family:var(--sans); font-size:1rem; background:var(--bg); color:var(
     </div>
 
     <div class="sidebar-footer">
-      <div id="si-ver">v1.6.5</div>
+      <div id="si-ver">v1.6.6</div>
       <div>Node <span id="si-node">—</span></div>
       <div>User <span id="si-user">—</span></div>
       <div style="display:none">Msgs: <span id="si-count">—</span></div>
@@ -1521,7 +1521,7 @@ function toggleSettings() {
     // Info row: version, callsign, status
     const info = document.createElement('div');
     info.className = 'm-cfg-info';
-    info.innerHTML = '<span>v1.6.5</span>' +
+    info.innerHTML = '<span>v1.6.6</span>' +
       '<span style="color:var(--accent);background:var(--accent-bg);border:1px solid var(--accent-border);padding:2px 7px;border-radius:4px">' + (callEl ? callEl.textContent : '—') + '</span>' +
       '<span id="m-status-pill" class="' + (statusPill ? statusPill.className : '') + '">' + (statusPill ? statusPill.textContent : '') + '</span>';
 
@@ -1831,7 +1831,20 @@ async function bpqGet(url, isRetry) {
       CFG.key = key; saveCFG();
       try { document.getElementById('cfg-key').value = key; } catch(_){}
     }
-    if (key) return postLoginHtml;
+    if (key) {
+      // Don't return the post-login landing page — it's a different listing
+      // than what was asked for (it includes mail FROM the user, so callers
+      // parsing it as WMtoMe would show sent messages in My Received).
+      // Re-fetch the originally requested URL under the fresh key instead.
+      const keyedUrl = requestedKey ? url.replace(requestedKey, key) : url;
+      console.debug('[BPQ] logged in, re-fetching original URL with fresh key:', keyedUrl);
+      const keyedRetry = await queuedFetch(keyedUrl, { credentials:'include', headers: authHeaders() });
+      if (keyedRetry.ok) {
+        const keyedHtml = await keyedRetry.text();
+        if (!isLoginPage(keyedHtml)) return keyedHtml;
+      }
+      return postLoginHtml;
+    }
     // No key yet — retry the originally-requested URL now that we are authenticated
     console.debug('[BPQ] no key in post-login response, retrying original URL:', url);
     const retry = await queuedFetch(url, { credentials:'include', headers: authHeaders() });
@@ -2250,6 +2263,26 @@ function filterList() {
 // No auto-sort by starred — preserve natural message order
 function sortPersonal(msgs) { return [...msgs]; }
 
+// Personal (My Received): keep only P-type messages addressed to us.
+// WMtoMe should handle this, but some LinBPQ responses mix in other mail
+// (and the post-login landing page lists mail FROM the user too).
+// The to field must match the callsign as a token — plain, @route, or -SSID —
+// not as a substring: a destination email address can contain the user's
+// callsign (e.g. to:CHRIS.AE7GE@gmail.com) without being addressed to them.
+function filterPersonal(msgs) {
+  const myCall = (CFG.callsign||'').toUpperCase();
+  const toMe = t => {
+    const b = (t||'').trim().toUpperCase();
+    return b === myCall || b.startsWith(myCall+'@') || b.startsWith(myCall+'-');
+  };
+  return msgs.filter(m => {
+    const t = (m.type||'').toUpperCase();
+    if (!t.startsWith('P')) return false;
+    if (myCall && m.to && !toMe(m.to)) return false;
+    return true;
+  });
+}
+
 // ── SORT ORDER ─────────────────────────────────────
 // BPQ's own list order (newest first) is the default; persisted per browser.
 let sortOldestFirst = LS.get('bpq_sort_oldest') === '1';
@@ -2324,18 +2357,8 @@ async function loadFolder(folder, label) {
     }
     let msgs=parseList(html);
 
-    // Personal (My Received): filter to only P-type messages addressed to us
-    // WMtoMe should handle this but some LinBPQ versions return mixed types
     if(folder==='Personal') {
-      const myCall=(CFG.callsign||'').toUpperCase();
-      msgs = msgs.filter(m => {
-        const t = (m.type||'').toUpperCase();
-        if (!t.startsWith('P')) return false;
-        if (myCall && m.to && !m.to.toUpperCase().includes(myCall)) return false;
-        return true;
-      });
-
-      msgs=sortPersonal(msgs);
+      msgs=sortPersonal(filterPersonal(msgs));
       persFilter='ALL';
       buildPersFilters(msgs);
       document.getElementById('sf-pers-wrap').classList.add('open');
@@ -3624,7 +3647,7 @@ async function silentRefresh(manual=false){
     const k=await autoDetectKey();
     if(k&&k!==CFG.key){CFG.key=k;saveCFG();document.getElementById('cfg-key').value=k;toast('Session key refreshed','info');}
     let fresh=parseList(await bpqGet(base()+FOLDER_PATHS[activeFolder](CFG.key)));
-    if(activeFolder==='Personal') fresh=sortPersonal(fresh);
+    if(activeFolder==='Personal') fresh=sortPersonal(filterPersonal(fresh));
     const oldNums=new Set(allMsgs.map(m=>m.num));
     const freshNums=new Set(fresh.map(m=>m.num));
     const added=fresh.filter(m=>!oldNums.has(m.num));
@@ -3640,6 +3663,7 @@ async function silentRefresh(manual=false){
     if(activeFolder==='Bulls') buildBullFilters(allMsgs);
     if(activeFolder==='NTS') buildNtsFilters(allMsgs);
     const f=getFiltered(); renderList(f); updateListCount(f);
+    setStatus('ok',`● ${allMsgs.length} msgs`);
     lastRefresh=new Date(); updateRefreshLbl();
     if(added.length) toast(`${added.length} new message${added.length>1?'s':''}`, 'info');
     updateFolderBadges();
@@ -3671,7 +3695,8 @@ async function updateFolderBadges(){
   for(const f of folders){
     try {
       const html = await bpqGet(base()+FOLDER_PATHS[f.key](CFG.key));
-      const msgs = parseList(html).filter(m=>!killedSet.has(m.num));
+      let msgs = parseList(html).filter(m=>!killedSet.has(m.num));
+      if(f.key==='Personal') msgs = filterPersonal(msgs);
       const unread = msgs.filter(m=>!readSet.has(m.num)).length;
       const el = document.getElementById(f.id);
       if(!el) continue;
