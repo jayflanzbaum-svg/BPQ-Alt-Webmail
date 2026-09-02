@@ -495,7 +495,7 @@ body { font-family:var(--sans); font-size:1rem; background:var(--bg); color:var(
 <!-- TOPBAR -->
 <div class="topbar">
   <div class="logo">BPQ-ALT-WEBMAIL</div>
-  <span style="font-family:var(--mono);font-size:0.69rem;color:var(--text3);margin-left:-6px">v1.6.6</span>
+  <span style="font-family:var(--mono);font-size:0.69rem;color:var(--text3);margin-left:-6px">v1.6.7</span>
   <div class="top-call" id="top-call">—</div>
   <span class="top-node" id="top-node">—</span>
   <div class="tspc"></div>
@@ -563,7 +563,7 @@ body { font-family:var(--sans); font-size:1rem; background:var(--bg); color:var(
     </div>
 
     <div class="sidebar-footer">
-      <div id="si-ver">v1.6.6</div>
+      <div id="si-ver">v1.6.7</div>
       <div>Node <span id="si-node">—</span></div>
       <div>User <span id="si-user">—</span></div>
       <div style="display:none">Msgs: <span id="si-count">—</span></div>
@@ -1521,7 +1521,7 @@ function toggleSettings() {
     // Info row: version, callsign, status
     const info = document.createElement('div');
     info.className = 'm-cfg-info';
-    info.innerHTML = '<span>v1.6.6</span>' +
+    info.innerHTML = '<span>v1.6.7</span>' +
       '<span style="color:var(--accent);background:var(--accent-bg);border:1px solid var(--accent-border);padding:2px 7px;border-radius:4px">' + (callEl ? callEl.textContent : '—') + '</span>' +
       '<span id="m-status-pill" class="' + (statusPill ? statusPill.className : '') + '">' + (statusPill ? statusPill.textContent : '') + '</span>';
 
@@ -2068,11 +2068,14 @@ function buildSubfilters(wrapId, msgs, keyFn, activeVal, onClickFn, pinFirst) {
 // ═══════════════════════════════════════════════════
 let headerFetchAbort = null; // AbortController to cancel in-flight fetches on folder switch
 
+// Returns the RAW "From:" value out of the BPQ header block — domain suffix
+// and all (e.g. "KJ4XYZ@winlink.org"). Callers run it through baseCall() when
+// they want the bare callsign for display/grouping, and keep the full value on
+// msg.hdrFromFull so replyAddr() can route a reply back out.
 function extractHdrFrom(bodyText) {
-  // Match "From: CALLSIGN" at start of body (may have @domain suffix)
   const m = bodyText.match(/^From:\s*([^\r\n]+)/mi);
   if (!m) return null;
-  return baseCall(m[1].trim());
+  return m[1].trim() || null;
 }
 
 async function fetchMsgHeader(msg) {
@@ -2092,7 +2095,9 @@ async function fetchMsgHeader(msg) {
     if (!r.ok) return;
     const html = await r.text();
     const body = parseBody(html);
-    msg.hdrFrom = (body ? extractHdrFrom(body) : null) || baseCall(msg.from);
+    const rawFrom = body ? extractHdrFrom(body) : null;
+    msg.hdrFromFull = rawFrom || null;
+    msg.hdrFrom = rawFrom ? baseCall(rawFrom) : baseCall(msg.from);
   } catch(_) {
     msg.hdrFrom = baseCall(msg.from);
   }
@@ -2520,7 +2525,8 @@ async function openMsg(num) {
         if(msg.hdrFrom===undefined) {
           const hf=extractHdrFrom(body);
           if(hf) {
-            msg.hdrFrom=hf;
+            msg.hdrFromFull=hf;
+            msg.hdrFrom=baseCall(hf);
             if(activeFolder==='Personal'){ buildPersFilters(allMsgs); renderList(getFiltered()); }
           }
         }
@@ -2882,14 +2888,32 @@ async function doPrev() {
 // ═══════════════════════════════════════════════════
 //  COMPOSE / REPLY / SEND / DOWNLOAD
 // ═══════════════════════════════════════════════════
+// The address a reply must actually be sent to. persFromKey() returns the bare
+// callsign used for the reader's From line and the Personal-folder filters —
+// that is the wrong thing to drop into the To field whenever the sender's
+// address carries a routing domain. "KJ4XYZ@winlink.org" cut down to "KJ4XYZ"
+// no longer tells BPQ to hand the reply to the Winlink gateway (it now looks
+// like a plain local/BBS callsign), and the same goes for a hierarchical
+// home-BBS suffix such as "@KE4MOB.#CFL.FL.USA.NOAM". So keep the whole
+// address whenever the message header gave us one. "SMTP:user@domain" is
+// already carried through intact (and case-intact) by baseCall(), so those
+// keep going down the persFromKey() path untouched.
+function replyAddr(m) {
+  const full = (m.hdrFromFull || '').trim();
+  if (full && !/^smtp:/i.test(full)) {
+    const at = full.indexOf('@');
+    if (at > 0 && at < full.length - 1) return full.toUpperCase();
+  }
+  return persFromKey(m);
+}
 function doReply(){
   const msg=allMsgs.find(m=>m.num===activeNum); if(!msg)return;
   const sig = CFG.signature || `73 de ${CFG.callsign||'N4SFL'}`;
   const re=msg.subject.replace(/^RE:\s*/i,'');
-  // Use persFromKey(), not the raw list-row msg.from — the list column is
-  // unreliable (see LAZY HEADER FETCH comment above) and for internet mail
-  // it never carries the full "SMTP:user@domain" address anyway.
-  const replyTo=persFromKey(msg);
+  // Use the header-derived address, not the raw list-row msg.from — the list
+  // column is unreliable (see LAZY HEADER FETCH comment above) and never
+  // carries a full "SMTP:user@domain" / "CALL@winlink.org" address anyway.
+  const replyTo=replyAddr(msg);
   openCompose(replyTo,`RE: ${re}`,`\n\n${sig}\n\n--- #${msg.num} from ${replyTo} ---\n${msg.body||''}`,'Reply');
 }
 function openCompose(to='',subj='',body='',title=''){

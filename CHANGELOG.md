@@ -1,5 +1,10 @@
 # Changelog
 
+## v1.6.7 — 2026-09-02
+
+### Fixed
+- **Reply to a Winlink-gated message dropped the `@winlink.org` off the sender's address**, leaving a bare callsign in the To field. BPQ then has no way to tell the reply is destined for the Winlink gateway — `KJ4XYZ` looks like an ordinary local/BBS callsign — so the reply routes by the BBS routing table (or sits locally) instead of going back out to Winlink. Same root cause as the v1.6.1 `SMTP:user@domain` bug: `baseCall()` strips everything after the `@` because a BBS *hierarchical* suffix is routing noise for display purposes, and `doReply()` was reusing that display value as the reply address. The full `From:` header value is now kept alongside the stripped one (`msg.hdrFromFull`), and a new `replyAddr()` puts the complete address in the To field whenever the header carried a domain — including a hierarchical home-BBS suffix such as `@KE4MOB.#CFL.FL.USA.NOAM`, which BPQ also needs in order to route a reply off-node. The reader's From line and the Personal-folder sender filters still show/group by the bare callsign.
+
 ## v1.6.6 — 2026-08-30
 
 ### Fixed
