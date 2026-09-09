@@ -1970,7 +1970,11 @@ function parseList(html) {
     // Reliable signal: via is a known system sender OR from doesn't look
     // like a callsign (callsigns are all-caps alphanumeric, 3-7 chars).
     const looksLikeCallsign = s => /^[A-Z0-9]{3,7}(-\d{1,2})?$/.test(s);
-    const looksLikeSender   = s => /^[A-Z0-9@]{2,12}$/i.test(s) && !s.includes(' ');
+    // Internet-mail rows put "SMTP:user@domain" in the via column instead of
+    // a callsign — that colon/dot content fails the plain callsign pattern,
+    // so without this the heuristic below never fires and the first subject
+    // word gets misread as the from field (dropped from the subject).
+    const looksLikeSender   = s => (/^[A-Z0-9@]{2,12}$/i.test(s) || /^smtp:/i.test(s)) && !s.includes(' ');
 
     if (via && !via.startsWith('@') && looksLikeSender(via) && !looksLikeCallsign(from)) {
       // via is actually the FROM field, from is the first subject word
