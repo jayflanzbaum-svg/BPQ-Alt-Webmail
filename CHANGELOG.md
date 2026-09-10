@@ -1,5 +1,10 @@
 # Changelog
 
+## v1.6.8 — 2026-09-10
+
+### Fixed
+- **SMTP/RMS messages dropped the first word of the subject in the reading-pane header** (credit: Chris AE7GE). Directory listing rows for internet-mail messages have no `via`/BBS column, so the sender's `SMTP:user@domain` address lands in that column instead, shifting everything else left by one. `parseList()` already had a heuristic to detect and correct this shift, but its `looksLikeSender()` check rejected the `SMTP:` pattern (the colon/dot fail the plain callsign regex), so the correction never fired — the first subject word was misread as the `from` field and silently dropped (e.g. "This is a test message." rendered as "is a test message."). `looksLikeSender()` now also recognizes the `SMTP:` prefix, matching the convention `baseCall()` already uses elsewhere for the same header format.
+
 ## v1.6.7 — 2026-09-02
 
 ### Fixed
