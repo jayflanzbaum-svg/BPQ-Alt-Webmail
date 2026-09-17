@@ -22,9 +22,10 @@ opens, so refreshing the page won't re-fire the compose window.
 | `to` | **To** field | Uppercased automatically. Accepts a callsign (`K1AJD`), area routing (`04543@NTSME`), or Winlink address (`N4SFL@winlink.org`). |
 | `subject` | **Subject** field | Free text. |
 | `body` | **Message** textarea | Free text. Use `%0A` for newlines. |
-| `type` | **Type** dropdown | One of `P` / `B` / `T`. Anything else (or omitted) falls through to `P`. |
+| `type` | **Type** dropdown | One of `P` / `B` / `T`. Anything else (or omitted) falls through to `P`. `T` still sends plain NTS traffic — it just no longer has a dropdown entry to select (since v1.7.0), so the compose window shows `P` while the message goes out as type `T`. |
 
-Form-style types (`T/RRI` radiogram, `B/PKTNET` check-in) are **not**
+Form-style types (`T/RRI` radiogram — shown in the dropdown as
+“T = NTS (Radiogram Form)” — and `B/PKTNET` check-in) are **not**
 supported via the hash — those need structured field data, not a
 single pre-filled body string. Use the form by hand for those.
 

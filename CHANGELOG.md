@@ -26,6 +26,7 @@ categories you do not want to see.
 
 ### Changed
 - **QRZ is no longer a section of the address book.** It was a full-width block at the top of the modal despite being one-time setup. The only entry point now is a small **🔍 look up on QRZ** link on the contact card: with credentials saved it simply looks the callsign up, and without them it opens a compact “Connect QRZ.com” prompt naming the callsign, then carries straight on with the lookup once you sign in. The only always-visible trace is one dim `QRZ: <user>` / `QRZ not connected` link in the modal footer, which reopens the same prompt to change or disconnect the account.
+- **The compose Type dropdown no longer offers plain “T – NTS Traffic”**, and the radiogram entry is now labelled **“T = NTS (Radiogram Form)”** — NTS traffic is composed through the radiogram form rather than typed freehand. Messages still go out as wire type `T`: the form's REVIEW step and the documented `#compose?type=T` dashboard link both set the type directly now that it is not a dropdown entry.
 - The per-contact **✉ compose button** in the contact list is much larger (0.77rem → 1.7rem) — it is the control reached for most often there and was previously a pinprick beside the delete ✕.
 
 ### Fixed

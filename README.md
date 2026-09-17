@@ -49,7 +49,7 @@ The same single HTML file automatically adapts to phones and tablets — no sepa
 - **Reject filter** — block future messages by FROM callsign or TO category directly from the message you're reading. Writes the entry into BPQ's native Mail config reject list (same as the Reject From / Reject To fields on the Configuration page) — no need to leave the webmail interface
 
 ### NTS Traffic & Form Composers
-- **NTS Radiogram (T/RRI) composer** — full ARRL radiogram form with REVIEW step, HX handling-code meanings, HX variables (HXA/HXB/HXF), auto-incrementing message number, ARRL extended-punctuation substitution (X-RAY, COMMA, QUERY, R decimal), and parsing of received radiograms back into the form
+- **NTS Radiogram composer** (Type → **T = NTS (Radiogram Form)**) — the way NTS traffic is composed; plain freehand “T” is no longer offered in the dropdown, though messages still go out as wire type `T`. Full ARRL radiogram form with REVIEW step, HX handling-code meanings, HX variables (HXA/HXB/HXF), auto-incrementing message number, ARRL extended-punctuation substitution (X-RAY, COMMA, QUERY, R decimal), and parsing of received radiograms back into the form
 - **PKTNET Check-In composer (B/PKTNET)** — form-style check-in message (form concept N3MEL, form created KN4LQN)
 - **NTS Delivered button** — one click marks any T-type message delivered via BPQ's `WMNDel`, with delivered-state tracking and NTS sub-folders
 - **Compose deep links** — open a pre-filled compose window from any dashboard or bookmark via `#compose?to=CALL&subject=...` (see README-dashboard-links.md); works in already-open tabs too

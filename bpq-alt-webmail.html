@@ -838,7 +838,7 @@ body { font-family:var(--sans); font-size:1rem; background:var(--bg); color:var(
           <button type="button" class="btn" onclick="openAddressBook()" title="Open the address book" style="flex:0 0 auto">📇</button>
         </div>
       </div>
-      <div class="field"><span class="field-lbl">Type</span><select class="field-in" id="cmp-type" style="width:auto" onchange="onComposeTypeChange()"><option value="P">P – Personal</option><option value="B">B – Bulletin</option><option value="B/PKTNET">B/PKTNET – PKTNET Check-In (form)</option><option value="T">T – NTS Traffic</option><option value="T/RRI">T/RRI – NTS Radiogram (form)</option></select></div>
+      <div class="field"><span class="field-lbl">Type</span><select class="field-in" id="cmp-type" style="width:auto" onchange="forcedType=null;onComposeTypeChange()"><option value="P">P – Personal</option><option value="B">B – Bulletin</option><option value="B/PKTNET">B/PKTNET – PKTNET Check-In (form)</option><option value="T/RRI">T = NTS (Radiogram Form)</option></select></div>
       <div id="cmp-normal-fields">
         <div class="field"><span class="field-lbl">Subject</span><input class="field-in" id="cmp-subj" placeholder="subject line"></div>
         <div class="field"><span class="field-lbl">Message</span><textarea class="field-ta" id="cmp-body" placeholder="message text…"></textarea></div>
@@ -4419,6 +4419,7 @@ function openCompose(to='',subj='',body='',title=''){
   // type (Bulletin, Traffic, a form mode) sets cmp-type explicitly right
   // after calling openCompose(), so this dropdown must never carry over
   // the type from whatever was sent last.
+  forcedType = null;
   document.getElementById('cmp-type').value = 'P';
   onComposeTypeChange();
   // Title goes on AFTER onComposeTypeChange(), which sets its own title per
@@ -4438,6 +4439,7 @@ function closeCompose(){
   // should bump counters / clear form fields.
   rgPendingNum = null;
   pkPendingClear = false;
+  forcedType = null;
   document.getElementById('cmp-ov').classList.remove('open');
   clearDraft();
 }
@@ -4494,8 +4496,13 @@ function processHashAction(){
   try { history.replaceState(null, '', location.pathname + location.search); }
   catch(e) { location.hash = ''; }
   openCompose(to, subj, body, 'New Message');
-  if (['P','B','T'].includes(type)) {
+  if (type === 'T') {
+    // Plain NTS traffic is no longer a dropdown entry, but the documented
+    // #compose?type=T link must still put a type-T message on the air.
+    forcedType = 'T';
+  } else if (['P','B'].includes(type)) {
     document.getElementById('cmp-type').value = type;
+    onComposeTypeChange();
   }
 }
 // Self-driving trigger: poll briefly until the compose modal exists in the DOM,
@@ -4566,10 +4573,14 @@ function bpqReplyNotice(ifr) {
 
 async function doSend(){
   let type=document.getElementById('cmp-type').value;
-  // Form-style types use REVIEW instead of immediate send — stage
-  // values into the standard compose form, user clicks SEND again.
-  if (type === 'T/RRI')   { rgReview(); return; }
-  if (type === 'B/PKTNET'){ pkReview(); return; }
+  if (forcedType) {
+    type = forcedType;          // already reviewed, or set by a deep link
+  } else {
+    // Form-style types use REVIEW instead of immediate send — stage
+    // values into the standard compose form, user clicks SEND again.
+    if (type === 'T/RRI')   { rgReview(); return; }
+    if (type === 'B/PKTNET'){ pkReview(); return; }
+  }
   const st=document.getElementById('cmp-status');
   // Callsigns are conventionally upper-case, but an "SMTP:user@domain"
   // address must keep its original case — force-uppercasing it can break
@@ -4977,6 +4988,7 @@ function parseRadiogramToForm() {
   const p = rgParseRadiogram(msg.body);
   if (!p) { toast('Could not parse radiogram from this message', 'err'); return; }
   openCompose();
+  forcedType = null;
   document.getElementById('cmp-type').value = 'T/RRI';
   onComposeTypeChange();
   // Preamble (we DO overwrite msg # here — user explicitly opened a
@@ -5141,9 +5153,16 @@ function pkReview() {
 // the To field is hidden (the form generates the routing) and the
 // send button is relabeled REVIEW (clicking it staging the result
 // in the standard compose form for a final look before sending).
+// The Type dropdown no longer offers plain "T": raw NTS traffic is reached
+// either through the radiogram form's REVIEW step or a #compose?type=T deep
+// link. In both cases the modal sits in plain-compose mode while the message
+// still has to go out as wire type T, so that type is carried here rather than
+// in the dropdown.
+let forcedType = null;
+
 function onComposeTypeChange() {
   const type = document.getElementById('cmp-type').value;
-  const isRg = (type === 'T/RRI');
+  const isRg = (type === 'T/RRI') && !forcedType;
   const isPk = (type === 'B/PKTNET');
   const isForm = isRg || isPk;
   document.getElementById('cmp-normal-fields').style.display = isForm ? 'none' : '';
@@ -5173,8 +5192,10 @@ function rgReview() {
   // record it as the new "last sent" and bump the auto-increment.
   const num = parseInt(document.getElementById('rg-msgnum').value, 10);
   rgPendingNum = Number.isFinite(num) ? num : null;
-  const typeSel = document.getElementById('cmp-type');
-  typeSel.value = 'T';
+  // Was: typeSel.value = 'T'. The dropdown has no plain-T entry any more, so
+  // the wire type rides alongside instead and onComposeTypeChange() drops the
+  // form for the plain review fields.
+  forcedType = 'T';
   onComposeTypeChange();
   document.getElementById('cmp-to').value   = rg.to;
   document.getElementById('cmp-subj').value = rg.subj;
