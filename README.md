@@ -30,6 +30,7 @@ The same single HTML file automatically adapts to phones and tablets — no sepa
 - **Unread badges** — My Received, Bulletins, and NTS Traffic show unread message counts in the sidebar, updated on every auto-refresh
 - **My Received subfilters** — filter by sender callsign; SYSTEM pinned at top
 - **Bulletin subfilters** — filter by TO category (SITREP, TECHNI, ARISS, etc.)
+- **Subscribe / unsubscribe to bulletin categories** — right-click (or long-press on a phone) any TO entry in the Bulletins tree, or any bulletin in the message list, to stop seeing that category. `WX`, `PKTNET` and the like drop out of the tree's *ALL* roll-up, out of the message list and out of the folder's unread badge. This is a local view filter only — nothing is killed or rejected on the BBS (unlike **Reject**, which asks the node itself to stop accepting the traffic), so unsubscribed categories stay listed at the bottom of the tree, dimmed and marked ⊘, ready to resubscribe. Picking one explicitly still shows its mail
 - Message counts and unread indicators on every filter
 
 ### Message List
@@ -38,11 +39,13 @@ The same single HTML file automatically adapts to phones and tablets — no sepa
 - **★ Star filter** — click ★ in list header to show only starred messages
 - **Multi-select** — hover a message to reveal checkbox; select multiple and bulk kill
 - Search/filter box works across callsign, subject, type, message number
+- **Right-click a message** (long-press on touch) for quick actions: unsubscribe from that bulletin category, save the sender to the address book, or reply
 
 ### Message Reader
 - FROM, TO, DATE, TYPE, MSG#, BID, SIZE in header
 - Reply, Forward, Save (.txt download), Prev/Next navigation
 - **Kill** — marks message deleted in BPQ; killed messages hidden immediately and persist across reloads
+- **📇+ Save Sender** — files the station you are reading into the address book: opens the contact card pre-filled with their callsign (and pre-looked-up, if QRZ is connected) so you can add a name, phone or group while the message is still in front of you
 - **Reject filter** — block future messages by FROM callsign or TO category directly from the message you're reading. Writes the entry into BPQ's native Mail config reject list (same as the Reject From / Reject To fields on the Configuration page) — no need to leave the webmail interface
 
 ### NTS Traffic & Form Composers
@@ -52,10 +55,16 @@ The same single HTML file automatically adapts to phones and tablets — no sepa
 - **Compose deep links** — open a pre-filled compose window from any dashboard or bookmark via `#compose?to=CALL&subject=...` (see README-dashboard-links.md); works in already-open tabs too
 
 ### Address Book
-- Callsign/name/city/state contacts — reachable from compose's To field (📇 button + autocomplete) or the topbar **📇 Address Book** button
-- Optional QRZ.com XML Data lookup (your own paid QRZ subscription login, stored only in your browser) auto-fills name/city/state from a callsign
-- "📇 Add Contact" button in the message reader saves the open message's sender directly
-- Sort the contact list A–Z, by most-used, or by last-used (concept: N3MEL)
+A two-pane workspace — groups rail on the left, contact list on the right — opened from the topbar **📇 Address Book** button or the 📇 beside compose's To field. Concept: N3MEL.
+
+- **Full contact card** — callsign, full name, street, city, state, ZIP, phone, email, website, free-text notes and group membership. Opened with **+ Add Contact**, by clicking any contact, or straight off a message. Older contacts simply have the newer fields blank
+- **Contact groups** — a named list of callsigns. Groups reference contacts rather than copying them, so one edit updates a contact everywhere and a contact can belong to any number of groups. Renaming or deleting a contact follows through into every group; deleting a group never deletes contacts
+- **Group picker with type-ahead** — groups show as removable chips; type to filter, and a name that does not exist yet is offered as **+ Create "…"**, so making a group is a side effect of typing it. Works the same with four groups or four hundred. Full keyboard support (↑↓, Enter, Backspace, Esc)
+- **Send to a group or a selection** — **✉ Compose** in the toolbar addresses the contacts you have ticked, or everyone in the group you have open; right-clicking a group offers the same. BPQ accepts one recipient per message, so the app sends once per member behind a confirmation, with progress as it goes and a single summary at the end
+- **Import** — paste callsigns separated by anything (spaces, commas, semicolons, newlines) or load/drop a CSV, with or without a `callsign,name,city,state` header. A preview states how many are new versus already known and what will be skipped before anything is written; every imported contact can be filed into any number of groups (including one created on the spot) in the same pass. Existing contacts are never overwritten — an import only fills blank fields
+- **📇+ Save Sender** in the reader, and **📇+** beside compose's To field, file the station you are reading or replying to without leaving the message
+- **Optional QRZ.com lookup** (your own paid QRZ XML Data subscription, stored only in your browser) fills name, street, city, state, ZIP and email from a callsign. There is no settings page for it — the **🔍 look up on QRZ** link on the contact card offers to connect the first time you use it, then carries straight on with the lookup. A lookup only ever fills blank fields
+- Filter and sort the contact list A–Z, by most-used, or by last-used; drag contacts onto a group to file them; multi-select for bulk add-to-group, remove-from-group or delete
 
 ### Star Rules
 - Built-in rule: stars SYSTEM messages with subject starting "New User" (new user notifications)

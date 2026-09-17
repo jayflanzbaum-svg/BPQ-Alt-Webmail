@@ -309,6 +309,126 @@ body { font-family:var(--sans); font-size:1rem; background:var(--bg); color:var(
 .rg-credit { font-family:var(--mono); font-size:0.69rem; color:var(--text3); margin-top:10px; padding-top:8px; border-top:1px dashed var(--border); text-align:center; font-style:italic; line-height:1.5 }
 .rg-credit a { color:var(--text3); text-decoration:underline }
 .rg-credit a:hover { color:var(--accent) }
+
+/* ── ADDRESS BOOK (three-pane: groups | contacts | contact detail) ── */
+.ab-modal { width:min(1600px,96vw); height:min(1000px,92vh); max-height:92vh }
+.ab-modal .modal-bd { padding:0; gap:0; overflow:hidden }
+.ab-main { display:flex; flex:1 1 auto; min-height:0 }
+
+/* groups rail */
+.ab-rail { flex:0 0 240px; display:flex; flex-direction:column; min-height:0; border-right:1px solid var(--border); background:var(--bg) }
+.ab-rail-hd { font-family:var(--mono); font-size:0.69rem; font-weight:600; color:var(--text3); text-transform:uppercase; letter-spacing:.1em; padding:12px 14px 6px; display:flex; align-items:center; gap:6px }
+.ab-rail-hd .ab-rail-n { margin-left:auto; font-weight:400 }
+.ab-rail-filter { margin:0 10px 8px; padding:5px 8px; background:var(--bg2); border:1px solid var(--border); border-radius:4px; color:var(--text); font-family:var(--mono); font-size:0.77rem; outline:none }
+.ab-rail-filter:focus { border-color:var(--green-dim) }
+.ab-rail-list { overflow-y:auto; min-height:0; flex:1 1 auto; padding:0 6px 6px }
+.ab-grp { display:flex; align-items:center; gap:8px; padding:7px 9px; border-radius:4px; cursor:pointer; font-family:var(--mono); font-size:0.85rem; color:var(--text3); border-left:2px solid transparent; user-select:none }
+.ab-grp:hover { background:var(--bg3); color:var(--text2) }
+.ab-grp.active { background:var(--accent-bg); color:var(--accent); border-left-color:var(--accent) }
+.ab-grp.drop { background:var(--accent-bg); outline:1px dashed var(--accent) }
+.ab-grp-lbl { flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap }
+.ab-grp-n { font-size:0.77rem; color:var(--text3); flex-shrink:0 }
+.ab-rail-sep { border-top:1px solid var(--border); margin:7px 6px }
+.ab-rail-ft { padding:8px 10px; border-top:1px solid var(--border); display:flex; flex-direction:column; gap:6px }
+.ab-newgrp { padding:6px 9px; background:transparent; border:1px dashed var(--border2); border-radius:4px; color:var(--text3); font-family:var(--mono); font-size:0.77rem; cursor:pointer; text-align:left }
+.ab-newgrp:hover { border-color:var(--accent); color:var(--accent) }
+
+/* contact list pane */
+.ab-pane { flex:1 1 auto; display:flex; flex-direction:column; min-height:0; min-width:0; border-right:1px solid var(--border) }
+.ab-tools { display:flex; gap:8px; align-items:center; padding:11px 14px 9px; border-bottom:1px solid var(--border); flex-wrap:wrap }
+.ab-pane-ttl { font-family:var(--mono); font-size:0.92rem; font-weight:600; color:var(--text); min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap }
+.ab-pane-sub { font-family:var(--mono); font-size:0.77rem; color:var(--text3); flex:1; min-width:0 }
+.ab-selall { display:flex; align-items:center; gap:6px; padding:6px 14px; border-bottom:1px solid var(--border); font-family:var(--mono); font-size:0.77rem; color:var(--text3); cursor:pointer; user-select:none }
+.ab-selall:hover { color:var(--text2) }
+.ab-bulk { display:none; align-items:center; gap:8px; flex-wrap:wrap; padding:8px 14px; background:var(--accent-bg); border-bottom:1px solid var(--accent-border); font-family:var(--mono); font-size:0.77rem; color:var(--accent) }
+.ab-bulk.on { display:flex }
+.ab-list { overflow-y:auto; min-height:0; flex:1 1 auto; padding:8px 12px 12px }
+.ab-c-row { display:flex; align-items:center; gap:10px; padding:8px 10px; background:var(--bg3); border:1px solid var(--border); border-radius:5px; margin-bottom:5px; cursor:pointer }
+.ab-c-row:hover { border-color:var(--border2) }
+.ab-c-row.sel { border-color:var(--accent); background:var(--accent-bg) }
+.ab-c-row.open { border-color:var(--green-dim); box-shadow:inset 2px 0 0 var(--accent) }
+.ab-c-cb { margin:0; flex-shrink:0; cursor:pointer; width:15px; height:15px }
+.ab-c-main { flex:1; min-width:0; font-family:var(--mono); font-size:0.85rem; color:var(--text2); line-height:1.55 }
+.ab-c-main b { color:var(--text); font-weight:600 }
+.ab-c-sub { font-size:0.77rem; color:var(--text3) }
+/* the per-row compose action, deliberately large: it is what people reach for
+   most in this list, and at .77rem it was a pinprick */
+.ab-c-send { background:none; border:none; color:var(--text3); cursor:pointer; font-size:1.7rem; line-height:1; padding:2px 8px; flex-shrink:0 }
+.ab-c-send:hover { color:var(--accent) }
+.ab-chips { margin-top:3px }
+.ab-chip { display:inline-block; background:var(--bg2); border:1px solid var(--accent-border); color:var(--accent); border-radius:3px; padding:0 6px; font-size:0.69rem; margin-right:4px; margin-top:2px }
+.ab-more { padding:10px 4px; text-align:center; font-family:var(--mono); font-size:0.77rem; color:var(--text3) }
+
+/* contact detail pane */
+/* contact card — a dialog stacked over the address book, not a fixed pane */
+.cd-ov { z-index:120 }
+.cd-modal { width:min(620px,96vw); max-height:92vh }
+.cd-modal .modal-bd { gap:0 }
+.cd-hd-row { display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap }
+.cd-sec { font-family:var(--mono); font-size:0.69rem; font-weight:600; color:var(--accent); text-transform:uppercase; letter-spacing:.1em; margin:14px 0 7px; padding-bottom:5px; border-bottom:1px solid var(--border) }
+.cd-row { display:flex; gap:9px; flex-wrap:wrap }
+.cd-row .field { flex:1 1 150px; min-width:0 }
+.cd-row .field.narrow { flex:0 0 78px }
+.cd-row .field.wide { flex:1 1 100% }
+.cd-notes { min-height:60px; resize:vertical; padding:8px 10px; background:var(--bg); border:1px solid var(--border); border-radius:4px; color:var(--text); font-family:var(--mono); font-size:0.85rem; outline:none; width:100%; line-height:1.5 }
+.cd-notes:focus { border-color:var(--green-dim) }
+.ab-link { background:none; border:none; padding:0; color:var(--accent); font-family:var(--mono); font-size:0.77rem; cursor:pointer; text-decoration:underline; text-underline-offset:2px }
+.ab-link:hover { color:var(--green) }
+.ab-link.dim { color:var(--text3); text-decoration-color:var(--border2) }
+.ab-link.dim:hover { color:var(--text2) }
+/* group picker: chips + type-ahead, used by the contact card and the importer.
+   Scales past a checkbox list because you type instead of scrolling, and a
+   name that does not exist yet is offered as "+ Create". */
+.gp { position:relative }
+.gp-box { display:flex; flex-wrap:wrap; gap:5px; align-items:center; min-height:38px; padding:6px 8px; background:var(--bg); border:1px solid var(--border); border-radius:4px; cursor:text }
+.gp-box.focus { border-color:var(--green-dim) }
+.gp-chip { display:inline-flex; align-items:center; gap:4px; background:var(--accent-bg); border:1px solid var(--accent-border); color:var(--accent); border-radius:12px; padding:2px 5px 2px 10px; font-family:var(--mono); font-size:0.77rem; max-width:100% }
+.gp-chip span { overflow:hidden; text-overflow:ellipsis; white-space:nowrap }
+.gp-chip button { background:none; border:none; color:inherit; cursor:pointer; font-size:0.92rem; line-height:1; padding:0 3px; opacity:.65; flex-shrink:0 }
+.gp-chip button:hover { opacity:1; color:var(--red) }
+.gp-in { flex:1 1 110px; min-width:110px; background:none; border:none; outline:none; color:var(--text); font-family:var(--mono); font-size:0.85rem; padding:3px 2px }
+.gp-in::placeholder { color:var(--text3) }
+/* fixed, not absolute: the card body scrolls, and an absolute menu would be
+   clipped by it. Positioned from the box's rect, like the context menu. */
+.gp-menu { display:none; position:fixed; z-index:400; background:var(--bg2); border:1px solid var(--border2); border-radius:5px; box-shadow:0 8px 24px rgba(0,0,0,.5); max-height:230px; overflow-y:auto; padding:4px }
+.gp-menu.open { display:block }
+.gp-opt { display:flex; align-items:center; width:100%; text-align:left; padding:7px 9px; background:none; border:none; color:var(--text2); font-family:var(--mono); font-size:0.85rem; cursor:pointer; border-radius:4px }
+.gp-opt:hover, .gp-opt.hi { background:var(--bg3); color:var(--text) }
+.gp-opt-n { margin-left:auto; padding-left:10px; color:var(--text3); font-size:0.77rem }
+.gp-opt.gp-new { color:var(--accent) }
+.gp-sep { border-top:1px solid var(--border); margin:4px 2px }
+.gp-none { padding:8px 9px; color:var(--text3); font-family:var(--mono); font-size:0.77rem }
+.gp-hint { font-family:var(--mono); font-size:0.69rem; color:var(--text3); margin-top:5px }
+.ab-empty-side { font-family:var(--mono); font-size:0.77rem; color:var(--text3); line-height:1.7; padding:8px 2px }
+
+/* import panel */
+.ab-imp-modal { width:min(840px,96vw); max-height:92vh }
+.ab-imp-ta { width:100%; min-height:180px; resize:vertical; padding:9px 11px; background:var(--bg); border:1px solid var(--border); border-radius:4px; color:var(--text); font-family:var(--mono); font-size:0.85rem; outline:none; line-height:1.5 }
+.ab-imp-ta:focus { border-color:var(--green-dim) }
+.ab-imp-ta.drop { border-color:var(--accent); background:var(--accent-bg) }
+.ab-imp-stat { font-family:var(--mono); font-size:0.77rem; line-height:1.7; color:var(--text3) }
+.ab-imp-stat b { color:var(--text) }
+.ab-imp-prev { max-height:130px; overflow-y:auto; background:var(--bg); border:1px solid var(--border); border-radius:4px; padding:7px 9px; font-family:var(--mono); font-size:0.77rem; color:var(--text2); line-height:1.6; word-break:break-all }
+.ab-imp-bad { color:var(--amber) }
+.ab-ck { display:inline-flex; align-items:center; gap:7px; font-family:var(--mono); font-size:0.77rem; color:var(--text2); cursor:pointer; user-select:none }
+.ab-ck input { margin:0; cursor:pointer }
+
+/* mobile pane switcher — hidden on desktop, where all three panes coexist */
+.ab-tabs { display:none; gap:4px; padding:8px 10px; border-bottom:1px solid var(--border); background:var(--bg) }
+.ab-tab { flex:1; padding:8px 4px; background:transparent; border:1px solid var(--border2); border-radius:4px; color:var(--text3); font-family:var(--mono); font-size:0.77rem; cursor:pointer }
+.ab-tab.on { background:var(--accent-bg); border-color:var(--accent); color:var(--accent) }
+
+/* ── CONTEXT MENU ── */
+.ctxm { position:fixed; z-index:400; background:var(--bg2); border:1px solid var(--border2); border-radius:6px; padding:4px; min-width:200px; max-width:270px; box-shadow:0 8px 26px rgba(0,0,0,.5); display:none; font-family:var(--mono); font-size:0.85rem }
+.ctxm.open { display:block }
+.ctxm-hd { padding:5px 9px 6px; color:var(--text3); font-size:0.69rem; text-transform:uppercase; letter-spacing:.1em; border-bottom:1px solid var(--border); margin-bottom:4px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap }
+.ctxm-it { display:block; width:100%; text-align:left; padding:6px 9px; background:none; border:none; color:var(--text2); font-family:inherit; font-size:inherit; cursor:pointer; border-radius:4px }
+.ctxm-it:hover { background:var(--bg3); color:var(--text) }
+.ctxm-it.danger:hover { color:var(--red) }
+.ctxm-it.good:hover { color:var(--green) }
+.ctxm-sep { border-top:1px solid var(--border); margin:4px 2px }
+.sf.muted { opacity:.55 }
+.sf.muted .sf-lbl::after { content:' ⊘'; font-size:0.69rem; color:var(--text3) }
 .del-box { background:var(--bg2); border:1px solid var(--border2); border-radius:8px; padding:22px 26px; max-width:360px; width:90% }
 .del-ttl { font-family:var(--mono); font-size:0.92rem; font-weight:600; color:var(--red); margin-bottom:10px }
 .del-msg { font-size:1rem; color:var(--text2); margin-bottom:18px; line-height:1.5 }
@@ -342,7 +462,9 @@ body { font-family:var(--sans); font-size:1rem; background:var(--bg); color:var(
 .rv-sum-chev { color:var(--text3); font-size:0.69rem; flex-shrink:0; transition:transform .15s }
 
 @media (min-width: 769px) {
-  #ab-modal { width:640px }
+  /* The address book is a three-pane workspace, not a dialog — give it the
+     screen. (It was pinned to 640px when it was a single narrow column.) */
+  #ab-modal { width:min(1600px,96vw); height:min(1000px,92vh) }
 }
 
 /* ── MOBILE RESPONSIVE ── */
@@ -438,6 +560,20 @@ body { font-family:var(--sans); font-size:1rem; background:var(--bg); color:var(
   /* Rules modal */
   .rules-modal { width:100%; max-width:100%; border-radius:0 }
 
+  /* Address book: one pane at a time, picked with the switcher. Stacking all
+     three squeezes the contact list to nothing on a phone. */
+  .ab-modal { width:100%; max-width:100%; height:100vh; max-height:100vh; border-radius:0 }
+  .ab-tabs { display:flex }
+  .ab-main { flex-direction:column }
+  .ab-rail, .ab-pane { flex:1 1 auto; min-height:0; border-right:none; max-height:none }
+  .ab-modal[data-mp="groups"]   .ab-pane,
+  .ab-modal[data-mp="contacts"] .ab-rail { display:none }
+  .cd-modal { width:100%; max-width:100%; height:100vh; max-height:100vh; border-radius:0 }
+  .ab-pane-ttl { flex:1 1 100% }
+  .ab-imp-modal { width:100%; max-width:100%; height:100vh; max-height:100vh; border-radius:0 }
+  .ctxm { min-width:230px; font-size:0.92rem }
+  .ctxm-it { padding:10px 11px }
+
   /* Toast above bottom nav */
   .toast { bottom:72px }
 
@@ -495,7 +631,7 @@ body { font-family:var(--sans); font-size:1rem; background:var(--bg); color:var(
 <!-- TOPBAR -->
 <div class="topbar">
   <div class="logo">BPQ-ALT-WEBMAIL</div>
-  <span style="font-family:var(--mono);font-size:0.69rem;color:var(--text3);margin-left:-6px">v1.6.8</span>
+  <span style="font-family:var(--mono);font-size:0.69rem;color:var(--text3);margin-left:-6px">v1.7.0</span>
   <div class="top-call" id="top-call">—</div>
   <span class="top-node" id="top-node">—</span>
   <div class="tspc"></div>
@@ -563,7 +699,7 @@ body { font-family:var(--sans); font-size:1rem; background:var(--bg); color:var(
     </div>
 
     <div class="sidebar-footer">
-      <div id="si-ver">v1.6.8</div>
+      <div id="si-ver">v1.7.0</div>
       <div>Node <span id="si-node">—</span></div>
       <div>User <span id="si-user">—</span></div>
       <div style="display:none">Msgs: <span id="si-count">—</span></div>
@@ -622,7 +758,7 @@ body { font-family:var(--sans); font-size:1rem; background:var(--bg); color:var(
       <div class="rv-tb">
         <button class="btn primary" onclick="doReply()">↩ Reply</button>
         <button class="btn" onclick="doForward()">→ Forward</button>
-        <button class="btn" onclick="addContactFromMessage()" title="Save sender to address book">📇 Add Contact</button>
+        <button class="btn" onclick="addContactFromMessage()" title="Save this station to the address book">📇+ Save Sender</button>
         <button class="btn" id="btn-parse-rg" onclick="parseRadiogramToForm()" style="display:none" title="Parse this NTS radiogram into the T/RRI form">📋 Parse</button>
         <button class="btn" onclick="doDownload()">⤓ Save</button>
         <button class="btn" onclick="doPrev()">← Prev</button>
@@ -698,7 +834,8 @@ body { font-family:var(--sans); font-size:1rem; background:var(--bg); color:var(
         <div style="display:flex;gap:6px">
           <input class="field-in" id="cmp-to" list="ab-datalist" placeholder="K1AJD" style="flex:1">
           <datalist id="ab-datalist"></datalist>
-          <button type="button" class="btn" onclick="openAddressBook()" title="Address Book" style="flex:0 0 auto">📇</button>
+          <button type="button" class="btn" onclick="addContactFromCompose()" title="Save the station in To: to the address book" style="flex:0 0 auto">📇+</button>
+          <button type="button" class="btn" onclick="openAddressBook()" title="Open the address book" style="flex:0 0 auto">📇</button>
         </div>
       </div>
       <div class="field"><span class="field-lbl">Type</span><select class="field-in" id="cmp-type" style="width:auto" onchange="onComposeTypeChange()"><option value="P">P – Personal</option><option value="B">B – Bulletin</option><option value="B/PKTNET">B/PKTNET – PKTNET Check-In (form)</option><option value="T">T – NTS Traffic</option><option value="T/RRI">T/RRI – NTS Radiogram (form)</option></select></div>
@@ -843,61 +980,223 @@ body { font-family:var(--sans); font-size:1rem; background:var(--bg); color:var(
 
 <!-- ADDRESS BOOK -->
 <div class="overlay" id="ab-ov">
-  <div class="rules-modal" id="ab-modal">
+  <div class="rules-modal ab-modal" id="ab-modal">
     <div class="modal-hd">
       <span class="modal-ttl">📇 Address Book</span>
       <button class="modal-x" onclick="closeAddressBook()">×</button>
     </div>
-    <div class="modal-bd">
-      <div class="rg-sec">
-        <div class="rg-sec-hd">QRZ Lookup <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--text3)">— optional, your own QRZ.com XML subscription login</span></div>
-        <div class="rg-row" id="ab-qrz-view" style="align-items:center;display:none">
-          <span class="modal-hint" id="ab-qrz-summary"></span>
-          <div class="btn-sp"></div>
-          <button class="btn" onclick="editQrzCreds()">Update</button>
-        </div>
-        <div class="rg-row" id="ab-qrz-edit">
-          <div class="field"><span class="field-lbl">QRZ Username</span><input class="field-in" id="ab-qrz-user" placeholder="callsign" autocomplete="off"></div>
-          <div class="field"><span class="field-lbl">QRZ Password</span><input class="field-in" id="ab-qrz-pass" type="password" placeholder="password" autocomplete="off"></div>
-          <button class="btn" style="align-self:flex-end" onclick="saveQrzCreds()">Save</button>
-        </div>
-        <div class="rg-hint">Requires a paid QRZ.com XML Data subscription (separate from a regular QRZ login). Stored only in this browser and used to auto-fill Name / City / State when adding a contact. Leave blank to enter contacts by hand.</div>
-      </div>
-
-      <div class="rg-sec">
-        <div class="rg-sec-hd">Add / Edit Contact</div>
-        <div class="rg-row">
-          <div class="field" style="flex:0 0 110px"><span class="field-lbl">Callsign</span><input class="field-in" id="ab-f-call" placeholder="K1AJD" style="text-transform:uppercase"></div>
-          <div class="field"><span class="field-lbl">Full Name</span><input class="field-in" id="ab-f-name" placeholder="John Doe"></div>
-          <div class="field"><span class="field-lbl">City</span><input class="field-in" id="ab-f-city" placeholder="Boston"></div>
-          <div class="field" style="flex:0 0 70px"><span class="field-lbl">State</span><input class="field-in" id="ab-f-state" placeholder="MA"></div>
-        </div>
-        <div class="rg-row" style="align-items:center">
-          <button class="btn" onclick="qrzLookupIntoForm()" title="Fill Name/City/State from QRZ using the callsign above">🔍 QRZ Lookup</button>
-          <span class="modal-hint" id="ab-lookup-status"></span>
-          <div class="btn-sp"></div>
-          <button class="btn" id="ab-cancel-edit" onclick="cancelEditContact()" style="display:none">Cancel</button>
-          <button class="send-btn" onclick="saveContact()">Save Contact</button>
-        </div>
-      </div>
-
-      <div class="rg-sec" style="flex:1;display:flex;flex-direction:column;min-height:0">
-        <div class="rg-sec-hd" style="display:flex;align-items:center;gap:8px">
-          <span style="flex:1">Contacts</span>
-          <select class="field-in" id="ab-sort" style="width:auto" onchange="setAbSort(this.value)">
-            <option value="alpha">Sort: A–Z</option>
-            <option value="most">Sort: Most used</option>
-            <option value="last">Sort: Last used</option>
-          </select>
-          <input class="field-in" id="ab-search" placeholder="filter…" style="width:160px" oninput="renderAddressBook()">
-        </div>
-        <div id="ab-list" style="overflow-y:auto;min-height:120px;max-height:280px"></div>
-      </div>
-      <div class="rg-credit">Address Book concept: N3MEL</div>
+    <div class="ab-tabs">
+      <button class="ab-tab" id="ab-tab-groups" onclick="abMobilePane('groups')">Groups</button>
+      <button class="ab-tab on" id="ab-tab-contacts" onclick="abMobilePane('contacts')">Contacts</button>
     </div>
-    <div class="modal-ft"><span class="modal-hint" id="ab-status"></span><span class="modal-hint" id="ab-count"></span></div>
+    <div class="modal-bd">
+      <div class="ab-main">
+
+        <!-- 1 · groups rail -->
+        <div class="ab-rail">
+          <div class="ab-rail-hd"><span>Groups</span><span class="ab-rail-n" id="ab-rail-n"></span></div>
+          <input class="ab-rail-filter" id="ab-grp-filter" placeholder="filter groups…" oninput="renderAbGroups()">
+          <div class="ab-rail-list" id="ab-rail-list"></div>
+          <div class="ab-rail-ft">
+            <button class="ab-newgrp" onclick="abNewGroup()">+ New Group</button>
+          </div>
+        </div>
+
+        <!-- 2 · contact list -->
+        <div class="ab-pane">
+          <div class="ab-tools">
+            <span class="ab-pane-ttl" id="ab-pane-ttl">All Contacts</span>
+            <span class="ab-pane-sub" id="ab-pane-sub"></span>
+            <button class="btn" id="ab-compose-btn" onclick="abComposeSelected()" title="Compose to the ticked contacts (or to the whole group when nothing is ticked)">✉ Compose</button>
+            <button class="btn" onclick="openImport()" title="Paste a list of callsigns or import a CSV">⤓ Import</button>
+            <button class="btn" onclick="openContactCard(null)" title="Add a new contact">+ Add Contact</button>
+            <select class="field-in" id="ab-sort" style="width:auto" onchange="setAbSort(this.value)">
+              <option value="alpha">Sort: A–Z</option>
+              <option value="most">Sort: Most used</option>
+              <option value="last">Sort: Last used</option>
+            </select>
+            <input class="field-in" id="ab-search" placeholder="filter contacts…" style="width:200px" oninput="renderAddressBook()">
+          </div>
+          <label class="ab-selall">
+            <input type="checkbox" id="ab-selall-cb" onchange="abSelectAllVisible(this.checked)">
+            <span id="ab-selall-lbl">Select all</span>
+          </label>
+          <div class="ab-bulk" id="ab-bulk">
+            <span id="ab-bulk-n">0 selected</span>
+            <div class="btn-sp"></div>
+            <select class="rule-sel" id="ab-bulk-grp" onchange="abBulkAddToGroup(this)">
+              <option value="">Add to group…</option>
+            </select>
+            <button class="rule-edit" id="ab-bulk-rm" onclick="abBulkRemoveFromGroup()" style="display:none"></button>
+            <button class="rule-edit" onclick="abBulkDelete()" title="Delete the selected contacts">✕ Delete</button>
+            <button class="rule-edit" onclick="abClearSel()">Clear</button>
+          </div>
+          <div class="ab-list" id="ab-list"></div>
+        </div>
+
+      </div>
+    </div>
+    <div class="modal-ft">
+      <span class="modal-hint" id="ab-status"></span>
+      <span class="modal-hint">
+        <span id="ab-count"></span>
+        <span style="margin:0 8px;color:var(--border2)">|</span>
+        <button class="ab-link dim" id="ab-qrz-link" onclick="openQrzLogin()"></button>
+      </span>
+    </div>
   </div>
 </div>
+
+<!-- CONTACT CARD (stacks over the address book) -->
+<div class="overlay cd-ov" id="cd-ov">
+  <div class="rules-modal cd-modal">
+    <div class="modal-hd">
+      <span class="modal-ttl" id="cd-ttl">Add Contact</span>
+      <button class="modal-x" onclick="closeContactCard()">×</button>
+    </div>
+    <div class="modal-bd">
+
+      <div class="cd-hd-row">
+        <div class="field" style="flex:0 0 150px"><span class="field-lbl">Callsign</span><input class="field-in" id="ab-f-call" placeholder="K1AJD" style="text-transform:uppercase"></div>
+        <div class="field" style="flex:1 1 200px"><span class="field-lbl">Full Name</span><input class="field-in" id="ab-f-name" placeholder="John Doe"></div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:8px">
+        <button class="ab-link" onclick="qrzLookupIntoForm()" title="Fill this card in from QRZ.com">🔍 look up on QRZ</button>
+        <span class="modal-hint" id="ab-lookup-status"></span>
+      </div>
+
+      <div class="cd-sec">Location</div>
+      <div class="cd-row">
+        <div class="field wide"><span class="field-lbl">Street Address</span><input class="field-in" id="ab-f-street" placeholder="123 Main St"></div>
+      </div>
+      <div class="cd-row" style="margin-top:8px">
+        <div class="field"><span class="field-lbl">City</span><input class="field-in" id="ab-f-city" placeholder="Boston"></div>
+        <div class="field narrow"><span class="field-lbl">State</span><input class="field-in" id="ab-f-state" placeholder="MA" style="text-transform:uppercase"></div>
+        <div class="field narrow" style="flex:0 0 100px"><span class="field-lbl">ZIP</span><input class="field-in" id="ab-f-zip" placeholder="02101"></div>
+      </div>
+
+      <div class="cd-sec">Contact</div>
+      <div class="cd-row">
+        <div class="field"><span class="field-lbl">Phone</span><input class="field-in" id="ab-f-phone" type="tel" placeholder="617-555-0131"></div>
+        <div class="field"><span class="field-lbl">Email</span><input class="field-in" id="ab-f-email" type="email" placeholder="call@example.com"></div>
+      </div>
+      <div class="cd-row" style="margin-top:8px">
+        <div class="field wide"><span class="field-lbl">Website</span><input class="field-in" id="ab-f-web" placeholder="qrz.com/db/K1AJD"></div>
+      </div>
+
+      <div class="cd-sec">Notes</div>
+      <textarea class="cd-notes" id="ab-f-notes" placeholder="rig, antenna, nets they check into, anything…"></textarea>
+
+      <div class="cd-sec">Groups</div>
+      <div class="gp" id="gp-card">
+        <div class="gp-box" onclick="gpFocus('gp-card')">
+          <input class="gp-in" id="gp-card-in" placeholder="type to find or create a group…" autocomplete="off"
+                 oninput="gpOnInput('gp-card')" onfocus="gpOpen('gp-card')" onkeydown="gpKey('gp-card',event)">
+        </div>
+        <div class="gp-menu" id="gp-card-menu"></div>
+        <div class="gp-hint">Type a name that does not exist yet to create it.</div>
+      </div>
+
+    </div>
+    <div class="modal-ft">
+      <span class="modal-hint" id="cd-status"></span>
+      <span>
+        <button class="btn danger" id="cd-del" onclick="deleteFromCard()" style="display:none">✕ Delete</button>
+        <button class="btn" onclick="closeContactCard()" style="margin-left:6px">Cancel</button>
+        <button class="send-btn" onclick="saveContact()" style="margin-left:6px">Save Contact</button>
+      </span>
+    </div>
+  </div>
+</div>
+
+<!-- IMPORT CONTACTS -->
+<div class="overlay" id="imp-ov">
+  <div class="rules-modal ab-imp-modal">
+    <div class="modal-hd">
+      <span class="modal-ttl">⤓ Import Contacts</span>
+      <button class="modal-x" onclick="closeImport()">×</button>
+    </div>
+    <div class="modal-bd">
+      <div class="field">
+        <span class="field-lbl">Paste callsigns, or a CSV — or drop a .csv file here</span>
+        <textarea class="ab-imp-ta" id="imp-ta" oninput="renderImportPreview()"
+          placeholder="K1AJD W2XYZ N3MEL&#10;…or one per line, or comma separated&#10;&#10;…or a CSV with headers:&#10;callsign,name,city,state&#10;K1AJD,John Doe,Boston,MA"></textarea>
+      </div>
+      <div class="rg-row" style="align-items:center;margin-bottom:0">
+        <input type="file" id="imp-file" accept=".csv,.txt,text/csv,text/plain" style="display:none" onchange="importFilePicked(this)">
+        <button class="btn" onclick="document.getElementById('imp-file').click()">📂 Choose a CSV file…</button>
+        <span class="modal-hint" id="imp-file-name"></span>
+        <div class="btn-sp"></div>
+        <button class="rule-edit" onclick="document.getElementById('imp-ta').value='';renderImportPreview()">Clear</button>
+      </div>
+
+      <div class="rg-sec" style="margin-bottom:0">
+        <div class="rg-sec-hd">Add every imported contact to</div>
+        <div class="gp" id="gp-imp">
+          <div class="gp-box" onclick="gpFocus('gp-imp')">
+            <input class="gp-in" id="gp-imp-in" placeholder="type to find or create a group…" autocomplete="off"
+                   oninput="gpOnInput('gp-imp')" onfocus="gpOpen('gp-imp')" onkeydown="gpKey('gp-imp',event)">
+          </div>
+          <div class="gp-menu" id="gp-imp-menu"></div>
+          <div class="gp-hint">Leave empty to import without filing into a group.</div>
+        </div>
+      </div>
+
+      <div class="rg-sec" style="margin-bottom:0">
+        <div class="rg-sec-hd">Options</div>
+        <label class="ab-ck"><input type="checkbox" id="imp-qrz"> Look up names on QRZ afterwards (runs in the background, one per second)</label>
+        <div class="rg-hint" id="imp-qrz-hint"></div>
+      </div>
+
+      <div class="ab-imp-stat" id="imp-stat"></div>
+      <div class="ab-imp-prev" id="imp-prev" style="display:none"></div>
+    </div>
+    <div class="modal-ft">
+      <span class="modal-hint" id="imp-status"></span>
+      <span>
+        <button class="btn" onclick="closeImport()">Cancel</button>
+        <button class="send-btn" id="imp-go" onclick="runImport()" style="margin-left:8px">Import</button>
+      </span>
+    </div>
+  </div>
+</div>
+
+<!-- QRZ LOGIN (opened on demand, from the lookup link) -->
+<div class="overlay" id="qrz-ov">
+  <div class="del-box" style="max-width:420px">
+    <div class="del-ttl" style="color:var(--accent)">🔍 Connect QRZ.com</div>
+    <div class="del-msg" style="font-size:0.85rem" id="qrz-why">
+      Sign in to fill Name / City / State automatically from a callsign.
+    </div>
+    <div class="field" style="margin-bottom:10px"><span class="field-lbl">QRZ Username</span><input class="field-in" id="ab-qrz-user" placeholder="callsign" autocomplete="off"></div>
+    <div class="field" style="margin-bottom:10px"><span class="field-lbl">QRZ Password</span><input class="field-in" id="ab-qrz-pass" type="password" placeholder="password" autocomplete="off"></div>
+    <div class="rg-hint" style="margin-bottom:16px">Needs a paid QRZ.com <b>XML Data</b> subscription (not the same as a free QRZ login). Stored only in this browser.</div>
+    <div class="del-btns">
+      <button class="btn danger" id="qrz-forget" onclick="forgetQrzCreds()" style="display:none">Disconnect</button>
+      <div class="btn-sp"></div>
+      <button class="btn" onclick="closeQrzLogin()">Cancel</button>
+      <button class="send-btn" onclick="saveQrzCreds()">Connect</button>
+    </div>
+  </div>
+</div>
+
+<!-- GROUP NAME PROMPT -->
+<div class="overlay" id="grp-ov">
+  <div class="del-box">
+    <div class="del-ttl" id="grp-ttl" style="color:var(--accent)">New Group</div>
+    <div class="field" style="margin-bottom:18px">
+      <span class="field-lbl">Group name</span>
+      <input class="field-in" id="grp-name" placeholder="Net Control" maxlength="40">
+    </div>
+    <div class="del-btns">
+      <button class="btn" onclick="closeGroupPrompt()">Cancel</button>
+      <button class="send-btn" id="grp-save" onclick="saveGroupPrompt()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- SHARED CONTEXT MENU -->
+<div class="ctxm" id="ctxm"></div>
 
 <div class="toast" id="toast"></div>
 
@@ -966,54 +1265,59 @@ function saveCFG() {
 function loadContacts() { return LS.getJ('bpq_contacts') || []; }
 function saveContacts(list) { LS.setJ('bpq_contacts', list); }
 
-let abEditingCall = null; // callsign currently loaded into the edit form, or null = new contact
+// -- Groups --
+// A group is { name, members:[CALL,...] }. Groups reference contacts by
+// callsign rather than embedding copies, so editing a contact once updates it
+// everywhere and a contact can sit in any number of groups (the Gmail-label
+// model, which scales better than Outlook's copy-into-the-list member picker).
+// Deleting a contact prunes it from every group; deleting a group never
+// deletes contacts.
+function loadGroups() { return LS.getJ('bpq_groups') || []; }
+function saveGroups(list) { LS.setJ('bpq_groups', list); }
+function findGroup(name) { return loadGroups().find(g => g.name === name); }
+function groupsFor(call) { return loadGroups().filter(g => (g.members || []).includes(call)).map(g => g.name); }
+function sortedGroups() { return loadGroups().slice().sort((a, b) => a.name.localeCompare(b.name)); }
+
+// The contact list is plain innerHTML, so a five-figure address book would
+// build a huge string on every keystroke. Cap what is painted and tell the
+// user to narrow the filter instead.
+const AB_RENDER_CAP = 400;
+
+let abEditingCall = null;      // callsign loaded into the detail pane, or null = new contact
+let abGroupView   = '';        // '' = All Contacts, otherwise a group name
+let abSelected    = new Set(); // callsigns ticked in the contact list
+let abFormGroups  = new Set(); // groups ticked in the detail pane
+let grpPromptMode = null;      // 'new' | 'rename'
+let grpPromptOld  = '';
+let grpPromptPending = null;   // callsigns to seed a brand-new group with
 
 function escAttr(s) { return esc(s).replace(/'/g, '&#39;'); }
 
+// On a phone the three panes take turns; on desktop they all show and this
+// only tracks which one a tap should reveal next.
+function abMobilePane(which) {
+  document.getElementById('ab-modal').dataset.mp = which;
+  for (const k of ['groups', 'contacts']) {
+    document.getElementById('ab-tab-' + k).classList.toggle('on', k === which);
+  }
+}
+
 function openAddressBook() {
-  renderQrzCredsUI();
+  abMobilePane('contacts');
+  document.getElementById('cd-ov').classList.remove('open');
   document.getElementById('ab-search').value = '';
+  document.getElementById('ab-grp-filter').value = '';
   document.getElementById('ab-sort').value = abSort();
+  abSelected.clear();
   cancelEditContact();
+  renderQrzLink();
+  renderAbGroups();
   renderAddressBook();
   document.getElementById('ab-ov').classList.add('open');
 }
-function closeAddressBook() { document.getElementById('ab-ov').classList.remove('open'); }
-
-// Shows saved QRZ credentials as read-only text (with an Update button) once
-// set, instead of leaving password-filled input boxes sitting open with no
-// visible confirmation that Save actually did anything. Falls back to the
-// editable fields when nothing is saved yet.
-function renderQrzCredsUI() {
-  const user = LS.get('bpq_qrz_user') || '';
-  const view = document.getElementById('ab-qrz-view');
-  const edit = document.getElementById('ab-qrz-edit');
-  if (user) {
-    document.getElementById('ab-qrz-summary').textContent = `Saved — username ${user}, password ••••••••`;
-    view.style.display = '';
-    edit.style.display = 'none';
-  } else {
-    document.getElementById('ab-qrz-user').value = '';
-    document.getElementById('ab-qrz-pass').value = '';
-    view.style.display = 'none';
-    edit.style.display = '';
-  }
-}
-function editQrzCreds() {
-  document.getElementById('ab-qrz-user').value = LS.get('bpq_qrz_user') || '';
-  document.getElementById('ab-qrz-pass').value = LS.get('bpq_qrz_pass') || '';
-  document.getElementById('ab-qrz-view').style.display = 'none';
-  document.getElementById('ab-qrz-edit').style.display = '';
-}
-function saveQrzCreds() {
-  LS.set('bpq_qrz_user', document.getElementById('ab-qrz-user').value.trim().toUpperCase());
-  LS.set('bpq_qrz_pass', document.getElementById('ab-qrz-pass').value);
-  // Credentials changed — any cached session key is now stale.
-  LS.del('bpq_qrz_session'); LS.del('bpq_qrz_session_exp');
-  renderQrzCredsUI();
-  const st = document.getElementById('ab-status');
-  st.style.color = 'var(--green)'; st.textContent = 'QRZ credentials saved';
-  setTimeout(() => { st.textContent = ''; }, 2500);
+function closeAddressBook() {
+  document.getElementById('ab-ov').classList.remove('open');
+  hideCtxMenu();
 }
 
 function abSort() { return LS.get('bpq_ab_sort') || 'alpha'; }
@@ -1026,76 +1330,623 @@ const AB_SORTERS = {
   most:  (a, b) => (b.useCount || 0) - (a.useCount || 0) || a.call.localeCompare(b.call),
   last:  (a, b) => (b.lastUsed || 0) - (a.lastUsed || 0) || a.call.localeCompare(b.call),
 };
-function renderAddressBook() {
+
+// ── 1 · groups rail ──
+function renderAbGroups() {
+  const q = (document.getElementById('ab-grp-filter').value || '').toUpperCase();
+  const all = sortedGroups();
+  const groups = q ? all.filter(g => g.name.toUpperCase().includes(q)) : all;
+  const total = loadContacts().length;
+  const rail = document.getElementById('ab-rail-list');
+  document.getElementById('ab-rail-n').textContent = all.length ? `${all.length}` : '';
+
+  let html = `
+    <div class="ab-grp${abGroupView === '' ? ' active' : ''}" onclick="abSetGroupView('')"
+         ondragover="abGrpDragOver(event,this)" ondragleave="abGrpDragLeave(this)" ondrop="abGrpDrop(event,this,'')">
+      <span class="ab-grp-lbl">All Contacts</span><span class="ab-grp-n">${total}</span>
+    </div>`;
+  if (groups.length) html += '<div class="ab-rail-sep"></div>';
+  html += groups.map(g => `
+    <div class="ab-grp${abGroupView === g.name ? ' active' : ''}" data-grp="${escAttr(g.name)}" onclick="abSetGroupView('${escAttr(g.name)}')"
+         oncontextmenu="abGroupCtx(event,'${escAttr(g.name)}')" title="Right-click for compose / rename / delete"
+         ondragover="abGrpDragOver(event,this)" ondragleave="abGrpDragLeave(this)" ondrop="abGrpDrop(event,this,'${escAttr(g.name)}')">
+      <span class="ab-grp-lbl">${esc(g.name)}</span><span class="ab-grp-n">${(g.members || []).length}</span>
+    </div>`).join('');
+  if (!all.length) html += '<div class="ab-empty-side" style="padding:10px 9px">No groups yet.<br>Make one below, or from an import.</div>';
+  else if (!groups.length) html += '<div class="ab-empty-side" style="padding:10px 9px">No group matches that filter.</div>';
+  rail.innerHTML = html;
+
+  // The bulk "Add to group" dropdown mirrors the rail.
+  const sel = document.getElementById('ab-bulk-grp');
+  sel.innerHTML = '<option value="">Add to group\u2026</option>' +
+    all.map(g => `<option value="${escAttr(g.name)}">${esc(g.name)}</option>`).join('') +
+    '<option value="__new__">+ New group\u2026</option>';
+}
+function abSetGroupView(name) {
+  abGroupView = name;
+  abSelected.clear();
+  if (isMobile) abMobilePane('contacts');
+  renderAbGroups();
+  renderAddressBook();
+}
+
+// ── 2 · contact list ──
+function abVisibleContacts() {
   const q = (document.getElementById('ab-search').value || '').toUpperCase();
-  const list = loadContacts().slice().sort(AB_SORTERS[abSort()] || AB_SORTERS.alpha);
-  const filtered = list.filter(c => !q ||
+  const all = loadContacts().slice().sort(AB_SORTERS[abSort()] || AB_SORTERS.alpha);
+  const grp = abGroupView ? findGroup(abGroupView) : null;
+  const scoped = grp ? all.filter(c => (grp.members || []).includes(c.call)) : all;
+  const filtered = scoped.filter(c => !q ||
     c.call.includes(q) || (c.name || '').toUpperCase().includes(q) ||
     (c.city || '').toUpperCase().includes(q) || (c.state || '').toUpperCase().includes(q));
+  return { all, grp, scoped, filtered };
+}
+function renderAddressBook() {
+  const { all, grp, scoped, filtered } = abVisibleContacts();
+
+  document.getElementById('ab-pane-ttl').textContent = grp ? grp.name : 'All Contacts';
+  document.getElementById('ab-pane-sub').textContent =
+    filtered.length === scoped.length ? `${scoped.length}` : `${filtered.length} of ${scoped.length}`;
+  document.getElementById('ab-count').textContent =
+    `${all.length} contact${all.length === 1 ? '' : 's'} \u00b7 ${loadGroups().length} group${loadGroups().length === 1 ? '' : 's'}`;
+
+  // Drop stale selections (contacts no longer on screen) so the bulk bar can
+  // never act on something the user cannot see.
+  const visible = new Set(filtered.map(c => c.call));
+  for (const c of [...abSelected]) if (!visible.has(c)) abSelected.delete(c);
+
+  const shown = filtered.slice(0, AB_RENDER_CAP);
   const el = document.getElementById('ab-list');
-  document.getElementById('ab-count').textContent = `${list.length} contact${list.length === 1 ? '' : 's'}`;
-  el.innerHTML = filtered.length ? filtered.map(c => `
-    <div class="rule-row">
-      <div class="rule-summary"><b>${esc(c.call)}</b>${c.name ? ' — ' + esc(c.name) : ''}${(c.city || c.state) ? ' · ' + esc([c.city, c.state].filter(Boolean).join(', ')) : ''}</div>
-      <div class="rule-actions">
-        <button class="rule-edit" onclick="abUseContact('${escAttr(c.call)}')" title="Compose to this contact">✉</button>
-        <button class="rule-edit" onclick="editContact('${escAttr(c.call)}')" title="Edit">✎</button>
-        <button class="rule-del" onclick="deleteContact('${escAttr(c.call)}')" title="Delete">✕</button>
+  el.innerHTML = shown.length ? shown.map(c => {
+    const gs = groupsFor(c.call);
+    const sel = abSelected.has(c.call);
+    const where = [c.city, c.state].filter(Boolean).join(', ');
+    return `
+    <div class="ab-c-row${sel ? ' sel' : ''}${abEditingCall === c.call ? ' open' : ''}" draggable="true"
+         ondragstart="abRowDragStart(event,'${escAttr(c.call)}')" onclick="editContact('${escAttr(c.call)}')">
+      <input type="checkbox" class="ab-c-cb" ${sel ? 'checked' : ''} onclick="event.stopPropagation()"
+             onchange="abToggleSel('${escAttr(c.call)}',this.checked)" title="Select">
+      <div class="ab-c-main">
+        <div><b>${esc(c.call)}</b>${c.name ? ' \u2014 ' + esc(c.name) : ''}</div>
+        ${where ? `<div class="ab-c-sub">${esc(where)}</div>` : ''}
+        ${gs.length ? `<div class="ab-chips">${gs.map(n => `<span class="ab-chip">${esc(n)}</span>`).join('')}</div>` : ''}
       </div>
-    </div>`).join('') : `<div class="list-empty">${list.length ? 'No matches' : 'No contacts yet — add one above'}</div>`;
+      <div class="rule-actions" onclick="event.stopPropagation()">
+        <button class="ab-c-send" onclick="abUseContact('${escAttr(c.call)}')" title="Compose to this contact">\u2709</button>
+        <button class="rule-del" onclick="deleteContact('${escAttr(c.call)}')" title="Delete">\u2715</button>
+      </div>
+    </div>`;
+  }).join('') : `<div class="list-empty">${
+      grp ? 'No members yet \u2014 tick contacts under All Contacts and use \u201cAdd to group\u201d, drag them onto the group, or import a list straight into it'
+          : (all.length ? 'No matches' : 'No contacts yet \u2014 add one on the right, or use Import')
+    }</div>`;
+  if (filtered.length > shown.length) {
+    el.innerHTML += `<div class="ab-more">Showing ${shown.length} of ${filtered.length} \u2014 narrow the filter to see the rest</div>`;
+  }
+
+  // "Select all" reflects the visible set.
+  const cb = document.getElementById('ab-selall-cb');
+  cb.checked = shown.length > 0 && shown.every(c => abSelected.has(c.call));
+  cb.indeterminate = !cb.checked && shown.some(c => abSelected.has(c.call));
+  document.getElementById('ab-selall-lbl').textContent =
+    shown.length ? `Select all ${shown.length}` : 'Select all';
+
+  renderAbBulkBar();
+}
+function abSelectAllVisible(on) {
+  const shown = abVisibleContacts().filtered.slice(0, AB_RENDER_CAP);
+  for (const c of shown) { if (on) abSelected.add(c.call); else abSelected.delete(c.call); }
+  renderAddressBook();
 }
 
+// ── Multi-select + bulk group actions ──
+function abToggleSel(call, on) {
+  if (on) abSelected.add(call); else abSelected.delete(call);
+  renderAddressBook();
+}
+function abClearSel() { abSelected.clear(); renderAddressBook(); }
+function renderAbBulkBar() {
+  const bar = document.getElementById('ab-bulk');
+  const n = abSelected.size;
+  bar.classList.toggle('on', n > 0);
+  document.getElementById('ab-bulk-n').textContent = `${n} selected`;
+  const cbtn = document.getElementById('ab-compose-btn');
+  if (cbtn) {
+    cbtn.textContent = n ? `\u2709 Compose (${n})` : '\u2709 Compose';
+    cbtn.title = n ? `Compose to the ${n} ticked contact${n === 1 ? '' : 's'}`
+                   : (abGroupView ? `Compose to everyone in ${abGroupView}`
+                                  : 'Tick some contacts, or open a group, to compose to them');
+  }
+  document.getElementById('ab-bulk-grp').value = '';
+  const rm = document.getElementById('ab-bulk-rm');
+  rm.style.display = abGroupView ? '' : 'none';
+  if (abGroupView) rm.textContent = `\u2212 Remove from ${abGroupView}`;
+}
+function abBulkAddToGroup(sel) {
+  const v = sel.value;
+  sel.value = '';
+  if (!v) return;
+  if (v === '__new__') { abNewGroup([...abSelected]); return; }
+  abAddCallsToGroup([...abSelected], v);
+}
+function abAddCallsToGroup(calls, name) {
+  calls = (calls || []).filter(Boolean);
+  if (!calls.length) return;
+  const list = loadGroups();
+  const g = list.find(x => x.name === name);
+  if (!g) return;
+  let added = 0;
+  for (const c of calls) if (!g.members.includes(c)) { g.members.push(c); added++; }
+  g.members.sort();
+  saveGroups(list);
+  abSelected.clear();
+  renderAbGroups();
+  renderAddressBook();
+  if (abEditingCall) syncFormGroups(abEditingCall);
+  toast(added ? `${added} added to ${name}` : `Already in ${name}`, added ? 'ok' : 'info');
+}
+function abBulkRemoveFromGroup() {
+  if (!abGroupView || !abSelected.size) return;
+  const list = loadGroups();
+  const g = list.find(x => x.name === abGroupView);
+  if (!g) return;
+  const n = abSelected.size;
+  g.members = g.members.filter(c => !abSelected.has(c));
+  saveGroups(list);
+  abSelected.clear();
+  renderAbGroups();
+  renderAddressBook();
+  toast(`${n} removed from ${g.name}`, 'ok');
+}
+function abBulkDelete() {
+  const n = abSelected.size;
+  if (!n) return;
+  if (!confirm(`Delete ${n} contact${n === 1 ? '' : 's'} from the address book?`)) return;
+  const gone = new Set(abSelected);
+  saveContacts(loadContacts().filter(c => !gone.has(c.call)));
+  const gl = loadGroups();
+  for (const g of gl) g.members = g.members.filter(c => !gone.has(c));
+  saveGroups(gl);
+  if (gone.has(abEditingCall)) cancelEditContact();
+  abSelected.clear();
+  refreshAbDatalist();
+  renderAbGroups();
+  renderAddressBook();
+  toast(`${n} contact${n === 1 ? '' : 's'} deleted`, 'ok');
+}
+
+// ── Drag a contact onto a group (Thunderbird's drag-onto-the-list gesture) ──
+function abRowDragStart(e, call) {
+  // Drag the whole ticked selection when the dragged row is part of it.
+  const payload = abSelected.has(call) ? [...abSelected] : [call];
+  e.dataTransfer.setData('text/plain', payload.join(','));
+  e.dataTransfer.effectAllowed = 'copy';
+}
+function abGrpDragOver(e, el) { e.preventDefault(); e.dataTransfer.dropEffect = 'copy'; el.classList.add('drop'); }
+function abGrpDragLeave(el) { el.classList.remove('drop'); }
+function abGrpDrop(e, el, name) {
+  e.preventDefault();
+  el.classList.remove('drop');
+  if (!name) return; // dropped on "All Contacts" -- nothing to do
+  const calls = (e.dataTransfer.getData('text/plain') || '').split(',').filter(Boolean);
+  abAddCallsToGroup(calls, name);
+}
+
+// ── Group create / rename / delete ──
+function openGroupPrompt(mode, oldName, pendingCalls) {
+  grpPromptMode = mode;
+  grpPromptOld = oldName || '';
+  grpPromptPending = pendingCalls || null;
+  document.getElementById('grp-ttl').textContent = mode === 'rename' ? 'Rename Group' : 'New Group';
+  const inp = document.getElementById('grp-name');
+  inp.value = oldName || '';
+  document.getElementById('grp-ov').classList.add('open');
+  setTimeout(() => { inp.focus(); inp.select(); }, 60);
+}
+function closeGroupPrompt() {
+  document.getElementById('grp-ov').classList.remove('open');
+  grpPromptMode = null; grpPromptPending = null;
+}
+function abNewGroup(pendingCalls) { openGroupPrompt('new', '', pendingCalls); }
+// Create a group if it does not exist yet; returns its name either way.
+function ensureGroup(name) {
+  name = (name || '').trim();
+  if (!name) return '';
+  const list = loadGroups();
+  const hit = list.find(g => g.name.toUpperCase() === name.toUpperCase());
+  if (hit) return hit.name;
+  list.push({ name, members: [] });
+  saveGroups(list);
+  return name;
+}
+function saveGroupPrompt() {
+  const name = document.getElementById('grp-name').value.trim();
+  if (!name) { toast('Group name required', 'err'); return; }
+  const list = loadGroups();
+  if (list.some(g => g.name.toUpperCase() === name.toUpperCase() && g.name !== grpPromptOld)) {
+    toast('A group with that name already exists', 'err'); return;
+  }
+  if (grpPromptMode === 'rename') {
+    const g = list.find(x => x.name === grpPromptOld);
+    if (g) g.name = name;
+    if (abGroupView === grpPromptOld) abGroupView = name;
+    saveGroups(list);
+    toast(`Renamed to ${name}`, 'ok');
+  } else {
+    const members = (grpPromptPending || []).slice().sort();
+    list.push({ name, members });
+    saveGroups(list);
+    abGroupView = name;
+    abSelected.clear();
+    toast(members.length ? `${name} created with ${members.length} member${members.length === 1 ? '' : 's'}` : `${name} created`, 'ok');
+  }
+  closeGroupPrompt();
+  refreshAbDatalist();
+  renderAbGroups();
+  renderAddressBook();
+  if (abEditingCall) syncFormGroups(abEditingCall);
+}
+function abDeleteGroup(name) {
+  if (!confirm(`Delete group "${name}"?\n\nThe contacts themselves are kept.`)) return;
+  saveGroups(loadGroups().filter(g => g.name !== name));
+  if (abGroupView === name) abGroupView = '';
+  abFormGroups.delete(name);
+  refreshAbDatalist();
+  renderAbGroups();
+  renderAddressBook();
+  if (abEditingCall !== null || true) renderFormGroups();
+  toast(`Group ${name} deleted`, 'ok');
+}
+function abGroupCtx(e, name) {
+  e.preventDefault(); e.stopPropagation();
+  const g = findGroup(name);
+  const n = g ? (g.members || []).length : 0;
+  showCtxMenu(e, name, [
+    { label: `\u2709 Compose to ${name} (${n})`, disabled: !n, fn: () => abComposeToGroup(name) },
+    { label: '\u270e Rename group', fn: () => openGroupPrompt('rename', name) },
+    { sep: true },
+    { label: '\u2715 Delete group', cls: 'danger', fn: () => abDeleteGroup(name) },
+  ]);
+}
+// Address a message to everyone in a group. BPQ's EMSave takes one recipient
+// per POST, so doSend() fans a comma-separated To out into one send each --
+// see the multi-recipient branch there.
+function composeToCalls(calls, label) {
+  calls = [...new Set((calls || []).filter(Boolean))].sort();
+  if (!calls.length) return false;
+  for (const c of calls) bumpContactUsage(c);
+  const to = calls.join(', ');
+  const open = document.getElementById('cmp-ov').classList.contains('open');
+  closeAddressBook();
+  if (open) {
+    document.getElementById('cmp-to').value = to;
+    scheduleDraftSave();
+  } else {
+    const n = calls.length;
+    openCompose(to, '', '', `New Message \u00b7 ${label || (n + ' recipient' + (n === 1 ? '' : 's'))}`);
+  }
+  return true;
+}
+function abComposeToGroup(name) {
+  const g = findGroup(name);
+  if (!g || !g.members.length) { toast('Group is empty', 'info'); return; }
+  composeToCalls(g.members, name);
+}
+// Toolbar action: the ticked contacts, or -- when nothing is ticked and a group
+// is on screen -- everyone in that group.
+function abComposeSelected() {
+  if (abSelected.size) { composeToCalls([...abSelected], `${abSelected.size} selected`); return; }
+  if (abGroupView) { abComposeToGroup(abGroupView); return; }
+  toast('Tick the contacts you want to write to first', 'info');
+}
+
+// ── Contact card ──
+// A contact is edited in a dialog stacked over the address book, not in a
+// permanent pane: adding a contact is an occasional act, and a fixed form was
+// taking up a third of the window for it. Fields beyond callsign/name/city/
+// state are optional and older records simply have them blank.
 function findContact(call) { return loadContacts().find(c => c.call === call); }
 
-function editContact(call) {
-  const c = findContact(call); if (!c) return;
-  abEditingCall = call;
-  document.getElementById('ab-f-call').value = c.call;
-  document.getElementById('ab-f-name').value = c.name || '';
-  document.getElementById('ab-f-city').value = c.city || '';
-  document.getElementById('ab-f-state').value = c.state || '';
-  document.getElementById('ab-lookup-status').textContent = '';
-  document.getElementById('ab-cancel-edit').style.display = '';
+const CD_FIELDS = {
+  call: 'ab-f-call', name: 'ab-f-name', street: 'ab-f-street', city: 'ab-f-city',
+  state: 'ab-f-state', zip: 'ab-f-zip', phone: 'ab-f-phone', email: 'ab-f-email',
+  web: 'ab-f-web', notes: 'ab-f-notes',
+};
+function cdSet(vals) {
+  for (const [k, id] of Object.entries(CD_FIELDS)) document.getElementById(id).value = vals[k] || '';
 }
+function cdGet() {
+  const out = {};
+  for (const [k, id] of Object.entries(CD_FIELDS)) out[k] = document.getElementById(id).value.trim();
+  out.call = out.call.toUpperCase();
+  out.state = out.state.toUpperCase();
+  return out;
+}
+
+// Open the card. `call` = an existing contact to edit, or null for a new one;
+// `seed` pre-fills a brand-new card (used by Save Sender).
+function openContactCard(call, seed) {
+  const c = call ? findContact(call) : null;
+  abEditingCall = c ? c.call : null;
+  cdSet(c || { call: seed || '' });
+  document.getElementById('ab-lookup-status').textContent = '';
+  document.getElementById('cd-status').textContent = '';
+  document.getElementById('cd-ttl').textContent = c ? `Edit \u00b7 ${c.call}` : 'Add Contact';
+  document.getElementById('cd-del').style.display = c ? '' : 'none';
+  // Existing contact: show the groups it is in. New one: pre-file it into
+  // whatever group is currently open.
+  abFormGroups = new Set(c ? groupsFor(c.call) : (abGroupView ? [abGroupView] : []));
+  renderFormGroups();
+  document.getElementById('cd-ov').classList.add('open');
+  setTimeout(() => document.getElementById(c || seed ? 'ab-f-name' : 'ab-f-call').focus(), 60);
+  renderAddressBook();
+}
+function closeContactCard() {
+  document.getElementById('cd-ov').classList.remove('open');
+  abEditingCall = null;
+  renderAddressBook();
+}
+// Kept as the name the rest of the app already calls to open a contact.
+function editContact(call) { openContactCard(call); }
+// Reset helper used after a save and when the book is (re)opened.
 function cancelEditContact() {
   abEditingCall = null;
-  document.getElementById('ab-f-call').value = '';
-  document.getElementById('ab-f-name').value = '';
-  document.getElementById('ab-f-city').value = '';
-  document.getElementById('ab-f-state').value = '';
-  document.getElementById('ab-lookup-status').textContent = '';
-  document.getElementById('ab-cancel-edit').style.display = 'none';
+  abFormGroups = new Set();
 }
+function deleteFromCard() {
+  const call = abEditingCall;
+  if (!call) return;
+  closeContactCard();
+  deleteContact(call);
+}
+
+// ═══════════════════════════════════════════════════
+//  GROUP PICKER  (chips + type-ahead)
+//
+//  One control, two instances: the contact card and the importer. A plain
+//  checkbox list stops working once someone has thirty groups -- this filters
+//  as you type instead, and offers to create a name that does not exist yet,
+//  so making a group is a side effect of typing it rather than a separate
+//  trip to the address book.
+//
+//  Each instance owns a Set of selected names plus an onChange callback.
+//  Because the Sets it wraps (abFormGroups / impGroups) are reassigned when a
+//  dialog opens, gpInit() must be called again each time to rebind them.
+// ═══════════════════════════════════════════════════
+const GP = {};
+
+function gpInit(id, selSet, onChange) {
+  GP[id] = { sel: selSet, onChange: onChange || null, hi: -1, opts: [] };
+  gpRenderChips(id);
+  gpCloseMenu(id);
+  const inp = document.getElementById(id + '-in');
+  if (inp) inp.value = '';
+}
+function gpState(id) { return GP[id]; }
+
+function gpRenderChips(id) {
+  const st = GP[id]; if (!st) return;
+  const box = document.querySelector('#' + id + ' .gp-box');
+  const inp = document.getElementById(id + '-in');
+  // Rebuild the chips in front of the input, leaving the input itself alone
+  // so focus and caret survive.
+  [...box.querySelectorAll('.gp-chip')].forEach(el => el.remove());
+  for (const name of [...st.sel].sort((a, b) => a.localeCompare(b))) {
+    const chip = document.createElement('span');
+    chip.className = 'gp-chip';
+    chip.innerHTML = `<span>${esc(name)}</span><button type="button" title="Remove">\u00d7</button>`;
+    chip.querySelector('button').onclick = e => { e.stopPropagation(); gpRemove(id, name); };
+    box.insertBefore(chip, inp);
+  }
+  inp.placeholder = st.sel.size ? 'add another\u2026' : 'type to find or create a group\u2026';
+}
+
+function gpFocus(id) { const i = document.getElementById(id + '-in'); if (i) i.focus(); }
+function gpOnInput(id) { GP[id].hi = -1; gpOpen(id); }
+
+function gpOpen(id) {
+  const st = GP[id]; if (!st) return;
+  const q = (document.getElementById(id + '-in').value || '').trim();
+  const qq = q.toUpperCase();
+  const all = sortedGroups();
+  st.opts = all
+    .filter(g => !st.sel.has(g.name))
+    .filter(g => !qq || g.name.toUpperCase().includes(qq))
+    .map(g => ({ name: g.name, n: (g.members || []).length, create: false }));
+  // Offer creation when the typed name is not already an exact match.
+  const exact = all.some(g => g.name.toUpperCase() === qq);
+  if (q && !exact) st.opts.push({ name: q, n: 0, create: true });
+  if (st.hi >= st.opts.length) st.hi = st.opts.length - 1;
+
+  const menu = document.getElementById(id + '-menu');
+  if (!st.opts.length) {
+    menu.innerHTML = `<div class="gp-none">${st.sel.size && !q ? 'In every group already' : 'No groups yet \u2014 type a name to create one'}</div>`;
+  } else {
+    menu.innerHTML = st.opts.map((o, i) => o.create
+      ? `${i && !st.opts[i - 1].create ? '<div class="gp-sep"></div>' : ''}<button type="button" class="gp-opt gp-new${i === st.hi ? ' hi' : ''}" onmousedown="event.preventDefault()" onclick="gpPick('${id}',${i})">+ Create \u201c${esc(o.name)}\u201d</button>`
+      : `<button type="button" class="gp-opt${i === st.hi ? ' hi' : ''}" onmousedown="event.preventDefault()" onclick="gpPick('${id}',${i})">${esc(o.name)}<span class="gp-opt-n">${o.n}</span></button>`
+    ).join('');
+  }
+  document.querySelector('#' + id + ' .gp-box').classList.add('focus');
+  menu.classList.add('open');
+  gpPlace(id);
+}
+// The menu is position:fixed so a scrolling dialog body cannot clip it, which
+// means its coordinates have to be set from the box's rect each time.
+function gpPlace(id) {
+  const box = document.querySelector('#' + id + ' .gp-box');
+  const menu = document.getElementById(id + '-menu');
+  if (!box || !menu.classList.contains('open')) return;
+  const r = box.getBoundingClientRect();
+  menu.style.width = r.width + 'px';
+  menu.style.left = r.left + 'px';
+  const h = menu.offsetHeight;
+  // Flip above the field when there is not room below.
+  menu.style.top = (r.bottom + 4 + h > window.innerHeight && r.top - 4 - h > 0)
+    ? (r.top - 4 - h) + 'px' : (r.bottom + 4) + 'px';
+}
+function gpCloseMenu(id) {
+  const menu = document.getElementById(id + '-menu');
+  if (menu) menu.classList.remove('open');
+  const box = document.querySelector('#' + id + ' .gp-box');
+  if (box) box.classList.remove('focus');
+  if (GP[id]) GP[id].hi = -1;
+}
+function gpPick(id, i) {
+  const st = GP[id]; const o = st && st.opts[i];
+  if (!o) return;
+  const name = o.create ? ensureGroup(o.name) : o.name;
+  if (!name) return;
+  gpAdd(id, name, o.create);
+}
+function gpAdd(id, name, created) {
+  const st = GP[id];
+  st.sel.add(name);
+  document.getElementById(id + '-in').value = '';
+  gpRenderChips(id);
+  if (st.onChange) st.onChange(name, true, created);
+  gpOpen(id);
+  gpFocus(id);
+}
+function gpRemove(id, name) {
+  const st = GP[id];
+  st.sel.delete(name);
+  gpRenderChips(id);
+  if (st.onChange) st.onChange(name, false, false);
+  if (document.getElementById(id + '-menu').classList.contains('open')) gpOpen(id);
+}
+function gpKey(id, e) {
+  const st = GP[id]; if (!st) return;
+  const inp = document.getElementById(id + '-in');
+  if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+    e.preventDefault();
+    if (!document.getElementById(id + '-menu').classList.contains('open')) { gpOpen(id); return; }
+    const n = st.opts.length; if (!n) return;
+    st.hi = e.key === 'ArrowDown' ? (st.hi + 1) % n : (st.hi <= 0 ? n - 1 : st.hi - 1);
+    gpOpen(id);
+  } else if (e.key === 'Enter') {
+    e.preventDefault(); e.stopPropagation();
+    if (st.hi >= 0) { gpPick(id, st.hi); return; }
+    // No highlight: take the only match, else create what was typed.
+    if (st.opts.length === 1) { gpPick(id, 0); return; }
+    const q = inp.value.trim();
+    if (q) { const made = ensureGroup(q); if (made) gpAdd(id, made, !findGroup(q)); }
+  } else if (e.key === 'Escape') {
+    if (document.getElementById(id + '-menu').classList.contains('open')) { e.stopPropagation(); gpCloseMenu(id); }
+  } else if (e.key === 'Backspace' && !inp.value && st.sel.size) {
+    e.preventDefault();
+    gpRemove(id, [...st.sel].sort((a, b) => a.localeCompare(b)).pop());
+  }
+}
+// Clicking away closes any open picker menu.
+document.addEventListener('mousedown', e => {
+  for (const id of Object.keys(GP)) {
+    const wrap = document.getElementById(id);
+    if (wrap && !wrap.contains(e.target)) gpCloseMenu(id);
+  }
+});
+window.addEventListener('resize', () => { for (const id of Object.keys(GP)) gpPlace(id); });
+
+// The card's picker. Creating a group here has to show up in the rail (and in
+// the importer's picker) straight away.
+function cardGroupsChanged(name, on, created) {
+  if (created) { refreshAbDatalist(); }
+  if (abEditingCall) applyFormGroups(abEditingCall);   // existing contact: apply at once
+  renderAbGroups();
+  renderAddressBook();
+}
+// Kept for callers that still speak the old checkbox language.
+function renderFormGroups() { gpInit('gp-card', abFormGroups, cardGroupsChanged); }
+function abFormGroupToggle(name, on) {
+  if (on) abFormGroups.add(name); else abFormGroups.delete(name);
+  gpRenderChips('gp-card');
+  cardGroupsChanged(name, on, false);
+}
+
+// Make the stored membership match the ticked boxes for one callsign.
+function applyFormGroups(call) {
+  const list = loadGroups();
+  for (const g of list) {
+    const has = g.members.includes(call);
+    const want = abFormGroups.has(g.name);
+    if (want && !has) { g.members.push(call); g.members.sort(); }
+    else if (!want && has) { g.members = g.members.filter(c => c !== call); }
+  }
+  saveGroups(list);
+}
+function syncFormGroups(call) {
+  abFormGroups = new Set(groupsFor(call));
+  renderFormGroups();
+}
+
 function saveContact() {
-  const call = document.getElementById('ab-f-call').value.trim().toUpperCase();
-  const name = document.getElementById('ab-f-name').value.trim();
-  const city = document.getElementById('ab-f-city').value.trim();
-  const state = document.getElementById('ab-f-state').value.trim().toUpperCase();
-  const st = document.getElementById('ab-status');
-  if (!call) { st.style.color = 'var(--red)'; st.textContent = 'Callsign is required'; return; }
+  const f = cdGet();
+  const st = document.getElementById('cd-status');
+  if (!f.call) { st.style.color = 'var(--red)'; st.textContent = 'Callsign is required'; return; }
   const list = loadContacts();
-  const targetCall = abEditingCall || call;
-  const idx = list.findIndex(c => c.call === targetCall);
-  if (idx < 0 && list.some(c => c.call === call)) {
-    // New contact but that callsign already exists — load it for editing instead of duplicating.
-    st.style.color = 'var(--red)'; st.textContent = 'Contact already exists — editing it instead';
-    editContact(call);
+  // Whether this is an edit is decided by how the card was opened, never by
+  // what is typed in the callsign box. Deriving it from the typed value let a
+  // NEW card whose callsign happened to match an existing contact fall through
+  // to the update path and overwrite that contact's saved details with the
+  // blank fields of the new card.
+  const editing = abEditingCall !== null;
+  const idx = editing ? list.findIndex(c => c.call === abEditingCall) : -1;
+  if (!editing && list.some(c => c.call === f.call)) {
+    // New card for a callsign already on file — switch to editing it rather
+    // than making a second record.
+    st.style.color = 'var(--red)'; st.textContent = 'Already saved \u2014 opening that contact';
+    setTimeout(() => openContactCard(f.call), 700);
+    return;
+  }
+  if (editing && f.call !== abEditingCall && list.some(c => c.call === f.call)) {
+    // Renaming onto a callsign that already exists would silently merge two
+    // contacts into one; refuse instead.
+    st.style.color = 'var(--red)'; st.textContent = `${f.call} is already in the address book`;
     return;
   }
   const prev = idx >= 0 ? list[idx] : null;
-  const rec = { call, name, city, state, useCount: prev?.useCount || 0, lastUsed: prev?.lastUsed || 0 };
+  const rec = Object.assign({}, prev || {}, f, {
+    useCount: prev?.useCount || 0,
+    lastUsed: prev?.lastUsed || 0,
+  });
   if (idx >= 0) list[idx] = rec; else list.push(rec);
   saveContacts(list);
+  // A rename has to follow the contact into every group it belongs to.
+  if (prev && prev.call !== f.call) renameCallInGroups(prev.call, f.call);
+  applyFormGroups(f.call);
+  closeContactCard();
   refreshAbDatalist();
-  cancelEditContact();
+  renderAbGroups();
   renderAddressBook();
-  st.style.color = 'var(--green)'; st.textContent = 'Saved';
-  setTimeout(() => { st.textContent = ''; }, 2000);
+  const ab = document.getElementById('ab-status');
+  ab.style.color = 'var(--green)'; ab.textContent = `Saved ${f.call}`;
+  setTimeout(() => { ab.textContent = ''; }, 2500);
+}
+function renameCallInGroups(oldCall, newCall) {
+  const list = loadGroups();
+  let touched = false;
+  for (const g of list) {
+    const i = g.members.indexOf(oldCall);
+    if (i >= 0) { g.members[i] = newCall; g.members = [...new Set(g.members)].sort(); touched = true; }
+  }
+  if (touched) saveGroups(list);
 }
 function deleteContact(call) {
   if (!confirm(`Delete contact ${call}?`)) return;
   saveContacts(loadContacts().filter(c => c.call !== call));
+  // Leave no dangling members behind in groups.
+  const gl = loadGroups();
+  let touched = false;
+  for (const g of gl) {
+    const before = g.members.length;
+    g.members = g.members.filter(c => c !== call);
+    if (g.members.length !== before) touched = true;
+  }
+  if (touched) saveGroups(gl);
+  abSelected.delete(call);
+  if (abEditingCall === call) closeContactCard();
   refreshAbDatalist();
+  renderAbGroups();
   renderAddressBook();
 }
 function bumpContactUsage(call) {
@@ -1117,31 +1968,298 @@ function abUseContact(call) {
     openCompose(call);
   }
 }
-// Save the sender of the currently open message as a contact (or load them
-// for editing if already saved). Called from the reader toolbar.
+
+// ── Quick add from a message ──
+// Reduce whatever address is on screen to the key the address book uses: the
+// bare callsign. A routing or home-BBS suffix ("K1ABC@KE4MOB.#CFL.FL.USA.NOAM")
+// is dropped, because the same operator should be one contact however the mail
+// happened to route. An "SMTP:" internet address has no callsign to key on, so
+// it is rejected rather than mangled.
+function contactKeyFromAddress(addr) {
+  const raw = (addr || '').trim();
+  if (!raw || /^smtp:/i.test(raw)) return '';
+  return raw.split(',')[0].split('@')[0].trim().toUpperCase();
+}
+
+// Save a station straight off a message. Opens the address book with the
+// contact card over it, pre-filled with the callsign, rather than saving
+// silently -- a toast alone gave no sign anything had happened, and no chance
+// to add a name, phone or group while the message is still in front of you.
+// A callsign already on file opens for editing instead of duplicating.
+function quickAddContact(call) {
+  if (!call) { toast('No callsign to add', 'err'); return; }
+  if (call === 'SYSTEM') { toast('SYSTEM is not a contact', 'info'); return; }
+  const known = findContact(call);
+  openAddressBook();
+  openContactCard(known ? call : null, known ? null : call);
+  if (known) { toast(`${call} is already saved \u2014 opened for editing`, 'info'); return; }
+  // Save a click: with QRZ connected, fill the card in straight away.
+  if (qrzHasCreds()) qrzLookupIntoForm();
+}
+
+// Reader toolbar: save the sender of the message being read.
 function addContactFromMessage() {
   const msg = allMsgs.find(m => m.num === activeNum);
-  if (!msg) return;
-  const call = persFromKey(msg);
-  if (!call || call === 'SYSTEM') { toast('No callsign to add', 'err'); return; }
-  openAddressBook();
-  const existing = findContact(call);
-  if (existing) {
-    editContact(call);
-  } else {
-    cancelEditContact();
-    document.getElementById('ab-f-call').value = call;
-    // If QRZ creds are already on file, save a click and look them up now.
-    if (LS.get('bpq_qrz_user') && LS.get('bpq_qrz_pass')) qrzLookupIntoForm();
-  }
+  if (!msg) { toast('Open a message first', 'info'); return; }
+  quickAddContact(contactKeyFromAddress(replyAddr(msg)));
 }
+// Compose / reply toolbar: save whoever is currently in the To field.
+function addContactFromCompose() {
+  const raw = document.getElementById('cmp-to').value || '';
+  const call = contactKeyFromAddress(raw);
+  if (!call) { toast(raw.trim() ? 'No callsign in the To field' : 'Fill in the To field first', 'err'); return; }
+  quickAddContact(call);
+}
+
 function refreshAbDatalist() {
   const dl = document.getElementById('ab-datalist');
   if (!dl) return;
-  dl.innerHTML = loadContacts().map(c => {
-    const desc = [c.name, [c.city, c.state].filter(Boolean).join(', ')].filter(Boolean).join(' — ');
+  const contacts = loadContacts().map(c => {
+    const desc = [c.name, [c.city, c.state].filter(Boolean).join(', ')].filter(Boolean).join(' \u2014 ');
     return `<option value="${escAttr(c.call)}">${esc(desc)}</option>`;
   }).join('');
+  // Groups are offered in the same picker, expanded to their member list, so
+  // picking a group in To works the way it does in a desktop mail client.
+  const grpOpts = loadGroups().filter(g => g.members.length).map(g =>
+    `<option value="${escAttr(g.members.join(', '))}">Group: ${esc(g.name)} (${g.members.length})</option>`).join('');
+  dl.innerHTML = grpOpts + contacts;
+}
+
+// ═══════════════════════════════════════════════════
+//  IMPORT
+//
+//  Takes either a pasted list of callsigns (any mix of commas, spaces,
+//  newlines) or a CSV with a header row, and files every imported contact
+//  into the chosen groups in one pass. Nothing is written until the user
+//  presses Import, and the preview always states exactly what will happen.
+// ═══════════════════════════════════════════════════
+let impGroups = new Set();   // existing groups ticked for this import
+let impFileName = '';
+
+// Permissive callsign check: 2-10 alphanumerics with at least one digit, plus
+// an optional -SSID. Deliberately loose — this has to accept every country's
+// format, and BBS-style suffixes have already been stripped by then.
+function looksLikeCallsign(t) {
+  return /^[A-Z0-9]{2,10}(-\d{1,2})?$/.test(t) && /\d/.test(t);
+}
+// Normalise one token to the key the address book uses.
+function normCall(t) {
+  return String(t || '').trim().toUpperCase().split('@')[0].replace(/^SMTP:/, '').trim();
+}
+
+// Split a CSV line, honouring "quoted, fields".
+function csvSplit(line) {
+  const out = []; let cur = '', q = false;
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i];
+    if (q) {
+      if (ch === '"' && line[i + 1] === '"') { cur += '"'; i++; }
+      else if (ch === '"') q = false;
+      else cur += ch;
+    } else if (ch === '"') q = true;
+    else if (ch === ',' || ch === '\t' || ch === ';') { out.push(cur); cur = ''; }
+    else cur += ch;
+  }
+  out.push(cur);
+  return out.map(v => v.trim());
+}
+
+// Tell "K1AJD,John Doe,Boston,MA" (one contact, four columns) apart from
+// "K1AJD, W2XYZ, N3MEL" (three contacts on one line). A row is CSV only when
+// the first field is a callsign AND some later field is not -- a line of
+// nothing but callsigns is a list, whatever happens to separate them.
+function isHeaderlessCsvRow(line) {
+  if (!/[,;\t]/.test(line)) return false;
+  const f = csvSplit(line).filter(v => v !== '');
+  if (f.length < 2) return false;
+  if (!looksLikeCallsign(normCall(f[0]))) return false;
+  return f.slice(1).some(v => !looksLikeCallsign(normCall(v)));
+}
+
+// Parse the textarea into { rows:[{call,name,city,state}], bad:[...] }.
+// A line with separators is treated as CSV; anything else is a bare list of
+// callsigns, however it is delimited.
+function parseImportText(text) {
+  const lines = String(text || '').split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+  const rows = [], bad = [], seen = new Set();
+  if (!lines.length) return { rows, bad };
+
+  // Header detection: first line names a callsign column and has separators.
+  let cols = null, startAt = 0;
+  if (/[,;\t]/.test(lines[0])) {
+    const h = csvSplit(lines[0]).map(v => v.toLowerCase());
+    if (h.some(v => v === 'call' || v === 'callsign' || v === 'call sign')) {
+      cols = {
+        call:  h.findIndex(v => v === 'call' || v === 'callsign' || v === 'call sign'),
+        name:  h.findIndex(v => v === 'name' || v === 'full name' || v === 'fullname'),
+        city:  h.findIndex(v => v === 'city' || v === 'qth'),
+        state: h.findIndex(v => v === 'state' || v === 'st' || v === 'province'),
+      };
+      startAt = 1;
+    }
+  }
+
+  const take = (call, name, city, state, src) => {
+    const c = normCall(call);
+    if (!looksLikeCallsign(c)) { if (src) bad.push(src); return; }
+    if (seen.has(c)) return;
+    seen.add(c);
+    rows.push({ call: c, name: (name || '').trim(), city: (city || '').trim(), state: (state || '').trim().toUpperCase() });
+  };
+
+  for (let i = startAt; i < lines.length; i++) {
+    const line = lines[i];
+    if (cols) {
+      const f = csvSplit(line);
+      take(f[cols.call], cols.name >= 0 ? f[cols.name] : '', cols.city >= 0 ? f[cols.city] : '',
+           cols.state >= 0 ? f[cols.state] : '', line);
+    } else if (isHeaderlessCsvRow(line)) {
+      // Headerless CSV: assume callsign,name,city,state.
+      const f = csvSplit(line);
+      take(f[0], f[1], f[2], f[3], line);
+    } else {
+      // Bare list — split on anything that is not part of a callsign.
+      for (const tok of line.split(/[\s,;]+/).filter(Boolean)) take(tok, '', '', '', tok);
+    }
+  }
+  return { rows, bad };
+}
+
+function openImport() {
+  document.getElementById('imp-ta').value = '';
+  document.getElementById('imp-file-name').textContent = '';
+  document.getElementById('imp-status').textContent = '';
+  document.getElementById('imp-qrz').checked = false;
+  impFileName = '';
+  // Pre-tick the group currently on screen — importing "into this group" is
+  // the common case when a group is open.
+  impGroups = new Set(abGroupView ? [abGroupView] : []);
+  renderImportGroups();
+  renderImportPreview();
+  document.getElementById('imp-ov').classList.add('open');
+  setTimeout(() => document.getElementById('imp-ta').focus(), 60);
+}
+function closeImport() { document.getElementById('imp-ov').classList.remove('open'); }
+
+function renderImportGroups() {
+  gpInit('gp-imp', impGroups, () => { renderAbGroups(); renderImportPreview(); });
+}
+
+function importFilePicked(input) {
+  const f = input.files && input.files[0];
+  if (!f) return;
+  loadImportFile(f);
+  input.value = '';
+}
+function loadImportFile(f) {
+  impFileName = f.name;
+  const r = new FileReader();
+  r.onload = () => {
+    document.getElementById('imp-ta').value = String(r.result || '');
+    document.getElementById('imp-file-name').textContent = f.name;
+    renderImportPreview();
+  };
+  r.onerror = () => toast('Could not read that file', 'err');
+  r.readAsText(f);
+}
+
+function renderImportPreview() {
+  const { rows, bad } = parseImportText(document.getElementById('imp-ta').value);
+  const known = new Set(loadContacts().map(c => c.call));
+  const fresh = rows.filter(r => !known.has(r.call));
+  const dup = rows.length - fresh.length;
+
+  const targets = [...impGroups].filter(n => findGroup(n));
+
+  const stat = document.getElementById('imp-stat');
+  const prev = document.getElementById('imp-prev');
+  const go = document.getElementById('imp-go');
+
+  if (!rows.length && !bad.length) {
+    stat.innerHTML = '<span class="modal-hint">Paste some callsigns above, or choose a CSV file.</span>';
+    prev.style.display = 'none';
+    go.disabled = true; go.style.opacity = '.4';
+    document.getElementById('imp-qrz-hint').textContent = '';
+    return;
+  }
+
+  go.disabled = !rows.length; go.style.opacity = rows.length ? '' : '.4';
+  go.textContent = rows.length ? `Import ${rows.length}` : 'Import';
+
+  stat.innerHTML =
+    `<b>${rows.length}</b> callsign${rows.length === 1 ? '' : 's'} found \u2014 ` +
+    `<b>${fresh.length}</b> new, <b>${dup}</b> already in the book` +
+    (bad.length ? ` \u00b7 <span class="ab-imp-bad">${bad.length} line${bad.length === 1 ? '' : 's'} skipped</span>` : '') +
+    (targets.length ? `<br>All ${rows.length} will be added to: <b>${targets.map(esc).join('</b>, <b>')}</b>`
+                    : '<br>Not being added to any group.');
+
+  prev.style.display = '';
+  prev.innerHTML = rows.slice(0, 200).map(r =>
+      `<span style="opacity:${known.has(r.call) ? '.45' : '1'}">${esc(r.call)}</span>`).join(', ') +
+    (rows.length > 200 ? ` \u2026 and ${rows.length - 200} more` : '') +
+    (bad.length ? `<div class="ab-imp-bad" style="margin-top:7px">Skipped: ${bad.slice(0, 12).map(esc).join(' \u00b7 ')}${bad.length > 12 ? ` \u2026 +${bad.length - 12}` : ''}</div>` : '');
+
+  document.getElementById('imp-qrz-hint').textContent = fresh.length
+    ? `${fresh.length} new contact${fresh.length === 1 ? '' : 's'} would be looked up \u2014 about ${Math.ceil(fresh.length / 60)} minute${Math.ceil(fresh.length / 60) === 1 ? '' : 's'}.`
+    : '';
+}
+
+function runImport() {
+  const { rows } = parseImportText(document.getElementById('imp-ta').value);
+  if (!rows.length) return;
+
+  // The picker creates groups as they are typed, so they already exist.
+  const targets = [...impGroups].filter(n => findGroup(n));
+
+  const list = loadContacts();
+  const byCall = new Map(list.map(c => [c.call, c]));
+  let added = 0, updated = 0;
+  for (const r of rows) {
+    const ex = byCall.get(r.call);
+    if (ex) {
+      // Never clobber details the user already has; only fill blanks.
+      let touched = false;
+      for (const k of ['name', 'city', 'state']) if (!ex[k] && r[k]) { ex[k] = r[k]; touched = true; }
+      if (touched) updated++;
+    } else {
+      const rec = { call: r.call, name: r.name, city: r.city, state: r.state, useCount: 0, lastUsed: 0 };
+      list.push(rec); byCall.set(r.call, rec); added++;
+    }
+  }
+  saveContacts(list);
+
+  if (targets.length) {
+    const gl = loadGroups();
+    for (const t of targets) {
+      const g = gl.find(x => x.name === t);
+      if (!g) continue;
+      const have = new Set(g.members);
+      for (const r of rows) if (!have.has(r.call)) { g.members.push(r.call); have.add(r.call); }
+      g.members.sort();
+    }
+    saveGroups(gl);
+  }
+
+  const wantQrz = document.getElementById('imp-qrz').checked;
+  const needLookup = wantQrz ? rows.map(r => r.call).filter(c => {
+    const x = byCall.get(c);
+    return x && !x.name && !x.city && !x.state;
+  }) : [];
+
+  closeImport();
+  refreshAbDatalist();
+  if (targets.length === 1) abGroupView = targets[0];
+  abSelected.clear();
+  renderAbGroups();
+  renderAddressBook();
+
+  const bits = [`${added} added`];
+  if (updated) bits.push(`${updated} filled in`);
+  if (rows.length - added - updated > 0) bits.push(`${rows.length - added - updated} unchanged`);
+  if (targets.length) bits.push(`filed into ${targets.join(', ')}`);
+  toast(bits.join(' \u00b7 '), 'ok');
+
+  if (needLookup.length) qrzEnrichMany(needLookup);
 }
 
 // ── QRZ.com XML lookup ──
@@ -1176,11 +2294,15 @@ function qrzGetSession(user, pass, force) {
   });
 }
 function qrzExtract(doc) {
-  const name = [qrzTag(doc, 'fname'), qrzTag(doc, 'name')].filter(Boolean).join(' ');
-  const city = qrzTag(doc, 'addr2');
-  const state = qrzTag(doc, 'state');
-  if (!name && !city && !state) return null;
-  return { name, city, state };
+  const info = {
+    name:   [qrzTag(doc, 'fname'), qrzTag(doc, 'name')].filter(Boolean).join(' '),
+    street: qrzTag(doc, 'addr1'),
+    city:   qrzTag(doc, 'addr2'),
+    state:  qrzTag(doc, 'state'),
+    zip:    qrzTag(doc, 'zip'),
+    email:  qrzTag(doc, 'email'),
+  };
+  return Object.values(info).some(Boolean) ? info : null;
 }
 function qrzLookup(call, user, pass) {
   return qrzGetSession(user, pass).then(session => {
@@ -1203,22 +2325,140 @@ function qrzLookup(call, user, pass) {
     });
   });
 }
+// The lookup link is the only QRZ entry point. With no credentials on file it
+// opens the login prompt and then *continues into the lookup* once they are
+// saved, rather than sending the user off to find a settings section.
+function qrzHasCreds() { return !!(LS.get('bpq_qrz_user') && LS.get('bpq_qrz_pass')); }
+
 function qrzLookupIntoForm() {
   const call = document.getElementById('ab-f-call').value.trim().toUpperCase();
   const status = document.getElementById('ab-lookup-status');
   if (!call) { status.style.color = 'var(--red)'; status.textContent = 'Enter a callsign first'; return; }
-  const user = LS.get('bpq_qrz_user'), pass = LS.get('bpq_qrz_pass');
-  if (!user || !pass) { status.style.color = 'var(--red)'; status.textContent = 'Add your QRZ login above first'; return; }
-  status.style.color = 'var(--amber)'; status.textContent = `Looking up ${call}…`;
-  qrzLookup(call, user, pass).then(info => {
+  if (!qrzHasCreds()) {
+    openQrzLogin(`Sign in to fill in <b>${esc(call)}</b> automatically.`, () => qrzLookupIntoForm());
+    return;
+  }
+  status.style.color = 'var(--amber)'; status.textContent = `Looking up ${call}\u2026`;
+  qrzLookup(call, LS.get('bpq_qrz_user'), LS.get('bpq_qrz_pass')).then(info => {
     if (!info) { status.style.color = 'var(--red)'; status.textContent = 'Not found on QRZ'; return; }
-    if (info.name) document.getElementById('ab-f-name').value = info.name;
-    if (info.city) document.getElementById('ab-f-city').value = info.city;
-    if (info.state) document.getElementById('ab-f-state').value = info.state;
-    status.style.color = 'var(--green)'; status.textContent = 'Filled from QRZ — review and save';
+    // Only ever fill blanks -- anything already typed into the card wins.
+    const filled = [];
+    for (const [k, id] of Object.entries(CD_FIELDS)) {
+      if (k === 'call' || !info[k]) continue;
+      const el = document.getElementById(id);
+      if (el.value.trim()) continue;
+      el.value = info[k];
+      filled.push(k);
+    }
+    status.style.color = filled.length ? 'var(--green)' : 'var(--text3)';
+    status.textContent = filled.length ? `Filled ${filled.join(', ')} \u2014 review and save`
+                                       : 'QRZ had nothing new to add';
   }).catch(err => {
-    status.style.color = 'var(--red)'; status.textContent = 'QRZ lookup failed: ' + (err.message || err);
+    status.style.color = 'var(--red)'; status.textContent = 'QRZ: ' + (err.message || err);
   });
+}
+
+// ── QRZ login prompt ──
+let qrzAfterLogin = null;   // what to run once credentials are saved
+
+function openQrzLogin(whyHtml, then) {
+  qrzAfterLogin = then || null;
+  const user = LS.get('bpq_qrz_user') || '';
+  document.getElementById('ab-qrz-user').value = user;
+  document.getElementById('ab-qrz-pass').value = LS.get('bpq_qrz_pass') || '';
+  document.getElementById('qrz-why').innerHTML = whyHtml ||
+    (user ? 'Update or disconnect your QRZ.com XML login.'
+          : 'Sign in to fill Name / City / State automatically from a callsign.');
+  document.getElementById('qrz-forget').style.display = user ? '' : 'none';
+  document.getElementById('qrz-ov').classList.add('open');
+  setTimeout(() => document.getElementById(user ? 'ab-qrz-pass' : 'ab-qrz-user').focus(), 60);
+}
+function closeQrzLogin() {
+  document.getElementById('qrz-ov').classList.remove('open');
+  qrzAfterLogin = null;
+}
+function saveQrzCreds() {
+  const u = document.getElementById('ab-qrz-user').value.trim().toUpperCase();
+  const pw = document.getElementById('ab-qrz-pass').value;
+  if (!u || !pw) { toast('Enter both a QRZ username and password', 'err'); return; }
+  LS.set('bpq_qrz_user', u);
+  LS.set('bpq_qrz_pass', pw);
+  // Credentials changed -- any cached session key is now stale.
+  LS.del('bpq_qrz_session'); LS.del('bpq_qrz_session_exp');
+  const then = qrzAfterLogin;
+  closeQrzLogin();
+  renderQrzLink();
+  toast(`QRZ connected as ${u}`, 'ok');
+  if (then) then();
+}
+function forgetQrzCreds() {
+  LS.del('bpq_qrz_user'); LS.del('bpq_qrz_pass');
+  LS.del('bpq_qrz_session'); LS.del('bpq_qrz_session_exp');
+  closeQrzLogin();
+  renderQrzLink();
+  toast('QRZ disconnected', 'ok');
+}
+// One quiet line in the address-book footer, the only always-visible trace of
+// QRZ in the UI.
+function renderQrzLink() {
+  const el = document.getElementById('ab-qrz-link');
+  if (!el) return;
+  const u = LS.get('bpq_qrz_user');
+  el.textContent = u ? `QRZ: ${u}` : 'QRZ not connected';
+  el.title = u ? 'Change or disconnect your QRZ login' : 'Connect a QRZ.com XML subscription for automatic lookups';
+}
+
+// ── Background enrichment ──
+// Fill one blank contact from QRZ. Resolves with a short description of what
+// was filled, or '' when there was nothing to do. Never clobbers details the
+// user already typed.
+function qrzEnrich(call) {
+  if (!qrzHasCreds()) return Promise.resolve('');
+  return qrzLookup(call, LS.get('bpq_qrz_user'), LS.get('bpq_qrz_pass')).then(info => {
+    if (!info) return '';
+    const list = loadContacts();
+    const c = list.find(x => x.call === call);
+    if (!c) return '';
+    // Only fill blanks, so a hand-edited contact is never overwritten.
+    let touched = false;
+    for (const k of ['name', 'street', 'city', 'state', 'zip', 'email']) {
+      if (!c[k] && info[k]) { c[k] = info[k]; touched = true; }
+    }
+    if (!touched) return '';
+    saveContacts(list);
+    refreshAbDatalist();
+    if (document.getElementById('ab-ov').classList.contains('open')) renderAddressBook();
+    return [info.name, info.city, info.state].filter(Boolean).join(', ');
+  });
+}
+
+// Walk a list of callsigns one per second. QRZ's XML service is a paid,
+// rate-limited API and a bulk import can be hundreds of calls, so this is
+// deliberately unhurried, runs in the background, and reports at the end.
+let qrzBulkAbort = false;
+function qrzEnrichMany(calls) {
+  if (!calls.length || !qrzHasCreds()) return;
+  qrzBulkAbort = false;
+  let i = 0, filled = 0, failed = 0;
+  toast(`QRZ: looking up ${calls.length} contact${calls.length === 1 ? '' : 's'} in the background\u2026`, 'info');
+  const step = () => {
+    if (qrzBulkAbort || i >= calls.length) {
+      const msg = qrzBulkAbort ? `QRZ lookup stopped \u2014 ${filled} filled in`
+                               : `QRZ: filled in ${filled} of ${calls.length}${failed ? ` (${failed} not found)` : ''}`;
+      toast(msg, filled ? 'ok' : 'info');
+      const st = document.getElementById('ab-status');
+      if (st) st.textContent = '';
+      return;
+    }
+    const call = calls[i++];
+    const st = document.getElementById('ab-status');
+    if (st) { st.style.color = 'var(--text3)'; st.textContent = `QRZ ${i}/${calls.length} \u2014 ${call}\u2026`; }
+    qrzEnrich(call)
+      .then(d => { if (d) filled++; else failed++; })
+      .catch(() => { failed++; })
+      .then(() => setTimeout(step, 1000));
+  };
+  step();
 }
 
 // ═══════════════════════════════════════════════════
@@ -1397,6 +2637,215 @@ function saveRules() {
 
 document.getElementById('rules-ov').addEventListener('click',e=>{if(e.target===e.currentTarget)closeRules();});
 document.getElementById('ab-ov').addEventListener('click',e=>{if(e.target===e.currentTarget)closeAddressBook();});
+document.getElementById('grp-ov').addEventListener('click',e=>{if(e.target===e.currentTarget)closeGroupPrompt();});
+document.getElementById('imp-ov').addEventListener('click',e=>{if(e.target===e.currentTarget)closeImport();});
+document.getElementById('cd-ov').addEventListener('click',e=>{if(e.target===e.currentTarget)closeContactCard();});
+// Enter saves from any single-line field on the card (not the notes box).
+for (const id of ['ab-f-call','ab-f-name','ab-f-street','ab-f-city','ab-f-state','ab-f-zip','ab-f-phone','ab-f-email','ab-f-web']) {
+  document.getElementById(id).addEventListener('keydown',e=>{
+    if(e.key==='Enter'){e.preventDefault();saveContact();}
+  });
+}
+document.getElementById('qrz-ov').addEventListener('click',e=>{if(e.target===e.currentTarget)closeQrzLogin();});
+document.getElementById('grp-name').addEventListener('keydown',e=>{
+  if(e.key==='Enter'){e.preventDefault();saveGroupPrompt();}
+  else if(e.key==='Escape'){e.preventDefault();closeGroupPrompt();}
+});
+// Enter anywhere in the QRZ prompt submits it — it is a two-field login.
+for (const id of ['ab-qrz-user','ab-qrz-pass']) {
+  document.getElementById(id).addEventListener('keydown',e=>{
+    if(e.key==='Enter'){e.preventDefault();saveQrzCreds();}
+    else if(e.key==='Escape'){e.preventDefault();closeQrzLogin();}
+  });
+}
+// Drop a .csv straight onto the import textarea.
+(function(){
+  const ta=document.getElementById('imp-ta');
+  const stop=e=>{e.preventDefault();e.stopPropagation();};
+  ta.addEventListener('dragover',e=>{stop(e);e.dataTransfer.dropEffect='copy';ta.classList.add('drop');});
+  ta.addEventListener('dragleave',()=>ta.classList.remove('drop'));
+  ta.addEventListener('drop',e=>{
+    stop(e); ta.classList.remove('drop');
+    const f=e.dataTransfer.files && e.dataTransfer.files[0];
+    if(f) loadImportFile(f); else renderImportPreview();
+  });
+})();
+// Escape closes whichever address-book layer is on top.
+document.addEventListener('keydown',e=>{
+  if(e.key!=='Escape') return;
+  const layers=[['qrz-ov',closeQrzLogin],['grp-ov',closeGroupPrompt],['cd-ov',closeContactCard],['imp-ov',closeImport],['ab-ov',closeAddressBook]];
+  for(const [id,fn] of layers){
+    if(document.getElementById(id).classList.contains('open')){ fn(); return; }
+  }
+});
+
+// ═══════════════════════════════════════════════════
+//  SHARED CONTEXT MENU
+//
+//  One floating menu reused by every right-clickable thing (bulletin
+//  sub-filters, message rows, address-book groups). Items are plain
+//  objects: { label, fn, cls?, disabled? } or { sep:true }. Handlers are
+//  held in a closure array rather than inlined into onclick attributes,
+//  so a callsign or group name containing quotes can never break out.
+// ═══════════════════════════════════════════════════
+let ctxHandlers = [];
+function showCtxMenu(e, title, items) {
+  e.preventDefault(); e.stopPropagation();
+  const el = document.getElementById('ctxm');
+  ctxHandlers = items.map(it => it.fn || null);
+  el.innerHTML = (title ? `<div class="ctxm-hd">${esc(title)}</div>` : '') +
+    items.map((it, i) => it.sep
+      ? '<div class="ctxm-sep"></div>'
+      : `<button class="ctxm-it${it.cls ? ' ' + it.cls : ''}" ${it.disabled ? 'disabled style="opacity:.4;cursor:default"' : `onclick="runCtxItem(${i})"`}>${esc(it.label)}</button>`
+    ).join('');
+  // Show it first so offsetWidth/Height are real, then keep it on screen.
+  el.style.left = '0px'; el.style.top = '0px';
+  el.classList.add('open');
+  const w = el.offsetWidth, h = el.offsetHeight;
+  const x = Math.max(4, Math.min(e.clientX, window.innerWidth  - w - 6));
+  const y = Math.max(4, Math.min(e.clientY, window.innerHeight - h - 6));
+  el.style.left = x + 'px'; el.style.top = y + 'px';
+}
+function hideCtxMenu() {
+  const el = document.getElementById('ctxm');
+  if (el) el.classList.remove('open');
+  ctxHandlers = [];
+}
+function runCtxItem(i) {
+  const fn = ctxHandlers[i];
+  hideCtxMenu();
+  if (fn) fn();
+}
+document.addEventListener('click', hideCtxMenu);
+document.addEventListener('keydown', e => { if (e.key === 'Escape') hideCtxMenu(); });
+window.addEventListener('blur', hideCtxMenu);
+window.addEventListener('resize', hideCtxMenu);
+document.addEventListener('scroll', hideCtxMenu, true);
+// A right-click anywhere that is not itself a handled target closes the menu
+// rather than leaving a stale one floating over the new spot.
+document.addEventListener('contextmenu', e => { if (!e.defaultPrevented) hideCtxMenu(); });
+
+// Touch devices have no right-click, and iOS Safari never fires contextmenu on
+// a long press — so synthesise one. A press that holds still for 480ms opens
+// the same menu; any real movement means the user is scrolling, so it is
+// abandoned. The follow-up click (which fires when the finger lifts) is
+// swallowed once, or long-pressing a bulletin would also select it.
+(function () {
+  const HOLD_MS = 480, MOVE_CANCEL = 12;
+  let timer = null, sx = 0, sy = 0, fired = false;
+  const targetFor = el => el.closest('#sf-bulls-wrap .sf[data-bull]')
+                       || el.closest('#list-body .mrow[data-num]')
+                       || el.closest('#ab-rail-list .ab-grp[data-grp]');
+  function cancel() { clearTimeout(timer); timer = null; }
+  document.addEventListener('touchstart', e => {
+    fired = false;
+    if (e.touches.length !== 1) return cancel();
+    const el = targetFor(e.target);
+    if (!el) return;
+    const t = e.touches[0];
+    sx = t.clientX; sy = t.clientY;
+    cancel();
+    timer = setTimeout(() => {
+      timer = null; fired = true;
+      const evt = { preventDefault(){}, stopPropagation(){}, clientX: sx, clientY: sy };
+      if (el.dataset.bull !== undefined)      bullFilterCtx(evt, el.dataset.bull);
+      else if (el.dataset.num !== undefined)  msgRowCtx(evt, el.dataset.num);
+      else if (el.dataset.grp !== undefined)  abGroupCtx(evt, el.dataset.grp);
+    }, HOLD_MS);
+  }, { passive: true });
+  document.addEventListener('touchmove', e => {
+    if (!timer) return;
+    const t = e.touches[0];
+    if (Math.abs(t.clientX - sx) > MOVE_CANCEL || Math.abs(t.clientY - sy) > MOVE_CANCEL) cancel();
+  }, { passive: true });
+  document.addEventListener('touchend', cancel, { passive: true });
+  document.addEventListener('touchcancel', cancel, { passive: true });
+  // Capture phase, so the row's own onclick never runs after a long press.
+  document.addEventListener('click', e => {
+    if (!fired) return;
+    fired = false;
+    if (targetFor(e.target)) { e.preventDefault(); e.stopPropagation(); }
+  }, true);
+})();
+
+// ═══════════════════════════════════════════════════
+//  BULLETIN SUBSCRIPTIONS
+//
+//  Purely a local view filter: an unsubscribed TO (WX, PKTNET, …) drops
+//  out of the Bulletins tree's "All" roll-up and out of the message list,
+//  but nothing is killed or rejected on the BBS and nothing is lost — the
+//  muted entries stay at the bottom of the tree so you can look at them
+//  and right-click to resubscribe. Distinct from "Reject", which asks the
+//  node itself to stop accepting that traffic.
+// ═══════════════════════════════════════════════════
+let bullUnsub = new Set((LS.getJ('bpq_bull_unsub') || []).map(v => String(v).toUpperCase()));
+function saveBullUnsub() { LS.setJ('bpq_bull_unsub', [...bullUnsub]); }
+function isBullUnsub(to) { return bullUnsub.has(String(to || '').toUpperCase()); }
+function subscribeBull(to) {
+  bullUnsub.delete(String(to || '').toUpperCase());
+  saveBullUnsub();
+  afterBullSubChange(`Subscribed to ${to}`);
+}
+function unsubscribeBull(to) {
+  const key = String(to || '').toUpperCase();
+  if (!key) return;
+  bullUnsub.add(key);
+  saveBullUnsub();
+  // Don't leave the list sitting on a filter that is now hidden.
+  if (bullFilter === to || bullFilter === key) bullFilter = 'ALL';
+  afterBullSubChange(`Unsubscribed from ${to} — hidden from Bulletins`);
+}
+function afterBullSubChange(msg) {
+  if (activeFolder === 'Bulls') {
+    buildBullFilters(allMsgs);
+    const f = getFiltered();
+    renderList(f);
+    updateListCount(f);
+    document.getElementById('list-title').textContent = bullFilter === 'ALL' ? 'Bulletins' : `Bulletins · ${bullFilter}`;
+    if (activeNum && !f.some(m => m.num === activeNum)) {
+      activeNum = null;
+      showEmpty(true);
+    }
+  }
+  updateActiveFolderBadge();
+  toast(msg, 'ok');
+}
+// Right-click target: a TO entry in the Bulletins tree.
+function bullFilterCtx(e, to) {
+  if (to === 'ALL') { hideCtxMenu(); return; }
+  const off = isBullUnsub(to);
+  showCtxMenu(e, `Bulletin · ${to}`, [
+    off ? { label: `✓ Resubscribe to ${to}`, cls: 'good', fn: () => subscribeBull(to) }
+        : { label: `⊘ Unsubscribe from ${to}`, cls: 'danger', fn: () => unsubscribeBull(to) },
+    { sep: true },
+    { label: `Show only ${to}`, fn: () => setBullFilter(to) },
+  ]);
+}
+// Right-click target: a row in the message list.
+function msgRowCtx(e, num) {
+  const m = allMsgs.find(x => x.num === num);
+  if (!m) { hideCtxMenu(); return; }
+  const to = (m.to || '').trim();
+  const isBull = (m.type || '').toUpperCase().startsWith('B');
+  const call = contactKeyFromAddress(replyAddr(m));
+  const items = [];
+  if (isBull && to) {
+    items.push(isBullUnsub(to)
+      ? { label: `✓ Resubscribe to ${to}`, cls: 'good', fn: () => subscribeBull(to) }
+      : { label: `⊘ Unsubscribe from ${to}`, cls: 'danger', fn: () => unsubscribeBull(to) });
+    items.push({ sep: true });
+  }
+  items.push({ label: `📇 Add ${call || persFromKey(m)} to address book`, disabled: !call, fn: () => quickAddContact(call) });
+  items.push({ label: '↩ Reply', fn: () => { openMsgThen(num, doReply); } });
+  showCtxMenu(e, `#${num} · ${m.subject || ''}`, items);
+}
+// Context actions that operate on "the open message" need that message open
+// first — the reader loads the body lazily.
+function openMsgThen(num, fn) {
+  if (activeNum === num) { fn(); return; }
+  Promise.resolve(openMsg(num)).then(fn);
+}
+
 
 // ── KILLED SET ─────────────────────────────────────
 let killedSet = new Set(LS.getJ('bpq_killed')||[]);
@@ -1521,7 +2970,7 @@ function toggleSettings() {
     // Info row: version, callsign, status
     const info = document.createElement('div');
     info.className = 'm-cfg-info';
-    info.innerHTML = '<span>v1.6.8</span>' +
+    info.innerHTML = '<span>v1.7.0</span>' +
       '<span style="color:var(--accent);background:var(--accent-bg);border:1px solid var(--accent-border);padding:2px 7px;border-radius:4px">' + (callEl ? callEl.textContent : '—') + '</span>' +
       '<span id="m-status-pill" class="' + (statusPill ? statusPill.className : '') + '">' + (statusPill ? statusPill.textContent : '') + '</span>';
 
@@ -2164,8 +3613,39 @@ function buildPersFilters(msgs) {
   const hasSystem = msgs.some(m => persFromKey(m)==='SYSTEM');
   buildSubfilters('sf-pers-wrap', msgs, persFromKey, persFilter, 'setPersFilter', hasSystem ? 'SYSTEM' : null);
 }
+// Bulletins get their own tree builder rather than buildSubfilters(): the
+// unsubscribed TOs have to be pulled out of the "All" roll-up and re-listed,
+// dimmed, below a divider so they stay reachable.
 function buildBullFilters(msgs) {
-  buildSubfilters('sf-bulls-wrap', msgs, m=>m.to, bullFilter, 'setBullFilter', null);
+  const counts = {}, unreads = {};
+  for (const m of msgs) {
+    const k = m.to || '?';
+    counts[k] = (counts[k] || 0) + 1;
+    if (!readSet.has(m.num)) unreads[k] = (unreads[k] || 0) + 1;
+  }
+  const keys = Object.keys(counts).sort();
+  const on  = keys.filter(k => !isBullUnsub(k));
+  const off = keys.filter(k =>  isBullUnsub(k));
+  let allCount = 0, allUnread = 0;
+  for (const k of on) { allCount += counts[k]; allUnread += (unreads[k] || 0); }
+
+  const row = (k, cnt, unr, muted) => `
+    <div class="sf${bullFilter === k ? ' active' : ''}${muted ? ' muted' : ''}"
+         data-bull="${escAttr(k)}" onclick="setBullFilter('${escAttr(k)}')"
+         ${k === 'ALL' ? '' : `oncontextmenu="bullFilterCtx(event,'${escAttr(k)}')"`}
+         title="${k === 'ALL' ? 'All subscribed bulletins' : (muted ? 'Unsubscribed — right-click to resubscribe' : 'Right-click to unsubscribe')}">
+      <span class="sf-lbl">${esc(k)}</span>
+      <span class="sf-count">(${cnt})</span>
+      <span class="sf-unread${unr > 0 ? ' on' : ''}"></span>
+    </div>`;
+
+  let html = row('ALL', allCount, allUnread, false) +
+             on.map(k => row(k, counts[k], unreads[k] || 0, false)).join('');
+  if (off.length) {
+    html += `<div class="ab-rail-sep" title="Unsubscribed — right-click to resubscribe"></div>` +
+            off.map(k => row(k, counts[k], unreads[k] || 0, true)).join('');
+  }
+  document.getElementById('sf-bulls-wrap').innerHTML = html;
 }
 // NTS routing area: the "@AREA" suffix on the to field, captured into msg.via.
 // Falls back to "NO AREA" when via is missing or duplicates the to field.
@@ -2247,7 +3727,9 @@ function setNtsFilter(f) {
 function getFiltered() {
   let msgs=allMsgs;
   if(activeFolder==='Personal'&&persFilter!=='ALL') msgs=msgs.filter(m=>persFromKey(m)===persFilter);
-  if(activeFolder==='Bulls'&&bullFilter!=='ALL') msgs=msgs.filter(m=>m.to===bullFilter);
+  if(activeFolder==='Bulls') msgs = bullFilter==='ALL'
+    ? msgs.filter(m=>!isBullUnsub(m.to))   // All = everything still subscribed
+    : msgs.filter(m=>m.to===bullFilter);   // an explicit pick always shows, even if unsubscribed
   if(activeFolder==='NTS') {
     if(ntsFilter==='ALL')           msgs=msgs.filter(m=>!deliveredSet.has(m.num));
     else if(ntsFilter==='DELIVERED') msgs=msgs.filter(m=> deliveredSet.has(m.num));
@@ -2442,7 +3924,7 @@ function renderList(msgs) {
     const starredManually=manualStars.has(m.num);
     const isStarred=starred||starredManually;
     const tagHtml=labels.map(l=>`<span class="rule-tag">${esc(l)}</span>`).join('');
-    return `<div class="mrow${activeNum===m.num?' active':''}${!isRead?' unread':''}${isSel?' selected':''}${isStarred?' starred':''}" onclick="handleRowClick(event,'${esc(m.num)}')">
+    return `<div class="mrow${activeNum===m.num?' active':''}${!isRead?' unread':''}${isSel?' selected':''}${isStarred?' starred':''}" data-num="${esc(m.num)}" onclick="handleRowClick(event,'${esc(m.num)}')" oncontextmenu="msgRowCtx(event,'${esc(m.num)}')">
       <input type="checkbox" class="mrow-cb" ${isSel?'checked':''} onclick="toggleSelect(event,'${esc(m.num)}')">
       <div class="mrow-body">
         <div class="mr-top">
@@ -2932,7 +4414,6 @@ function openCompose(to='',subj='',body='',title=''){
   // user clicks into the body directly or tabs into it later.
   bodyEl.setSelectionRange(0,0);
   bodyEl.scrollTop=0;
-  document.getElementById('cmp-ttl').textContent=title||(to?'Forward':'New Message');
   document.getElementById('cmp-status').textContent='';
   // Always default back to Personal — every caller that wants a different
   // type (Bulletin, Traffic, a form mode) sets cmp-type explicitly right
@@ -2940,6 +4421,10 @@ function openCompose(to='',subj='',body='',title=''){
   // the type from whatever was sent last.
   document.getElementById('cmp-type').value = 'P';
   onComposeTypeChange();
+  // Title goes on AFTER onComposeTypeChange(), which sets its own title per
+  // compose type and would otherwise stomp "Reply" / "Forward" / a group name
+  // back to the generic "New Message".
+  document.getElementById('cmp-ttl').textContent=title||(to?'Forward':'New Message');
   const modal=document.querySelector('#cmp-ov .modal');
   const saved=LS.get('bpq_compose_w');
   if(saved && !isMobile) modal.style.width=saved;
@@ -3032,7 +4517,54 @@ function doForward(){
   const sig = CFG.signature || `73 de ${CFG.callsign||'N4SFL'}`;
   openCompose('',`FWD: ${msg.subject}`,`\n\n${sig}\n\n--- Fwd #${msg.num} from ${persFromKey(msg)} ---\n${msg.body||''}`,'Forward');
 }
-function doSend(){
+// Split a To field into individual recipients. BPQ's EMSave takes exactly one
+// recipient per POST, so addressing a group means one send per member — the
+// comma/semicolon list is a UI convenience, not something the node understands.
+function splitRecipients(raw) {
+  return String(raw || '').split(/[,;]+/).map(t => t.trim()).filter(Boolean)
+    .map(t => /^smtp:/i.test(t) ? ('SMTP:' + t.slice(5).trim()) : t.toUpperCase())
+    .filter((t, i, a) => a.indexOf(t) === i);
+}
+
+// One POST to EMSave via a real hidden form + iframe, to match exactly what
+// BPQ expects. Resolves when the iframe comes back (or after a timeout — the
+// iframe gives us no way to read a failure out of the response).
+function sendOne(to, subj, type, msg) {
+  return new Promise(resolve => {
+    let ifr = document.getElementById('send-ifr');
+    if (!ifr) { ifr = document.createElement('iframe'); ifr.id = 'send-ifr'; ifr.name = 'send-ifr'; ifr.style.display = 'none'; document.body.appendChild(ifr); }
+    // BPQ's EMSave reply page runs its own alert() (e.g. "CALL added from WP").
+    // Same-origin, that alert blocks the whole window -- one per recipient. No
+    // allow-scripts and no allow-modals means the frame cannot open dialogs at
+    // all; allow-same-origin keeps its body readable so the message can still
+    // be recovered below.
+    ifr.setAttribute('sandbox', 'allow-forms allow-same-origin');
+    const f = document.createElement('form');
+    f.method = 'POST'; f.action = `${base()}/WebMail/EMSave?${CFG.key}`; f.target = 'send-ifr';
+    f.enctype = 'multipart/form-data'; f.style.display = 'none';
+    const fields = { To: to, Subj: subj, Type: type, BID: '', Msg: msg, Send: 'Send' };
+    for (const [k, v] of Object.entries(fields)) { const inp = document.createElement('input'); inp.type = 'hidden'; inp.name = k; inp.value = v; f.appendChild(inp); }
+    document.body.appendChild(f);
+    let done = false;
+    const finish = (ok, note) => { if (done) return; done = true; try { f.remove(); } catch (_) {} resolve({ ok, note: note || '' }); };
+    ifr.onload = () => finish(true, bpqReplyNotice(ifr));
+    f.submit();
+    setTimeout(() => finish(false), 15000);
+  });
+}
+
+// Recover the text BPQ would have shown in its own alert(), so suppressing the
+// dialog does not swallow what the node had to say.
+function bpqReplyNotice(ifr) {
+  try {
+    const doc = ifr.contentDocument;
+    if (!doc) return '';
+    const m = doc.documentElement.innerHTML.match(/alert\(\s*['"]([^'"]{1,200})['"]\s*\)/i);
+    return m ? m[1].trim() : '';
+  } catch (_) { return ''; }   // opaque or cross-origin reply
+}
+
+async function doSend(){
   let type=document.getElementById('cmp-type').value;
   // Form-style types use REVIEW instead of immediate send — stage
   // values into the standard compose form, user clicks SEND again.
@@ -3041,56 +4573,65 @@ function doSend(){
   const st=document.getElementById('cmp-status');
   // Callsigns are conventionally upper-case, but an "SMTP:user@domain"
   // address must keep its original case — force-uppercasing it can break
-  // delivery to case-sensitive mail systems.
-  let to=document.getElementById('cmp-to').value.trim();
-  to = /^smtp:/i.test(to) ? ('SMTP:' + to.slice(5).trim()) : to.toUpperCase();
+  // delivery to case-sensitive mail systems. splitRecipients() handles both.
+  const recips=splitRecipients(document.getElementById('cmp-to').value);
   const subj=document.getElementById('cmp-subj').value.trim();
   const msg=document.getElementById('cmp-body').value.trim();
-  if(!to||!subj||!msg){st.style.color='var(--red)';st.textContent='Fill in all fields';return;}
-  st.style.color='var(--amber)';st.textContent='Sending…';
-  document.getElementById('cmp-send').disabled=true;
-  /* Submit via a real hidden form + iframe to match exactly what BPQ expects */
-  let ifr=document.getElementById('send-ifr');
-  if(!ifr){ifr=document.createElement('iframe');ifr.id='send-ifr';ifr.name='send-ifr';ifr.style.display='none';document.body.appendChild(ifr);}
-  const f=document.createElement('form');
-  f.method='POST'; f.action=`${base()}/WebMail/EMSave?${CFG.key}`; f.target='send-ifr';
-  f.enctype='multipart/form-data'; f.style.display='none';
-  const fields={To:to,Subj:subj,Type:type,BID:'',Msg:msg,Send:'Send'};
-  for(const[k,v]of Object.entries(fields)){const inp=document.createElement('input');inp.type='hidden';inp.name=k;inp.value=v;f.appendChild(inp);}
-  document.body.appendChild(f);
-  ifr.onload=function(){
-    // Radiogram-originated send: bump the persisted "last sent" msg
-    // # and clear the per-message radiogram fields. Section 1 (Station
-    // of Origin) and Precedence/HX/Date are intentionally preserved.
-    if (rgPendingNum !== null && Number.isFinite(rgPendingNum)) {
-      LS.set('bpq_rg_last_sent', String(rgPendingNum));
-      rgPendingNum = null;
-      ['rg-msgnum','rg-time','rg-rcpt-name','rg-rcpt-call','rg-street','rg-apt',
-       'rg-city','rg-zip','rg-phone','rg-email','rg-text'].forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.value = '';
-      });
-      const stateSel = document.getElementById('rg-state');
-      if (stateSel) stateSel.value = '';
-    }
-    // PKTNET-originated send: persist user defaults and clear the
-    // per-message fields (To, Location, Comments). Station defaults
-    // (agency, from, contact, operator, grid, session/band/mode) are
-    // preserved across check-ins.
-    if (pkPendingClear) {
-      pkPendingClear = false;
-      pkSaveDefaults();
-      ['pk-location','pk-comments'].forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.value = '';
-      });
-    }
-    closeCompose();toast(`Sent to ${to}`,'ok');
-    document.getElementById('cmp-send').disabled=false;
-    f.remove();
-  };
-  f.submit();
-  setTimeout(()=>{document.getElementById('cmp-send').disabled=false;},5000);
+  if(!recips.length||!subj||!msg){st.style.color='var(--red)';st.textContent='Fill in all fields';return;}
+  // Sending a group is a real transmission per member over a slow RF link —
+  // make the user own that before it goes out.
+  if(recips.length>1 && !confirm(`Send this message separately to ${recips.length} recipients?\n\n${recips.join(', ')}`)) return;
+
+  st.style.color='var(--amber)';
+  const sendBtn=document.getElementById('cmp-send');
+  sendBtn.disabled=true;
+  let sent=0;
+  const notices=[];
+  for(let i=0;i<recips.length;i++){
+    st.textContent = recips.length>1 ? `Sending ${i+1} of ${recips.length} — ${recips[i]}…` : 'Sending…';
+    const r = await sendOne(recips[i],subj,type,msg);
+    if(r.ok) sent++;
+    if(r.note) notices.push(`${recips[i]}: ${r.note}`);
+    bumpContactUsage(recips[i]);
+  }
+  if (notices.length) console.info('[BPQ] node notices from this send:\n' + notices.join('\n'));
+
+  // Radiogram-originated send: bump the persisted "last sent" msg
+  // # and clear the per-message radiogram fields. Section 1 (Station
+  // of Origin) and Precedence/HX/Date are intentionally preserved.
+  if (rgPendingNum !== null && Number.isFinite(rgPendingNum)) {
+    LS.set('bpq_rg_last_sent', String(rgPendingNum));
+    rgPendingNum = null;
+    ['rg-msgnum','rg-time','rg-rcpt-name','rg-rcpt-call','rg-street','rg-apt',
+     'rg-city','rg-zip','rg-phone','rg-email','rg-text'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.value = '';
+    });
+    const stateSel = document.getElementById('rg-state');
+    if (stateSel) stateSel.value = '';
+  }
+  // PKTNET-originated send: persist user defaults and clear the
+  // per-message fields (To, Location, Comments). Station defaults
+  // (agency, from, contact, operator, grid, session/band/mode) are
+  // preserved across check-ins.
+  if (pkPendingClear) {
+    pkPendingClear = false;
+    pkSaveDefaults();
+    ['pk-location','pk-comments'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.value = '';
+    });
+  }
+  closeCompose();
+  sendBtn.disabled=false;
+  // One outcome for the whole send, however many recipients it had.
+  const extra = notices.length
+    ? (recips.length===1 ? ` — ${notices[0].replace(/^[^:]+:\s*/,'')}`
+                         : ` · ${notices.length} node notice${notices.length===1?'':'s'} (see console)`)
+    : '';
+  if (recips.length===1) toast(`Sent to ${recips[0]}${extra}`,'ok');
+  else if (sent===recips.length) toast(`Sent to ${sent} recipients${extra}`,'ok');
+  else toast(`Sent ${sent} of ${recips.length} — check My Sent${extra}`,'err');
 }
 
 // ═══════════════════════════════════════════════════
@@ -3708,7 +5249,8 @@ async function silentRefresh(manual=false){
 function updateActiveFolderBadge(){
   const el=document.getElementById('bdg-'+activeFolder);
   if(!el) return;
-  const unread=allMsgs.filter(m=>!killedSet.has(m.num)&&!readSet.has(m.num)).length;
+  const unread=allMsgs.filter(m=>!killedSet.has(m.num)&&!readSet.has(m.num)
+    &&!(activeFolder==='Bulls'&&isBullUnsub(m.to))).length;
   if(unread>0){ el.textContent=unread; el.style.display=''; }
   else { el.style.display='none'; }
 }
@@ -3725,6 +5267,9 @@ async function updateFolderBadges(){
       const html = await bpqGet(base()+FOLDER_PATHS[f.key](CFG.key));
       let msgs = parseList(html).filter(m=>!killedSet.has(m.num));
       if(f.key==='Personal') msgs = filterPersonal(msgs);
+      // Unsubscribed bulletin TOs are hidden from the list, so they must not
+      // keep the folder badge lit with mail the user has chosen not to see.
+      if(f.key==='Bulls') msgs = msgs.filter(m=>!isBullUnsub(m.to));
       const unread = msgs.filter(m=>!readSet.has(m.num)).length;
       const el = document.getElementById(f.id);
       if(!el) continue;
