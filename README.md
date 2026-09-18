@@ -93,6 +93,20 @@ A two-pane workspace — groups rail on the left, contact list on the right — 
 3. Open in your browser: `http://127.0.0.1:<your-HTTPPORT>/bpq-alt-webmail.html`
 4. On first run, enter your callsign — host and port are auto-detected from the URL
 
+> **Upgrading? Hard-reload the page** (`Ctrl`+`Shift`+`R`, or `Cmd`+`Shift`+`R` on a Mac)
+> the first time you open it after replacing the file, or you will very likely still see
+> the old version. This is not the browser being awkward: BPQ's web server caches a
+> file's `Last-Modified` date the first time it serves that path and never refreshes it,
+> and it sends no `ETag` or `Cache-Control`. Browsers therefore fall back to *heuristic*
+> caching and may reuse their copy for a day or more without even asking the server.
+> Because Chrome and Firefox apply that heuristic differently, it often looks like "the
+> new version works in one browser but not the other". See
+> [`UPSTREAM-REPORT-G8BPQ.md`](UPSTREAM-REPORT-G8BPQ.md) for the details.
+>
+> If you would rather not think about it, bookmark the page with a version marker and
+> bump it each upgrade — the app ignores the parameter:
+> `http://127.0.0.1:8010/bpq-alt-webmail.html?v=1.7.0`
+
 ### Quick Start — LinBPQ (Linux / Raspberry Pi)
 
 BPQ-Alt-WebMail works on LinBPQ without any changes — the web server and WebMail URL structure are identical to BPQ32.
@@ -112,6 +126,9 @@ BPQ-Alt-WebMail works on LinBPQ without any changes — the web server and WebMa
    
    Or from another machine on your network (replace with your Pi's IP and port):
    `http://192.168.1.x:8080/bpq-alt-webmail.html`
+
+> **Upgrading?** Hard-reload the page (`Ctrl`+`Shift`+`R`) after replacing the file —
+> see the note in the Windows section above for why. It applies equally on LinBPQ.
 
 > **Headless Pi tip:** Most Raspberry Pi BPQ nodes run headless with no local display. Access the web interface from any browser on your network using the Pi's IP address. You can find it with `hostname -I` on the Pi.
 
