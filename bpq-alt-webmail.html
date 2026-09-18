@@ -399,6 +399,34 @@ body { font-family:var(--sans); font-size:1rem; background:var(--bg); color:var(
 .gp-sep { border-top:1px solid var(--border); margin:4px 2px }
 .gp-none { padding:8px 9px; color:var(--text3); font-family:var(--mono); font-size:0.77rem }
 .gp-hint { font-family:var(--mono); font-size:0.69rem; color:var(--text3); margin-top:5px }
+
+/* ── MESSAGE TEMPLATES ── */
+.tpl-row { display:flex; gap:6px; align-items:center }
+.tpl-row .field-in { flex:1 1 auto; min-width:0 }
+.tpl-modal { width:min(1100px,96vw); height:min(820px,90vh) }
+.tpl-modal .modal-bd { padding:0; gap:0; overflow:hidden }
+.tpl-main { display:flex; flex:1 1 auto; min-height:0 }
+.tpl-list { flex:0 0 280px; display:flex; flex-direction:column; min-height:0; border-right:1px solid var(--border); background:var(--bg) }
+.tpl-list-hd { display:flex; align-items:center; gap:6px; padding:10px 12px 8px; font-family:var(--mono); font-size:0.69rem; font-weight:600; color:var(--text3); text-transform:uppercase; letter-spacing:.1em }
+.tpl-items { overflow-y:auto; min-height:0; flex:1 1 auto; padding:0 6px 6px }
+.tpl-item { padding:8px 10px; border-radius:4px; cursor:pointer; font-family:var(--mono); font-size:0.85rem; color:var(--text3); border-left:2px solid transparent; user-select:none }
+.tpl-item:hover { background:var(--bg3); color:var(--text2) }
+.tpl-item.active { background:var(--accent-bg); color:var(--accent); border-left-color:var(--accent) }
+.tpl-item-sub { font-size:0.69rem; color:var(--text3); margin-top:2px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap }
+.tpl-list-ft { padding:8px 10px; border-top:1px solid var(--border); display:flex; flex-direction:column; gap:6px }
+.tpl-edit { flex:1 1 auto; display:flex; flex-direction:column; min-height:0; min-width:0 }
+.tpl-edit-bd { overflow-y:auto; min-height:0; flex:1 1 auto; padding:12px 14px; display:flex; flex-direction:column; gap:10px }
+.tpl-edit-ft { padding:10px 14px; border-top:1px solid var(--border); display:flex; gap:8px; align-items:center }
+.tpl-body { flex:1 1 auto; min-height:200px; resize:vertical; padding:9px 11px; background:var(--bg); border:1px solid var(--border); border-radius:4px; color:var(--text); font-family:var(--mono); font-size:0.85rem; outline:none; width:100%; line-height:1.55 }
+.tpl-body:focus { border-color:var(--green-dim) }
+.tpl-vars { display:flex; flex-wrap:wrap; gap:4px }
+.tpl-var { padding:2px 8px; border:1px solid var(--border2); border-radius:12px; background:transparent; color:var(--text3); font-family:var(--mono); font-size:0.69rem; cursor:pointer }
+.tpl-var:hover { border-color:var(--accent); color:var(--accent) }
+.tpl-detected { font-family:var(--mono); font-size:0.77rem; color:var(--text3); line-height:1.7 }
+.tpl-detected b { color:var(--accent); font-weight:600 }
+.tpl-empty { padding:30px 16px; text-align:center; font-family:var(--mono); font-size:0.85rem; color:var(--text3); line-height:1.9 }
+.fill-modal { width:min(560px,96vw); max-height:90vh }
+.fill-row { margin-bottom:10px }
 .ab-empty-side { font-family:var(--mono); font-size:0.77rem; color:var(--text3); line-height:1.7; padding:8px 2px }
 
 /* import panel */
@@ -631,7 +659,7 @@ body { font-family:var(--sans); font-size:1rem; background:var(--bg); color:var(
 <!-- TOPBAR -->
 <div class="topbar">
   <div class="logo">BPQ-ALT-WEBMAIL</div>
-  <span style="font-family:var(--mono);font-size:0.69rem;color:var(--text3);margin-left:-6px">v1.7.0</span>
+  <span style="font-family:var(--mono);font-size:0.69rem;color:var(--text3);margin-left:-6px">v1.8.0</span>
   <div class="top-call" id="top-call">—</div>
   <span class="top-node" id="top-node">—</span>
   <div class="tspc"></div>
@@ -699,7 +727,7 @@ body { font-family:var(--sans); font-size:1rem; background:var(--bg); color:var(
     </div>
 
     <div class="sidebar-footer">
-      <div id="si-ver">v1.7.0</div>
+      <div id="si-ver">v1.8.0</div>
       <div>Node <span id="si-node">—</span></div>
       <div>User <span id="si-user">—</span></div>
       <div style="display:none">Msgs: <span id="si-count">—</span></div>
@@ -838,10 +866,54 @@ body { font-family:var(--sans); font-size:1rem; background:var(--bg); color:var(
           <button type="button" class="btn" onclick="openAddressBook()" title="Open the address book" style="flex:0 0 auto">📇</button>
         </div>
       </div>
-      <div class="field"><span class="field-lbl">Type</span><select class="field-in" id="cmp-type" style="width:auto" onchange="forcedType=null;onComposeTypeChange()"><option value="P">P – Personal</option><option value="B">B – Bulletin</option><option value="B/PKTNET">B/PKTNET – PKTNET Check-In (form)</option><option value="T/RRI">T = NTS (Radiogram Form)</option></select></div>
+      <div class="field"><span class="field-lbl">Type</span><select class="field-in" id="cmp-type" style="width:auto" onchange="forcedType=null;onComposeTypeChange()"><option value="P">P – Personal</option><option value="P/ICS213">P = ICS-213 General Message (form)</option><option value="B">B – Bulletin</option><option value="B/PKTNET">B/PKTNET – PKTNET Check-In (form)</option><option value="T/RRI">T = NTS (Radiogram Form)</option></select></div>
+      <div class="field" id="cmp-tpl-field">
+        <span class="field-lbl">Template</span>
+        <div class="tpl-row">
+          <select class="field-in" id="cmp-tpl" onchange="applyTemplateFromPicker(this)"></select>
+          <button type="button" class="btn" onclick="saveComposeAsTemplate()" title="Save what is in this window as a reusable template" style="flex:0 0 auto">save as…</button>
+          <button type="button" class="btn" onclick="openTemplates()" title="Manage templates" style="flex:0 0 auto">⚙</button>
+        </div>
+      </div>
       <div id="cmp-normal-fields">
         <div class="field"><span class="field-lbl">Subject</span><input class="field-in" id="cmp-subj" placeholder="subject line"></div>
         <div class="field"><span class="field-lbl">Message</span><textarea class="field-ta" id="cmp-body" placeholder="message text…"></textarea></div>
+      </div>
+      <div id="cmp-ics213" style="display:none">
+        <div class="rg-sec">
+          <div class="rg-sec-hd">General Message (ICS 213)
+            <div class="btn-sp"></div>
+            <button type="button" class="rg-now" onclick="icsLoadWinlinkWednesday()" title="Fill in the standard Winlink Wednesday check-in values">Winlink Wednesday</button>
+            <button type="button" class="rg-now" onclick="icsSetDateTimeNow()">now</button>
+          </div>
+          <div class="rg-row">
+            <div class="field"><span class="field-lbl">1 · Incident Name</span><input class="field-in" id="ics-incident" placeholder="e.g. Winlink Wednesday"></div>
+          </div>
+          <div class="rg-row">
+            <div class="field"><span class="field-lbl">2 · To (Name/Position)</span><input class="field-in" id="ics-to-name" placeholder="Net Control"></div>
+            <div class="field"><span class="field-lbl">3 · From (Name/Position)</span><input class="field-in" id="ics-from-name" placeholder="W1ABC, Net Participant"></div>
+          </div>
+          <div class="rg-row">
+            <div class="field" style="flex:2 1 240px"><span class="field-lbl">4 · Subject</span><input class="field-in" id="ics-subject" placeholder="Winlink Wednesday Check-in"></div>
+            <div class="field" style="flex:0 0 130px"><span class="field-lbl">5 · Date</span><input class="field-in" id="ics-date" placeholder="YYYY-MM-DD"></div>
+            <div class="field" style="flex:0 0 100px"><span class="field-lbl">6 · Time</span><input class="field-in" id="ics-time" placeholder="HH:MM"></div>
+          </div>
+          <div class="rg-row" style="margin-bottom:0">
+            <div class="field" style="flex:1 1 100%"><span class="field-lbl">Send to (callsign) — where this message is actually addressed</span><input class="field-in" id="ics-send-to" list="ab-datalist" placeholder="KN4LQN"></div>
+          </div>
+        </div>
+        <div class="rg-sec">
+          <div class="rg-sec-hd">7 · Message</div>
+          <textarea class="cd-notes" id="ics-message" style="min-height:150px" placeholder="The message text. For a Winlink Wednesday check-in this is your usual single line, e.g.&#10;W1ABC, Greg, Front Royal, Warren, VA (Packet)"></textarea>
+        </div>
+        <div class="rg-sec">
+          <div class="rg-sec-hd">8 · Approved by</div>
+          <div class="rg-row" style="margin-bottom:0">
+            <div class="field"><span class="field-lbl">Name</span><input class="field-in" id="ics-approved" placeholder="G. Butler"></div>
+            <div class="field"><span class="field-lbl">Position / Title</span><input class="field-in" id="ics-position" placeholder="Net Participant"></div>
+          </div>
+          <div class="rg-hint">Fields 1–8 match the Winlink <b>ICS213 General Message</b> form (Ver 41.12). This sends the readable text version of the form — what a receiving operator actually reads — without Winlink's XML attachment. Your From / Approved by / Position are remembered between messages.</div>
+        </div>
       </div>
       <div id="cmp-radiogram" style="display:none">
         <div class="rg-sec">
@@ -1042,6 +1114,87 @@ body { font-family:var(--sans); font-size:1rem; background:var(--bg); color:var(
         <span id="ab-count"></span>
         <span style="margin:0 8px;color:var(--border2)">|</span>
         <button class="ab-link dim" id="ab-qrz-link" onclick="openQrzLogin()"></button>
+      </span>
+    </div>
+  </div>
+</div>
+
+<!-- MESSAGE TEMPLATES -->
+<div class="overlay" id="tpl-ov">
+  <div class="rules-modal tpl-modal">
+    <div class="modal-hd">
+      <span class="modal-ttl">📋 Message Templates</span>
+      <button class="modal-x" onclick="closeTemplates()">×</button>
+    </div>
+    <div class="modal-bd">
+      <div class="tpl-main">
+
+        <div class="tpl-list">
+          <div class="tpl-list-hd"><span>Templates</span><span id="tpl-count" style="margin-left:auto;font-weight:400"></span></div>
+          <div class="tpl-items" id="tpl-items"></div>
+          <div class="tpl-list-ft">
+            <button class="ab-newgrp" onclick="newTemplate()">+ New Template</button>
+            <div style="display:flex;gap:6px">
+              <button class="rule-edit" onclick="exportTemplates()" title="Save all templates to a file you can share">⤓ Export</button>
+              <input type="file" id="tpl-file" accept=".json,application/json" style="display:none" onchange="importTemplatesFile(this)">
+              <button class="rule-edit" onclick="document.getElementById('tpl-file').click()" title="Load a template pack">⤒ Import</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="tpl-edit">
+          <div class="tpl-edit-bd" id="tpl-edit-bd">
+            <div class="rg-row">
+              <div class="field" style="flex:1 1 220px"><span class="field-lbl">Template name</span><input class="field-in" id="tpl-f-name" placeholder="Weekly net notice"></div>
+              <div class="field" style="flex:0 0 190px"><span class="field-lbl">Type</span>
+                <select class="field-in" id="tpl-f-type">
+                  <option value="">(leave unchanged)</option>
+                  <option value="P">P – Personal</option>
+                  <option value="B">B – Bulletin</option>
+                </select>
+              </div>
+            </div>
+            <div class="rg-row" style="margin-bottom:0">
+              <div class="field" style="flex:1 1 200px"><span class="field-lbl">To (optional)</span><input class="field-in" oninput="renderTemplateDetected()" id="tpl-f-to" placeholder="ALL"></div>
+              <div class="field" style="flex:2 1 260px"><span class="field-lbl">Subject</span><input class="field-in" oninput="renderTemplateDetected()" id="tpl-f-subj" placeholder="Net tonight {DATE}"></div>
+            </div>
+            <div class="field" style="flex:1 1 auto;min-height:0">
+              <span class="field-lbl">Message body</span>
+              <textarea class="tpl-body" oninput="renderTemplateDetected()" id="tpl-f-body" placeholder="Net tonight at {{Time}}Z on {{Frequency}}.&#10;Net control is {CALL} from {QTH}.&#10;&#10;73 de {CALL}"></textarea>
+            </div>
+            <div>
+              <span class="field-lbl">Insert a value — click to add at the cursor</span>
+              <div class="tpl-vars" id="tpl-vars"></div>
+            </div>
+            <div class="tpl-detected" id="tpl-detected"></div>
+          </div>
+          <div class="tpl-edit-ft">
+            <button class="btn danger" id="tpl-del" onclick="deleteTemplate()" style="display:none">✕ Delete</button>
+            <div class="btn-sp"></div>
+            <span class="modal-hint" id="tpl-status"></span>
+            <button class="btn" onclick="useTemplateFromManager()" title="Apply this template to a new message">✉ Use</button>
+            <button class="send-btn" onclick="saveTemplate()">Save Template</button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TEMPLATE FILL-IN -->
+<div class="overlay" id="fill-ov">
+  <div class="rules-modal fill-modal">
+    <div class="modal-hd">
+      <span class="modal-ttl" id="fill-ttl">Fill in</span>
+      <button class="modal-x" onclick="closeFill()">×</button>
+    </div>
+    <div class="modal-bd" id="fill-bd"></div>
+    <div class="modal-ft">
+      <span class="modal-hint">Leave a field blank to keep the placeholder.</span>
+      <span>
+        <button class="btn" onclick="closeFill()">Cancel</button>
+        <button class="send-btn" onclick="applyFill()" style="margin-left:8px">Insert</button>
       </span>
     </div>
   </div>
@@ -2026,6 +2179,365 @@ function refreshAbDatalist() {
 }
 
 // ═══════════════════════════════════════════════════
+//  MESSAGE TEMPLATES
+//
+//  A template is a reusable To / Type / Subject / Body, stored in
+//  `bpq_templates`. Two kinds of placeholder:
+//
+//    {CALL} {QTH} {NAME} {DATE} {UTC} {TIME} {DATETIME} {ZULU}
+//        automatic -- substituted silently from config and the clock.
+//
+//    {{Anything}}
+//        prompted -- collected in a small dialog when the template is
+//        applied, so one template covers "same message, three details
+//        change each time".
+//
+//  Templates are deliberately separate from the Type dropdown's two form
+//  composers (T/RRI, B/PKTNET): those exist because an external body format
+//  is mandated, whereas a template is free text the operator owns.
+// ═══════════════════════════════════════════════════
+function loadTemplates() { return LS.getJ('bpq_templates') || []; }
+function saveTemplates(list) { LS.setJ('bpq_templates', list); }
+function findTemplate(id) { return loadTemplates().find(t => t.id === id); }
+function sortedTemplates() {
+  return loadTemplates().slice().sort((a, b) => a.name.localeCompare(b.name));
+}
+function newTemplateId() {
+  return 't' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+}
+
+let tplEditingId = null;   // template open in the manager, or null = unsaved new one
+let fillPending = null;    // { tpl, keys, then } while the fill-in dialog is up
+
+// ── automatic placeholders ──
+function tplPad(n) { return String(n).padStart(2, '0'); }
+function tplAutoValues() {
+  const now = new Date();
+  const utc = `${tplPad(now.getUTCHours())}${tplPad(now.getUTCMinutes())}Z`;
+  const iso = `${now.getUTCFullYear()}-${tplPad(now.getUTCMonth() + 1)}-${tplPad(now.getUTCDate())}`;
+  return {
+    CALL: (CFG.callsign || '').toUpperCase(),
+    QTH: CFG.qth || '',
+    NAME: (LS.getJ('bpq_rg_origin') || {}).opName || '',   // only place the op's name is stored
+    DATE: iso,
+    UTC: utc,
+    ZULU: utc,
+    TIME: `${tplPad(now.getHours())}:${tplPad(now.getMinutes())}`,
+    DATETIME: `${iso} ${utc}`,
+  };
+}
+const TPL_AUTO_KEYS = ['CALL', 'QTH', 'NAME', 'DATE', 'UTC', 'TIME', 'DATETIME'];
+
+// Replace {KEY} for every automatic value. Unknown {WORDS} are left alone so a
+// message that legitimately contains braces is not mangled.
+function tplSubstAuto(text) {
+  const vals = tplAutoValues();
+  return String(text || '').replace(/\{([A-Z][A-Z0-9_]*)\}/g, (m, k) =>
+    Object.prototype.hasOwnProperty.call(vals, k) ? vals[k] : m);
+}
+// Every distinct {{prompted}} key in a template, in first-seen order.
+function tplPromptKeys(tpl) {
+  const seen = [];
+  const scan = t => String(t || '').replace(/\{\{([^{}]{1,60}?)\}\}/g, (m, k) => {
+    k = k.trim();
+    if (k && !seen.includes(k)) seen.push(k);
+    return m;
+  });
+  scan(tpl.subject); scan(tpl.body); scan(tpl.to);
+  return seen;
+}
+function tplSubstPrompts(text, values) {
+  return String(text || '').replace(/\{\{([^{}]{1,60}?)\}\}/g, (m, k) => {
+    const v = values[k.trim()];
+    return (v === undefined || v === '') ? m : v;   // blank keeps the placeholder
+  });
+}
+
+// ── the compose picker ──
+function refreshTemplatePicker() {
+  const sel = document.getElementById('cmp-tpl');
+  if (!sel) return;
+  const list = sortedTemplates();
+  sel.innerHTML = '<option value="">' +
+    (list.length ? '\u2014 start from a template \u2014' : '\u2014 no templates yet, use \u201csave as\u2026\u201d \u2014') +
+    '</option>' +
+    list.map(t => `<option value="${escAttr(t.id)}">${esc(t.name)}</option>`).join('');
+  sel.value = '';
+}
+function applyTemplateFromPicker(sel) {
+  const id = sel.value;
+  sel.value = '';
+  if (!id) return;
+  applyTemplate(id);
+}
+
+// Apply a template into the compose window. Collects any {{prompted}} values
+// first; auto placeholders are substituted at the moment of applying, so
+// {DATE} is the date the message is written rather than the date it was saved.
+function applyTemplate(id) {
+  const tpl = findTemplate(id);
+  if (!tpl) { toast('Template not found', 'err'); return; }
+  const keys = tplPromptKeys(tpl);
+  if (!keys.length) { applyTemplateNow(tpl, {}); return; }
+  openFill(tpl, keys, vals => applyTemplateNow(tpl, vals));
+}
+function applyTemplateNow(tpl, vals) {
+  const fill = t => tplSubstAuto(tplSubstPrompts(t, vals));
+  if (!document.getElementById('cmp-ov').classList.contains('open')) openCompose();
+  if (tpl.to) document.getElementById('cmp-to').value = fill(tpl.to);
+  if (tpl.type) {
+    forcedType = null;
+    document.getElementById('cmp-type').value = tpl.type;
+    onComposeTypeChange();
+  }
+  document.getElementById('cmp-subj').value = fill(tpl.subject);
+  document.getElementById('cmp-body').value = fill(tpl.body);
+  const list = loadTemplates();
+  const t = list.find(x => x.id === tpl.id);
+  if (t) { t.useCount = (t.useCount || 0) + 1; t.lastUsed = Date.now(); saveTemplates(list); }
+  document.getElementById('cmp-ttl').textContent = `New Message \u00b7 ${tpl.name}`;
+  scheduleDraftSave();
+  toast(`Template: ${tpl.name}`, 'ok');
+}
+
+// ── the fill-in dialog ──
+function openFill(tpl, keys, then) {
+  fillPending = { tpl, keys, then };
+  document.getElementById('fill-ttl').textContent = tpl.name;
+  document.getElementById('fill-bd').innerHTML = keys.map((k, i) => `
+    <div class="fill-row field">
+      <span class="field-lbl">${esc(k)}</span>
+      <input class="field-in" id="fill-${i}" placeholder="${esc(k)}">
+    </div>`).join('');
+  document.getElementById('fill-ov').classList.add('open');
+  setTimeout(() => { const el = document.getElementById('fill-0'); if (el) el.focus(); }, 60);
+}
+function closeFill() {
+  document.getElementById('fill-ov').classList.remove('open');
+  fillPending = null;
+}
+function applyFill() {
+  if (!fillPending) return;
+  const vals = {};
+  fillPending.keys.forEach((k, i) => {
+    const el = document.getElementById('fill-' + i);
+    vals[k] = el ? el.value.trim() : '';
+  });
+  const then = fillPending.then;
+  closeFill();
+  if (then) then(vals);
+}
+
+// ── save whatever is in the compose window ──
+// The path most templates will actually be born through: write the message
+// once naturally, then keep it, rather than facing an empty editor.
+function saveComposeAsTemplate() {
+  const to = document.getElementById('cmp-to').value.trim();
+  const subject = document.getElementById('cmp-subj').value.trim();
+  const body = document.getElementById('cmp-body').value;
+  if (!subject.trim() && !body.trim()) { toast('Nothing to save yet', 'info'); return; }
+  const type = document.getElementById('cmp-type').value;
+  openTemplates();
+  newTemplate();
+  document.getElementById('tpl-f-name').value = subject.slice(0, 40);
+  document.getElementById('tpl-f-to').value = to;
+  document.getElementById('tpl-f-type').value = (type === 'P' || type === 'B') ? type : '';
+  document.getElementById('tpl-f-subj').value = subject;
+  document.getElementById('tpl-f-body').value = body;
+  renderTemplateDetected();
+  const st = document.getElementById('tpl-status');
+  st.style.color = 'var(--text3)';
+  st.textContent = 'Name it, then Save';
+  setTimeout(() => document.getElementById('tpl-f-name').select(), 60);
+}
+
+// ── the manager ──
+function openTemplates() {
+  renderTemplateList();
+  if (!tplEditingId) newTemplate();
+  document.getElementById('tpl-ov').classList.add('open');
+}
+function closeTemplates() {
+  document.getElementById('tpl-ov').classList.remove('open');
+  refreshTemplatePicker();
+}
+function renderTemplateList() {
+  const list = sortedTemplates();
+  document.getElementById('tpl-count').textContent = list.length || '';
+  const el = document.getElementById('tpl-items');
+  el.innerHTML = list.length ? list.map(t => {
+    const bits = [t.type || '\u2014', t.to || 'no To'].join(' \u00b7 ');
+    return `<div class="tpl-item${tplEditingId === t.id ? ' active' : ''}" onclick="editTemplate('${escAttr(t.id)}')">
+      <div>${esc(t.name)}</div>
+      <div class="tpl-item-sub">${esc(bits)}</div>
+    </div>`;
+  }).join('') : '<div class="tpl-empty">No templates yet.<br><br>Write a message the way you normally would, then press <b>save as\u2026</b> in the compose window.</div>';
+}
+function newTemplate() {
+  tplEditingId = null;
+  for (const [id, v] of Object.entries({ 'tpl-f-name': '', 'tpl-f-to': '', 'tpl-f-subj': '', 'tpl-f-body': '' })) {
+    document.getElementById(id).value = v;
+  }
+  document.getElementById('tpl-f-type').value = '';
+  document.getElementById('tpl-del').style.display = 'none';
+  document.getElementById('tpl-status').textContent = '';
+  renderTemplateVars();
+  renderTemplateDetected();
+  renderTemplateList();
+}
+function editTemplate(id) {
+  const t = findTemplate(id); if (!t) return;
+  tplEditingId = id;
+  document.getElementById('tpl-f-name').value = t.name || '';
+  document.getElementById('tpl-f-to').value = t.to || '';
+  document.getElementById('tpl-f-type').value = t.type || '';
+  document.getElementById('tpl-f-subj').value = t.subject || '';
+  document.getElementById('tpl-f-body').value = t.body || '';
+  document.getElementById('tpl-del').style.display = '';
+  document.getElementById('tpl-status').textContent = '';
+  renderTemplateVars();
+  renderTemplateDetected();
+  renderTemplateList();
+}
+function saveTemplate() {
+  const name = document.getElementById('tpl-f-name').value.trim();
+  const st = document.getElementById('tpl-status');
+  if (!name) { st.style.color = 'var(--red)'; st.textContent = 'Name is required'; return; }
+  const rec = {
+    id: tplEditingId || newTemplateId(),
+    name,
+    to: document.getElementById('tpl-f-to').value.trim(),
+    type: document.getElementById('tpl-f-type').value,
+    subject: document.getElementById('tpl-f-subj').value,
+    body: document.getElementById('tpl-f-body').value,
+  };
+  const list = loadTemplates();
+  const i = list.findIndex(t => t.id === rec.id);
+  if (i >= 0) { rec.useCount = list[i].useCount || 0; rec.lastUsed = list[i].lastUsed || 0; list[i] = rec; }
+  else { rec.useCount = 0; rec.lastUsed = 0; list.push(rec); }
+  saveTemplates(list);
+  tplEditingId = rec.id;
+  // The editor is now looking at a saved template, so it gains a Delete; and
+  // the placeholder summary is refreshed in case the text arrived any way
+  // other than typing (save-as, paste, import).
+  document.getElementById('tpl-del').style.display = '';
+  renderTemplateDetected();
+  renderTemplateList();
+  refreshTemplatePicker();
+  st.style.color = 'var(--green)'; st.textContent = `Saved ${name}`;
+  setTimeout(() => { st.textContent = ''; }, 2500);
+}
+function deleteTemplate() {
+  const t = tplEditingId && findTemplate(tplEditingId);
+  if (!t) return;
+  if (!confirm(`Delete template "${t.name}"?`)) return;
+  saveTemplates(loadTemplates().filter(x => x.id !== t.id));
+  newTemplate();
+  refreshTemplatePicker();
+  toast(`Template ${t.name} deleted`, 'ok');
+}
+function useTemplateFromManager() {
+  if (!tplEditingId) { toast('Save the template first', 'info'); return; }
+  const id = tplEditingId;
+  closeTemplates();
+  applyTemplate(id);
+}
+
+// Clickable chips that drop a placeholder in at the cursor.
+function renderTemplateVars() {
+  const box = document.getElementById('tpl-vars');
+  const vals = tplAutoValues();
+  box.innerHTML = TPL_AUTO_KEYS.map(k =>
+    `<button type="button" class="tpl-var" title="${esc(vals[k] || '(not set)')}" onclick="insertTplVar('{${k}}')">{${k}}</button>`).join('') +
+    `<button type="button" class="tpl-var" title="Asks you for a value each time the template is used" onclick="insertTplVar('{{ask me}}')">{{ask me\u2026}}</button>`;
+}
+function insertTplVar(text) {
+  const el = document.getElementById('tpl-f-body');
+  const a = el.selectionStart ?? el.value.length, b = el.selectionEnd ?? a;
+  el.value = el.value.slice(0, a) + text + el.value.slice(b);
+  el.focus();
+  el.setSelectionRange(a + text.length, a + text.length);
+  renderTemplateDetected();
+}
+// Live feedback: what this template will ask for, and what it will fill in.
+function renderTemplateDetected() {
+  const draft = {
+    to: document.getElementById('tpl-f-to').value,
+    subject: document.getElementById('tpl-f-subj').value,
+    body: document.getElementById('tpl-f-body').value,
+  };
+  const prompts = tplPromptKeys(draft);
+  const all = (draft.subject || '') + ' ' + (draft.body || '') + ' ' + (draft.to || '');
+  const autos = TPL_AUTO_KEYS.filter(k => all.includes('{' + k + '}'));
+  const el = document.getElementById('tpl-detected');
+  const bits = [];
+  if (autos.length) bits.push('Fills in automatically: <b>' + autos.map(k => '{' + k + '}').join('</b>, <b>') + '</b>');
+  if (prompts.length) bits.push('Will ask you for: <b>' + prompts.map(esc).join('</b>, <b>') + '</b>');
+  el.innerHTML = bits.length ? bits.join('<br>') : 'No placeholders \u2014 this template inserts its text as written.';
+}
+
+// ── export / import, so a club can pass a set around ──
+function exportTemplates() {
+  const list = loadTemplates();
+  if (!list.length) { toast('No templates to export', 'info'); return; }
+  const payload = { kind: 'bpq-alt-webmail-templates', version: 1, exported: new Date().toISOString(), templates: list };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+  Object.assign(document.createElement('a'), {
+    href: URL.createObjectURL(blob),
+    download: `bpq-templates-${new Date().toISOString().slice(0, 10)}.json`,
+  }).click();
+  toast(`Exported ${list.length} template${list.length === 1 ? '' : 's'}`, 'ok');
+}
+function importTemplatesFile(input) {
+  const f = input.files && input.files[0];
+  input.value = '';
+  if (!f) return;
+  const r = new FileReader();
+  r.onload = () => {
+    let incoming;
+    try {
+      const data = JSON.parse(String(r.result || ''));
+      incoming = Array.isArray(data) ? data : data.templates;
+      if (!Array.isArray(incoming)) throw new Error('no templates array');
+    } catch (e) {
+      toast('That is not a template file', 'err');
+      return;
+    }
+    const list = loadTemplates();
+    const byName = new Map(list.map(t => [t.name.toUpperCase(), t]));
+    let added = 0, renamed = 0, skipped = 0;
+    for (const raw of incoming) {
+      const name = String(raw && raw.name || '').trim();
+      if (!name) { skipped++; continue; }
+      let finalName = name;
+      // Never overwrite something the operator already has under that name.
+      if (byName.has(finalName.toUpperCase())) {
+        let n = 2;
+        while (byName.has((name + ' (' + n + ')').toUpperCase())) n++;
+        finalName = name + ' (' + n + ')';
+        renamed++;
+      }
+      const rec = {
+        id: newTemplateId(), name: finalName,
+        to: String(raw.to || ''), type: (raw.type === 'P' || raw.type === 'B') ? raw.type : '',
+        subject: String(raw.subject || ''), body: String(raw.body || ''),
+        useCount: 0, lastUsed: 0,
+      };
+      list.push(rec); byName.set(finalName.toUpperCase(), rec); added++;
+    }
+    saveTemplates(list);
+    renderTemplateList();
+    refreshTemplatePicker();
+    const bits = [`${added} imported`];
+    if (renamed) bits.push(`${renamed} renamed to avoid clashing`);
+    if (skipped) bits.push(`${skipped} skipped`);
+    toast(bits.join(' \u00b7 '), added ? 'ok' : 'info');
+  };
+  r.onerror = () => toast('Could not read that file', 'err');
+  r.readAsText(f);
+}
+
+// ═══════════════════════════════════════════════════
 //  IMPORT
 //
 //  Takes either a pasted list of callsigns (any mix of commas, spaces,
@@ -2640,6 +3152,12 @@ document.getElementById('ab-ov').addEventListener('click',e=>{if(e.target===e.cu
 document.getElementById('grp-ov').addEventListener('click',e=>{if(e.target===e.currentTarget)closeGroupPrompt();});
 document.getElementById('imp-ov').addEventListener('click',e=>{if(e.target===e.currentTarget)closeImport();});
 document.getElementById('cd-ov').addEventListener('click',e=>{if(e.target===e.currentTarget)closeContactCard();});
+document.getElementById('tpl-ov').addEventListener('click',e=>{if(e.target===e.currentTarget)closeTemplates();});
+document.getElementById('fill-ov').addEventListener('click',e=>{if(e.target===e.currentTarget)closeFill();});
+// Enter anywhere in the fill-in dialog submits it.
+document.getElementById('fill-bd').addEventListener('keydown',e=>{
+  if(e.key==='Enter'){e.preventDefault();applyFill();}
+});
 // Enter saves from any single-line field on the card (not the notes box).
 for (const id of ['ab-f-call','ab-f-name','ab-f-street','ab-f-city','ab-f-state','ab-f-zip','ab-f-phone','ab-f-email','ab-f-web']) {
   document.getElementById(id).addEventListener('keydown',e=>{
@@ -2673,7 +3191,8 @@ for (const id of ['ab-qrz-user','ab-qrz-pass']) {
 // Escape closes whichever address-book layer is on top.
 document.addEventListener('keydown',e=>{
   if(e.key!=='Escape') return;
-  const layers=[['qrz-ov',closeQrzLogin],['grp-ov',closeGroupPrompt],['cd-ov',closeContactCard],['imp-ov',closeImport],['ab-ov',closeAddressBook]];
+  const layers=[['qrz-ov',closeQrzLogin],['grp-ov',closeGroupPrompt],['cd-ov',closeContactCard],
+                ['fill-ov',closeFill],['tpl-ov',closeTemplates],['imp-ov',closeImport],['ab-ov',closeAddressBook]];
   for(const [id,fn] of layers){
     if(document.getElementById(id).classList.contains('open')){ fn(); return; }
   }
@@ -2970,7 +3489,7 @@ function toggleSettings() {
     // Info row: version, callsign, status
     const info = document.createElement('div');
     info.className = 'm-cfg-info';
-    info.innerHTML = '<span>v1.7.0</span>' +
+    info.innerHTML = '<span>v1.8.0</span>' +
       '<span style="color:var(--accent);background:var(--accent-bg);border:1px solid var(--accent-border);padding:2px 7px;border-radius:4px">' + (callEl ? callEl.textContent : '—') + '</span>' +
       '<span id="m-status-pill" class="' + (statusPill ? statusPill.className : '') + '">' + (statusPill ? statusPill.textContent : '') + '</span>';
 
@@ -4420,6 +4939,7 @@ function openCompose(to='',subj='',body='',title=''){
   // after calling openCompose(), so this dropdown must never carry over
   // the type from whatever was sent last.
   forcedType = null;
+  refreshTemplatePicker();
   document.getElementById('cmp-type').value = 'P';
   onComposeTypeChange();
   // Title goes on AFTER onComposeTypeChange(), which sets its own title per
@@ -4580,6 +5100,7 @@ async function doSend(){
     // values into the standard compose form, user clicks SEND again.
     if (type === 'T/RRI')   { rgReview(); return; }
     if (type === 'B/PKTNET'){ pkReview(); return; }
+    if (type === 'P/ICS213'){ icsReview(); return; }
   }
   const st=document.getElementById('cmp-status');
   // Callsigns are conventionally upper-case, but an "SMTP:user@domain"
@@ -4625,6 +5146,13 @@ async function doSend(){
   // per-message fields (To, Location, Comments). Station defaults
   // (agency, from, contact, operator, grid, session/band/mode) are
   // preserved across check-ins.
+  if (icsPendingClear) {
+    icsPendingClear = false;
+    icsSaveDefaults();
+    // Station details persist; the message itself does not.
+    document.getElementById('ics-message').value = '';
+    document.getElementById('ics-subject').value = '';
+  }
   if (pkPendingClear) {
     pkPendingClear = false;
     pkSaveDefaults();
@@ -4657,6 +5185,7 @@ const RG_STATES = ['AL','AK','AZ','AR','CA','CO','CT','DE','FL','GA','HI','ID','
                    'KS','KY','LA','ME','MD','MA','MI','MN','MS','MO','MT','NE','NV','NH','NJ',
                    'NM','NY','NC','ND','OH','OK','OR','PA','RI','SC','SD','TN','TX','UT','VT',
                    'VA','WA','WV','WI','WY','DC','PR','VI','GU','AS','MP'];
+let icsPendingClear = false;
 let rgInited = false;
 // Set when REVIEW is clicked, captures the msg # being sent so that
 // when the iframe load fires (= BPQ accepted the POST) we can mark
@@ -5134,6 +5663,139 @@ function pkGenerate() {
 }
 // REVIEW handler — same shape as rgReview, but switches the modal
 // to type B (Bulletin) for sending.
+// ═══════════════════════════════════════════════════
+//  ICS-213 GENERAL MESSAGE FORM
+//
+//  Fields 1-8 and their labels are taken from the Winlink "ICS213 General
+//  Message" form (Ver 41.12) -- the version ARES/RACES stations actually run,
+//  and the one KN4LQN's Winlink Wednesday guide walks through. Note it stops
+//  at field 8: the Winlink submit form has no Reply block, unlike the paper
+//  ICS-213.
+//
+//  Winlink sends the data twice: an XML attachment for machines, plus a
+//  readable text rendering in the body. This form emits the readable
+//  rendering, reproducing the Winlink form's own numbering and labels so a
+//  receiving operator sees exactly the ICS-213 structure they expect.
+//
+//  On attachments (checked 2026-09-18 against G8BPQ's docs): BPQ *can* carry
+//  them -- the B2 format supports attachments, and they arrive over the
+//  RMS/Winlink, SMTP and ISP interfaces. Two things stopped us emitting the
+//  XML as well. First, per the BBS attachments page, "plain text attachments
+//  will be shown as part of the message to those reading messages on the BBS,
+//  but binary attachment will not be accessible" -- so an attachment buys a
+//  BBS reader nothing this body does not already give them. Second, whether
+//  EMSave accepts a file part is undetermined: BPQ's compose page sits behind
+//  the session key and the WebMail docs do not describe an upload field. If it
+//  turns out to be supported, adding the XML is small: build it from the same
+//  fields and append a file part to the form in sendOne().
+//
+//  Goes on the air as wire type P. The Type dropdown has no plain-T/P form
+//  entry, so icsReview() carries the wire type in forcedType (see the comment
+//  on onComposeTypeChange).
+// ═══════════════════════════════════════════════════
+function icsPad(n) { return String(n).padStart(2, '0'); }
+function icsSetDateTimeNow() {
+  const d = new Date();
+  document.getElementById('ics-date').value = `${d.getFullYear()}-${icsPad(d.getMonth() + 1)}-${icsPad(d.getDate())}`;
+  document.getElementById('ics-time').value = `${icsPad(d.getHours())}:${icsPad(d.getMinutes())}`;
+}
+// The station half of the form repeats every time; the message half never does.
+function icsSaveDefaults() {
+  const v = id => document.getElementById(id).value;
+  LS.setJ('bpq_ics_defaults', {
+    fromName: v('ics-from-name'),
+    approved: v('ics-approved'),
+    position: v('ics-position'),
+    incident: v('ics-incident'),
+    toName:   v('ics-to-name'),
+    sendTo:   v('ics-send-to'),
+  });
+}
+let icsInited = false;
+function icsInit() {
+  if (!icsInited) {
+    icsInited = true;
+    const d = LS.getJ('bpq_ics_defaults') || {};
+    const set = (id, val) => { const el = document.getElementById(id); if (el && !el.value) el.value = val || ''; };
+    set('ics-from-name', d.fromName || (CFG.callsign ? CFG.callsign.toUpperCase() : ''));
+    set('ics-approved', d.approved);
+    set('ics-position', d.position);
+    set('ics-incident', d.incident);
+    set('ics-to-name', d.toName);
+    set('ics-send-to', d.sendTo);
+  }
+  if (!document.getElementById('ics-date').value) icsSetDateTimeNow();
+}
+// The standard Winlink Wednesday check-in values, mirroring the "Load ICS213
+// INITIAL Data" button on the Winlink form.
+function icsLoadWinlinkWednesday() {
+  document.getElementById('ics-incident').value = 'Winlink Wednesday';
+  document.getElementById('ics-to-name').value  = 'Net Control';
+  document.getElementById('ics-subject').value  = 'Winlink Wednesday Check-in';
+  const from = document.getElementById('ics-from-name');
+  if (!from.value) from.value = `${(CFG.callsign || '').toUpperCase()}, Net Participant`;
+  const pos = document.getElementById('ics-position');
+  if (!pos.value) pos.value = 'Net Participant';
+  icsSetDateTimeNow();
+  const msg = document.getElementById('ics-message');
+  if (!msg.value) {
+    const parts = [(CFG.callsign || '').toUpperCase(), (LS.getJ('bpq_rg_origin') || {}).opName || '', CFG.qth || ''];
+    msg.value = parts.filter(Boolean).join(', ') + ' (Packet)';
+  }
+  toast('Winlink Wednesday values loaded \u2014 check field 7', 'ok');
+}
+
+// Render the form as the plain-text body that goes on the air.
+function icsGenerate() {
+  const v = id => (document.getElementById(id).value || '').trim();
+  const L = [];
+  L.push('General Message (ICS 213)');
+  L.push('');
+  L.push(`1. Incident Name: ${v('ics-incident')}`);
+  L.push(`2. To (Name/Position): ${v('ics-to-name')}`);
+  L.push(`3. From (Name/Position): ${v('ics-from-name')}`);
+  L.push(`4. Subject: ${v('ics-subject')}`);
+  L.push(`5. Date: ${v('ics-date')}`);
+  L.push(`6. Time: ${v('ics-time')}`);
+  L.push('');
+  L.push('7. Message:');
+  L.push(document.getElementById('ics-message').value.replace(/\s+$/, ''));
+  L.push('');
+  L.push(`8. Approved by: ${v('ics-approved')}`);
+  L.push(`Position/Title: ${v('ics-position')}`);
+  return {
+    to: v('ics-send-to'),
+    subj: v('ics-subject') || 'ICS-213 General Message',
+    body: L.join('\n'),
+  };
+}
+// REVIEW: swap the form out for the plain compose fields holding the rendered
+// message, so it can be read and edited before it goes.
+function icsReview() {
+  const st = document.getElementById('cmp-status');
+  const missing = [];
+  if (!document.getElementById('ics-send-to').value.trim()) missing.push('a callsign to send to');
+  if (!document.getElementById('ics-subject').value.trim()) missing.push('4. Subject');
+  if (!document.getElementById('ics-message').value.trim()) missing.push('7. Message');
+  if (missing.length) {
+    st.style.color = 'var(--red)';
+    st.textContent = 'Still needs: ' + missing.join(', ');
+    return;
+  }
+  const ics = icsGenerate();
+  icsSaveDefaults();
+  forcedType = 'P';
+  icsPendingClear = true;
+  onComposeTypeChange();
+  document.getElementById('cmp-to').value   = ics.to;
+  document.getElementById('cmp-subj').value = ics.subj;
+  document.getElementById('cmp-body').value = ics.body;
+  document.getElementById('cmp-ttl').textContent = 'Review ICS-213 \u2192 Send';
+  st.style.color = 'var(--text3)';
+  st.textContent = 'Review the formatted message, then click SEND.';
+  setTimeout(() => document.getElementById('cmp-body').focus(), 60);
+}
+
 function pkReview() {
   const pk = pkGenerate();
   pkPendingClear = true;
@@ -5163,11 +5825,14 @@ let forcedType = null;
 function onComposeTypeChange() {
   const type = document.getElementById('cmp-type').value;
   const isRg = (type === 'T/RRI') && !forcedType;
-  const isPk = (type === 'B/PKTNET');
-  const isForm = isRg || isPk;
+  const isPk = (type === 'B/PKTNET') && !forcedType;
+  const isIcs = (type === 'P/ICS213') && !forcedType;
+  const isForm = isRg || isPk || isIcs;
   document.getElementById('cmp-normal-fields').style.display = isForm ? 'none' : '';
+  document.getElementById('cmp-tpl-field').style.display     = isForm ? 'none' : '';
   document.getElementById('cmp-radiogram').style.display     = isRg ? '' : 'none';
   document.getElementById('cmp-pktnet').style.display        = isPk ? '' : 'none';
+  document.getElementById('cmp-ics213').style.display        = isIcs ? '' : 'none';
   document.getElementById('cmp-to-field').style.display      = isForm ? 'none' : '';
   document.getElementById('cmp-send').textContent            = isForm ? 'REVIEW ▶' : 'SEND ▶';
   if (isRg) {
@@ -5178,6 +5843,9 @@ function onComposeTypeChange() {
     pkInit();
     pkSetDateTimeNow();
     document.getElementById('cmp-ttl').textContent = 'New PKTNET Check-In (B/PKTNET)';
+  } else if (isIcs) {
+    icsInit();
+    document.getElementById('cmp-ttl').textContent = 'New ICS-213 General Message';
   } else {
     document.getElementById('cmp-ttl').textContent = 'New Message';
   }
@@ -5460,6 +6128,7 @@ async function init(){
   applyFont();
   applyLineSpacing();
   refreshAbDatalist();
+  refreshTemplatePicker();
   if (sortOldestFirst) {
     const btn = document.getElementById('sort-order-btn');
     btn.textContent = '↑';

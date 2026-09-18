@@ -51,6 +51,7 @@ The same single HTML file automatically adapts to phones and tablets — no sepa
 ### NTS Traffic & Form Composers
 - **NTS Radiogram composer** (Type → **T = NTS (Radiogram Form)**) — the way NTS traffic is composed; plain freehand “T” is no longer offered in the dropdown, though messages still go out as wire type `T`. Full ARRL radiogram form with REVIEW step, HX handling-code meanings, HX variables (HXA/HXB/HXF), auto-incrementing message number, ARRL extended-punctuation substitution (X-RAY, COMMA, QUERY, R decimal), and parsing of received radiograms back into the form
 - **PKTNET Check-In composer (B/PKTNET)** — form-style check-in message (form concept N3MEL, form created KN4LQN)
+- **ICS-213 General Message composer** — fields 1–8 matching the Winlink ICS213 General Message form (Ver 41.12), with a REVIEW step, a one-click **Winlink Wednesday** check-in preset, and station details remembered between messages. Sends as wire type P
 - **NTS Delivered button** — one click marks any T-type message delivered via BPQ's `WMNDel`, with delivered-state tracking and NTS sub-folders
 - **Compose deep links** — open a pre-filled compose window from any dashboard or bookmark via `#compose?to=CALL&subject=...` (see README-dashboard-links.md); works in already-open tabs too
 
@@ -65,6 +66,12 @@ A two-pane workspace — groups rail on the left, contact list on the right — 
 - **📇+ Save Sender** in the reader, and **📇+** beside compose's To field, file the station you are reading or replying to without leaving the message
 - **Optional QRZ.com lookup** (your own paid QRZ XML Data subscription, stored only in your browser) fills name, street, city, state, ZIP and email from a callsign. There is no settings page for it — the **🔍 look up on QRZ** link on the contact card offers to connect the first time you use it, then carries straight on with the lookup. A lookup only ever fills blank fields
 - Filter and sort the contact list A–Z, by most-used, or by last-used; drag contacts onto a group to file them; multi-select for bulk add-to-group, remove-from-group or delete
+
+### Message Templates
+- **Reusable To / Type / Subject / Body**, picked from the **Template** row in the compose window
+- **Placeholders** — `{CALL}` `{QTH}` `{NAME}` `{DATE}` `{UTC}` `{TIME}` `{DATETIME}` fill in automatically from your config and the clock; `{{anything}}` prompts you for a value when you apply the template, so one template covers a message whose details change each time
+- **Save as…** captures whatever is in the compose window as a new template, seeded with your subject as its name
+- **Export / Import** as JSON, so a club or ARES group can share a set. Importing never overwrites — a clashing name becomes “Net notice (2)”
 
 ### Star Rules
 - Built-in rule: stars SYSTEM messages with subject starting "New User" (new user notifications)

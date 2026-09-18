@@ -1,5 +1,23 @@
 # Changelog
 
+## v1.8.0 — 2026-09-18
+
+Message templates, and an ICS-213 General Message form.
+
+### Added
+- **Message templates.** A reusable To / Type / Subject / Body, picked from a **Template** row in the compose window. Two kinds of placeholder: `{CALL}` `{QTH}` `{NAME}` `{DATE}` `{UTC}` `{TIME}` `{DATETIME}` fill in silently from your config and the clock, substituted at the moment you apply the template so `{DATE}` is always today; and `{{anything}}` prompts you for a value in a small dialog, so one template covers “same message, three details change each time”. Unknown braces are left alone, so a message that legitimately contains `{…}` is not mangled.
+- **“Save as…” from the compose window** captures whatever you have written — To, Type, Subject, Body — and seeds the template name from the subject. Writing the message once and keeping it is the path most templates will be born through; nobody starts at an empty template editor.
+- **Template manager** with live feedback while you edit (“Fills in automatically: {CALL}, {QTH} · Will ask you for: Time, Frequency”), clickable chips that insert a placeholder at the cursor, and **Export / Import** as JSON so a club or ARES group can pass a set around. An import never overwrites: a name clash becomes “Net notice (2)”, so a shared pack cannot silently replace your own work.
+- **ICS-213 General Message form.** Fields 1–8 with the labels and numbering of the Winlink **ICS213 General Message** form (Ver 41.12) — Incident Name, To and From by name/position, Subject, Date, Time, Message, Approved by and Position/Title. Selecting it swaps the compose window for the form; REVIEW renders it to the plain text that goes on the air so it can be read and edited before sending, and refuses an incomplete form rather than transmitting a half-filled ICS-213. Goes out as wire type **P**, addressed to a callsign (field 2 is a position, which is not routable). Your From / Approved by / Position are remembered between messages; the message itself is not.
+- A **Winlink Wednesday** button on that form fills the standard check-in values, mirroring the “Load ICS213 INITIAL Data” button on the Winlink original, and seeds field 7 from your station details.
+
+### Changed
+- The ICS-213 entry sits directly under **P – Personal** in the Type dropdown, grouping the two P-type entries together.
+- QRZ lookups fill **street, ZIP and email** as well as name, city and state, and only ever fill blank fields.
+
+### Notes
+- Packet cannot carry Winlink's XML attachment for ICS-213, and it would not help if it could: per G8BPQ's documentation, *“plain text attachments will be shown as part of the message to those reading messages on the BBS, but binary attachment will not be accessible”*. The readable body this form produces is what a receiving operator sees either way.
+
 ## v1.7.0 — 2026-09-17
 
 A substantial address-book release: contact groups, sending to a group, bulk
