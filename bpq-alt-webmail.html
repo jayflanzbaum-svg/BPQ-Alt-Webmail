@@ -91,6 +91,11 @@ body.classic .rv-body { background:#ffffff }
 * { box-sizing:border-box; margin:0; padding:0 }
 html,body { height:100%; overflow:hidden }
 body { font-family:var(--sans); font-size:1rem; background:var(--bg); color:var(--text); display:flex; flex-direction:column; transition:background .15s,color .15s }
+/* Bold text/borders mode — accessibility toggle, no font download required:
+   leans on the real bold weight already built into system fonts (Consolas etc.)
+   in the --mono fallback chain rather than adding a bold @font-face. */
+body.bold-mode { font-weight:700 }
+body.bold-mode * { border-width:2px !important }
 
 /* ── TOPBAR ── */
 .topbar { display:flex; align-items:center; gap:10px; padding:0 14px; height:42px; border-bottom:1px solid var(--border); background:var(--bg2); flex-shrink:0 }
@@ -403,6 +408,10 @@ body { font-family:var(--sans); font-size:1rem; background:var(--bg); color:var(
 /* ── MESSAGE TEMPLATES ── */
 .tpl-row { display:flex; gap:6px; align-items:center }
 .tpl-row .field-in { flex:1 1 auto; min-width:0 }
+.tpl-toggle-link { color:var(--text3); font-family:var(--mono); font-size:0.77rem; text-decoration:underline; cursor:pointer; display:inline-block; margin-bottom:4px }
+.tpl-toggle-link:hover { color:var(--text2) }
+.field-lbl-link { color:var(--text3); font-family:var(--mono); font-size:0.72rem; text-decoration:underline; text-underline-offset:2px }
+.field-lbl-link:hover { color:var(--text2) }
 .tpl-modal { width:min(1100px,96vw); height:min(820px,90vh) }
 .tpl-modal .modal-bd { padding:0; gap:0; overflow:hidden }
 .tpl-main { display:flex; flex:1 1 auto; min-height:0 }
@@ -457,6 +466,14 @@ body { font-family:var(--sans); font-size:1rem; background:var(--bg); color:var(
 .ctxm-sep { border-top:1px solid var(--border); margin:4px 2px }
 .sf.muted { opacity:.55 }
 .sf.muted .sf-lbl::after { content:' ⊘'; font-size:0.69rem; color:var(--text3) }
+/* Bulletins tree rows carry a ★ toggle; trim the indent so the labels still
+   line up with the Personal/NTS trees, which have no button. */
+.sfb { padding-left:12px }
+.sf-star { background:none; border:none; cursor:pointer; padding:0 4px 0 0; font-size:0.8rem; line-height:1; color:var(--text3); opacity:.22; transition:opacity .15s, transform .15s }
+.sf-star:hover { opacity:.75; transform:scale(1.2) }
+.sf-star.on { opacity:1; color:var(--amber); filter:drop-shadow(0 0 3px var(--amber)) }
+.sf-star.ph { visibility:hidden; pointer-events:none }
+.sf.fav .sf-lbl { color:var(--amber) }
 .del-box { background:var(--bg2); border:1px solid var(--border2); border-radius:8px; padding:22px 26px; max-width:360px; width:90% }
 .del-ttl { font-family:var(--mono); font-size:0.92rem; font-weight:600; color:var(--red); margin-bottom:10px }
 .del-msg { font-size:1rem; color:var(--text2); margin-bottom:18px; line-height:1.5 }
@@ -671,6 +688,7 @@ body { font-family:var(--sans); font-size:1rem; background:var(--bg); color:var(
   <button class="tbtn" id="font-lbl" onclick="resetFont()" title="Reset font size">13px</button>
   <button class="tbtn" onclick="adjustFont(1)" title="Increase font size">A+</button>
   <button class="tbtn" id="lh-lbl" onclick="cycleLineSpacing()" title="Cycle line spacing">Normal</button>
+  <button class="tbtn" id="bold-btn" onclick="toggleBold()" title="Bold text & borders: OFF — click to toggle"><b>B</b></button>
   <button class="tbtn" onclick="toggleSettings()" title="Settings" style="color:var(--amber);border-color:var(--amber);font-weight:600">⚙ Settings</button>
   <button class="tbtn" onclick="openRules()" title="Star rules">★ Rules</button>
   <button class="tbtn" onclick="openAddressBook()" title="Address Book">📇 Address Book</button>
@@ -866,10 +884,16 @@ body { font-family:var(--sans); font-size:1rem; background:var(--bg); color:var(
           <button type="button" class="btn" onclick="openAddressBook()" title="Open the address book" style="flex:0 0 auto">📇</button>
         </div>
       </div>
-      <div class="field"><span class="field-lbl">Type</span><select class="field-in" id="cmp-type" style="width:auto" onchange="forcedType=null;onComposeTypeChange()"><option value="P">P – Personal</option><option value="P/ICS213">P = ICS-213 General Message (form)</option><option value="B">B – Bulletin</option><option value="B/PKTNET">B/PKTNET – PKTNET Check-In (form)</option><option value="T/RRI">T = NTS (Radiogram Form)</option></select></div>
+      <div class="field">
+        <span class="field-lbl" style="display:flex;align-items:center;gap:8px">
+          Type
+          <a href="https://www.tprfn.net/html-form-suite" target="_blank" rel="noopener noreferrer" class="field-lbl-link" title="Open TPRFN's HTML form suite in a new tab">More forms (TPRFN) ↗</a>
+        </span>
+        <select class="field-in" id="cmp-type" style="width:auto" onchange="forcedType=null;onComposeTypeChange()"><option value="P">P – Personal</option><option value="P/ICS213">P = ICS-213 General Message (form)</option><option value="B">B – Bulletin</option><option value="B/PKTNET">B/PKTNET – PKTNET Check-In (form)</option><option value="T/RRI">T = NTS (Radiogram Form)</option></select>
+      </div>
       <div class="field" id="cmp-tpl-field">
-        <span class="field-lbl">Template</span>
-        <div class="tpl-row">
+        <a href="javascript:void(0)" id="cmp-tpl-toggle" class="tpl-toggle-link" onclick="toggleTemplateSection()">Use a template</a>
+        <div class="tpl-row" id="cmp-tpl-row" style="display:none">
           <select class="field-in" id="cmp-tpl" onchange="applyTemplateFromPicker(this)"></select>
           <button type="button" class="btn" onclick="saveComposeAsTemplate()" title="Save what is in this window as a reusable template" style="flex:0 0 auto">save as…</button>
           <button type="button" class="btn" onclick="openTemplates()" title="Manage templates" style="flex:0 0 auto">⚙</button>
@@ -1114,6 +1138,9 @@ body { font-family:var(--sans); font-size:1rem; background:var(--bg); color:var(
         <span id="ab-count"></span>
         <span style="margin:0 8px;color:var(--border2)">|</span>
         <button class="ab-link dim" id="ab-qrz-link" onclick="openQrzLogin()"></button>
+        <span style="margin:0 8px;color:var(--border2)">|</span>
+        <button class="ab-link dim" id="ab-sync-link" onclick="abSyncToggle()"></button>
+        <button class="ab-link dim" id="ab-sync-now" onclick="abSyncNow()" style="display:none;margin-left:8px">sync now</button>
       </span>
     </div>
   </div>
@@ -1416,7 +1443,12 @@ function saveCFG() {
 //  name/city/state from just a callsign.
 // ═══════════════════════════════════════════════════
 function loadContacts() { return LS.getJ('bpq_contacts') || []; }
-function saveContacts(list) { LS.setJ('bpq_contacts', list); }
+// Every contact write goes through here, so this is where a record gets its
+// `updated` stamp and where a disappearance becomes a tombstone. Both exist
+// for the BBS sync (see ADDRESS BOOK SYNC): without a stamp two PCs cannot
+// tell whose copy of a contact is newer, and without a tombstone a partner
+// that still holds a deleted contact simply puts it back on the next merge.
+function saveContacts(list) { LS.setJ('bpq_contacts', abStamp('bpq_contacts', list, 'call', 'bpq_ab_ctomb')); abSyncTouch(); }
 
 // -- Groups --
 // A group is { name, members:[CALL,...] }. Groups reference contacts by
@@ -1426,10 +1458,336 @@ function saveContacts(list) { LS.setJ('bpq_contacts', list); }
 // Deleting a contact prunes it from every group; deleting a group never
 // deletes contacts.
 function loadGroups() { return LS.getJ('bpq_groups') || []; }
-function saveGroups(list) { LS.setJ('bpq_groups', list); }
+function saveGroups(list) { LS.setJ('bpq_groups', abStamp('bpq_groups', list, 'name', 'bpq_ab_gtomb')); abSyncTouch(); }
 function findGroup(name) { return loadGroups().find(g => g.name === name); }
 function groupsFor(call) { return loadGroups().filter(g => (g.members || []).includes(call)).map(g => g.name); }
 function sortedGroups() { return loadGroups().slice().sort((a, b) => a.name.localeCompare(b.name)); }
+
+// ═══════════════════════════════════════════════════
+//  ADDRESS BOOK SYNC  (between your own PCs, through the BBS)
+//
+//  Browsers cannot share localStorage across machines, and BPQ's web server
+//  will not help: probed 2026-09-22, PUT 404s and writes nothing, POST to a
+//  static path is ignored, and no node page carries an upload form. The only
+//  thing on a BPQ node a browser can both read and write is the mail store.
+//
+//  So the book syncs as ordinary mail. Each PC keeps exactly one P-type
+//  message to your own callsign, subject "[ABSYNC] <device>", carrying the
+//  whole address book between two markers; every PC reads the others' and
+//  merges. Nothing goes on the air — a message addressed to your own callsign
+//  at your home BBS is never forwarded — and parseList() hides these carriers
+//  from every list in the UI, so the inbox never shows machine mail.
+//
+//  base64, not raw JSON: a BBS path is not guaranteed 8-bit clean and may wrap
+//  long lines, which is precisely what one long JSON line would not survive.
+//  Lines are 76 characters and reassembly strips all whitespace, so a wrap in
+//  transit costs nothing.
+//
+//  Merge is per record, newest `updated` wins, with tombstones for deletions —
+//  not last-write-wins over the whole book, which would discard a contact
+//  added on the laptop just because the shack PC saved afterwards. Without
+//  tombstones a partner still holding a deleted contact would simply put it
+//  back on the next merge. Two records that both predate stamping are merged
+//  field by field, filling blanks only — the rule the CSV importer follows.
+//
+//  useCount/lastUsed are deliberately NOT synced: they are per-machine habits,
+//  and syncing them would push a new carrier after every send.
+//
+//  What this does not solve: the same contact edited on two PCs before either
+//  syncs. The newer stamp wins and the other edit is lost. No mail store can
+//  do better without real revision history.
+// ═══════════════════════════════════════════════════
+const AB_SYNC_TAG   = '[ABSYNC]';
+const AB_SYNC_BEGIN = '---BEGIN BPQ-ALT-AB v1---';
+const AB_SYNC_END   = '---END BPQ-ALT-AB---';
+const AB_SYNC_MAX   = 60000;              // refuse to post a carrier bigger than this
+const AB_TOMB_MS    = 90 * 864e5;         // forget a deletion after 90 days
+const AB_PULL_MS    = 90e3;               // don't re-read carriers more often than this
+const AB_PUSH_DELAY = 45e3;               // coalesce a burst of edits into one push
+const AB_SYNC_NOTE  =
+  'Address book sync for BPQ-Alt-WebMail. This message is written and read\n' +
+  'automatically by the webmail app, and is not meant to be read by a human.\n' +
+  'It stays on this BBS. Deleting it is harmless — the app writes a new one.';
+
+let abMerging      = false;   // true while applying a merge: suppress stamping
+let abSyncBusy     = false;
+let abPushTimer    = null;
+let abSyncLastPull = 0;
+let abSyncSeen     = new Set(LS.getJ('bpq_ab_seen') || []);
+
+function abSyncOn() { return LS.get('bpq_ab_sync') === '1'; }
+function abDeviceId() {
+  let d = LS.get('bpq_ab_device');
+  if (!d) { d = Math.random().toString(36).slice(2, 8).toUpperCase(); LS.set('bpq_ab_device', d); }
+  return d;
+}
+
+// ── Stamping and tombstones ──
+// Called from saveContacts/saveGroups, the only writers of either key.
+function abStamp(key, list, idField, tombKey) {
+  if (abMerging) return list;                 // merge results carry their own stamps
+  const now = Date.now();
+  const prev = LS.getJ(key) || [];
+  const prevById = new Map(prev.map(r => [abRecId(r, idField), r]));
+  const out = list.map(r => {
+    const id = abRecId(r, idField);
+    const was = prevById.get(id);
+    prevById.delete(id);
+    return (was && abRecEq(was, r)) ? { ...r, updated: was.updated || 0 } : { ...r, updated: now };
+  });
+  if (prevById.size) {
+    const tombs = LS.getJ(tombKey) || {};
+    for (const id of prevById.keys()) tombs[id] = now;
+    LS.setJ(tombKey, abPruneTombs(tombs));
+  }
+  return out;
+}
+function abRecId(r, idField) { return String((r && r[idField]) || '').toUpperCase(); }
+// Compare two records ignoring the stamp and the per-machine usage counters, so
+// re-saving an untouched contact does not make it look newer than a real edit
+// made on another PC.
+function abRecEq(a, b) {
+  const norm = r => {
+    const c = { ...r };
+    delete c.updated; delete c.useCount; delete c.lastUsed;
+    return JSON.stringify(Object.keys(c).sort().map(k =>
+      [k, Array.isArray(c[k]) ? [...c[k]].sort() : (c[k] === undefined || c[k] === null ? '' : c[k])]));
+  };
+  return norm(a) === norm(b);
+}
+function abPruneTombs(tombs) {
+  const cut = Date.now() - AB_TOMB_MS, out = {};
+  for (const [k, v] of Object.entries(tombs || {})) if (v > cut) out[k] = v;
+  return out;
+}
+
+// ── Payload ──
+function abBuildPayload() {
+  const lean = c => {
+    const o = { ...c };
+    delete o.useCount; delete o.lastUsed;
+    for (const k of Object.keys(o)) if (o[k] === '' || o[k] === null || o[k] === undefined) delete o[k];
+    return o;
+  };
+  return {
+    v: 1, dev: abDeviceId(), ts: Date.now(),
+    contacts: loadContacts().map(lean),
+    groups:   loadGroups(),
+    ctomb:    LS.getJ('bpq_ab_ctomb') || {},
+    gtomb:    LS.getJ('bpq_ab_gtomb') || {},
+  };
+}
+function abEncode(obj) {
+  const bytes = new TextEncoder().encode(JSON.stringify(obj));
+  let bin = '';
+  for (const b of bytes) bin += String.fromCharCode(b);
+  return btoa(bin).replace(/(.{76})/g, '$1\n');
+}
+function abDecode(b64) {
+  const bin = atob(String(b64).replace(/\s+/g, ''));
+  return JSON.parse(new TextDecoder().decode(Uint8Array.from(bin, ch => ch.charCodeAt(0))));
+}
+// Pull the payload out of a carrier body. Tolerates anything wrapped around it
+// — a quoted reply, BPQ's own "Attachment <name>" line, a signature.
+function abExtract(text) {
+  const t = String(text || '');
+  const i = t.indexOf(AB_SYNC_BEGIN);
+  if (i < 0) return '';
+  const j = t.indexOf(AB_SYNC_END, i);
+  return t.slice(i + AB_SYNC_BEGIN.length, j < 0 ? undefined : j);
+}
+
+// ── Merge ──
+// Fill this record's blanks from the other one. Returns a new record, or null
+// when there was nothing to fill.
+function abFillBlanks(mine, other) {
+  const out = { ...mine };
+  let filled = false;
+  for (const [k, v] of Object.entries(other || {})) {
+    if (k === 'updated' || k === 'useCount' || k === 'lastUsed') continue;
+    if ((out[k] === undefined || out[k] === '') && v !== undefined && v !== '') { out[k] = v; filled = true; }
+  }
+  return filled ? out : null;
+}
+function abMergePayload(rem) {
+  if (!rem || rem.v !== 1) return { changed: false };
+  const ctomb = abPruneTombs(LS.getJ('bpq_ab_ctomb') || {});
+  const gtomb = abPruneTombs(LS.getJ('bpq_ab_gtomb') || {});
+  for (const [k, v] of Object.entries(rem.ctomb || {})) if ((ctomb[k] || 0) < v) ctomb[k] = v;
+  for (const [k, v] of Object.entries(rem.gtomb || {})) if ((gtomb[k] || 0) < v) gtomb[k] = v;
+
+  let added = 0, updated = 0, removed = 0, groups = 0;
+
+  const byCall = new Map(loadContacts().map(c => [abRecId(c, 'call'), c]));
+  for (const r of (rem.contacts || [])) {
+    const id = abRecId(r, 'call');
+    if (!id) continue;
+    const tomb = ctomb[id] || 0;
+    if (tomb && tomb >= (r.updated || 0)) continue;          // deleted after the remote wrote it
+    const mine = byCall.get(id);
+    if (!mine) { byCall.set(id, { ...r }); added++; continue; }
+    const L = mine.updated || 0, R = r.updated || 0;
+    if (R > L) {
+      // A remote win must not carry away this machine's usage counters.
+      byCall.set(id, { ...r, useCount: mine.useCount, lastUsed: mine.lastUsed });
+      updated++;
+    } else if (!R && !L) {
+      const merged = abFillBlanks(mine, r);
+      if (merged) { byCall.set(id, merged); updated++; }
+    }
+  }
+  for (const [id, c] of [...byCall]) {
+    if ((ctomb[id] || 0) > (c.updated || 0)) { byCall.delete(id); removed++; }
+  }
+
+  const byName = new Map(loadGroups().map(g => [abRecId(g, 'name'), g]));
+  for (const r of (rem.groups || [])) {
+    const id = abRecId(r, 'name');
+    if (!id) continue;
+    const gt = gtomb[id] || 0;
+    if (gt && gt >= (r.updated || 0)) continue;
+    const mine = byName.get(id);
+    if (!mine) { byName.set(id, { ...r }); groups++; }
+    else if ((r.updated || 0) > (mine.updated || 0)) { byName.set(id, { ...r }); groups++; }
+  }
+  for (const [id, g] of [...byName]) {
+    if ((gtomb[id] || 0) > (g.updated || 0)) { byName.delete(id); groups++; }
+  }
+
+  const changed = !!(added || updated || removed || groups);
+  abMerging = true;
+  try {
+    LS.setJ('bpq_ab_ctomb', ctomb);
+    LS.setJ('bpq_ab_gtomb', gtomb);
+    if (changed) { saveContacts([...byCall.values()]); saveGroups([...byName.values()]); }
+  } finally { abMerging = false; }
+  return { changed, added, updated, removed, groups };
+}
+
+// ── Carriers on the node ──
+async function abSyncList() {
+  const html = await bpqGet(base() + FOLDER_PATHS.Mine(CFG.key));
+  return parseList(html, true).filter(m => (m.subject || '').startsWith(AB_SYNC_TAG));
+}
+function abSyncDev(m) { return ((m.subject || '').split(/\s+/)[1] || '').toUpperCase(); }
+async function abKillSilently(num) {
+  try { await bpqGet(killUrl(num)); killedSet.add(num); saveKilled(); } catch (_) {}
+}
+
+// ── Push / pull ──
+function abSyncTouch() {
+  if (abMerging || !abSyncOn()) return;
+  abSyncSchedulePush(AB_PUSH_DELAY);
+}
+function abSyncSchedulePush(ms) {
+  clearTimeout(abPushTimer);
+  abPushTimer = setTimeout(() => abSyncPush(), ms);
+}
+async function abSyncPush() {
+  if (!abSyncOn() || !CFG.key) return;
+  if (abSyncBusy) { abSyncSchedulePush(5000); return; }   // never silently drop a push
+  const call = (CFG.callsign || '').toUpperCase();
+  if (!call) return;
+  abSyncBusy = true;
+  try {
+    const body = AB_SYNC_NOTE + '\n\n' + AB_SYNC_BEGIN + '\n' + abEncode(abBuildPayload()) + '\n' + AB_SYNC_END + '\n';
+    if (body.length > AB_SYNC_MAX) {
+      toast('Address book too big to sync (' + Math.round(body.length / 1024) + ' KB)', 'err');
+      return;
+    }
+    const mine = (await abSyncList()).filter(m => abSyncDev(m) === abDeviceId());
+    const r = await sendOne(call, AB_SYNC_TAG + ' ' + abDeviceId(), 'P', body);
+    if (!r.ok) { toast('Address book sync: send failed', 'err'); return; }
+    LS.set('bpq_ab_pushed', String(Date.now()));
+    // Replace, don't accumulate: exactly one carrier per device. Killed only
+    // after the new one is safely in, so there is never a window with none.
+    for (const m of mine) await abKillSilently(m.num);
+    renderAbSyncLink();
+  } catch (e) {
+    console.warn('[BPQ] address book push failed', e);
+  } finally { abSyncBusy = false; }
+}
+async function abSyncPull(force) {
+  if (!abSyncOn() || !CFG.key || abSyncBusy) return false;
+  if (!force && Date.now() - abSyncLastPull < AB_PULL_MS) return false;
+  abSyncBusy = true;
+  let changed = false;
+  try {
+    abSyncLastPull = Date.now();
+    const rows = (await abSyncList())
+      .filter(m => abSyncDev(m) !== abDeviceId() && !abSyncSeen.has(m.num));
+    for (const m of rows) {
+      abSyncSeen.add(m.num);
+      let res = null;
+      try { res = abMergePayload(abDecode(abExtract(parseBody(await bpqGet(msgUrl(m.num))) || ''))); }
+      catch (e) { console.warn('[BPQ] unreadable sync carrier #' + m.num, e); continue; }
+      if (res && res.changed) {
+        changed = true;
+        const bits = [];
+        if (res.added)   bits.push(res.added + ' new');
+        if (res.updated) bits.push(res.updated + ' updated');
+        if (res.removed) bits.push(res.removed + ' removed');
+        if (res.groups)  bits.push(res.groups + ' group' + (res.groups === 1 ? '' : 's'));
+        toast('Address book synced — ' + bits.join(', '), 'ok');
+      }
+    }
+    LS.setJ('bpq_ab_seen', [...abSyncSeen].slice(-200));
+    if (changed) {
+      if (document.getElementById('ab-ov').classList.contains('open')) {
+        renderAbGroups(); renderAddressBook();
+      }
+      refreshAbDatalist();
+      abSyncSchedulePush(3000);   // pass the merged book on to the other PCs
+    }
+    renderAbSyncLink();
+  } catch (e) {
+    console.warn('[BPQ] address book pull failed', e);
+  } finally { abSyncBusy = false; }
+  return changed;
+}
+
+// ── The one control, in the address-book footer ──
+function abSyncToggle() {
+  if (abSyncOn()) {
+    LS.set('bpq_ab_sync', '0');
+    clearTimeout(abPushTimer);
+    renderAbSyncLink();
+    toast('Address book sync off — the carrier messages are left alone', 'info');
+    return;
+  }
+  const call = (CFG.callsign || '').toUpperCase();
+  if (!call) { toast('Set your callsign in Settings first', 'err'); return; }
+  if (!confirm(
+    'Sync your address book between your own PCs, through this BBS?\n\n' +
+    'Each PC keeps one message to ' + call + ' holding its copy of the book, and reads the ' +
+    'ones written by your other machines. It stays on your own node and is never forwarded ' +
+    'on the air, and the messages are hidden from your folders.\n\n' +
+    'Turn this on for every PC you want in sync.')) return;
+  LS.set('bpq_ab_sync', '1');
+  renderAbSyncLink();
+  abSyncNow();
+}
+function abSyncNow() {
+  if (!abSyncOn()) { toast('Turn sync on first', 'info'); return; }
+  toast('Syncing address book…', 'info');
+  abSyncPull(true).then(() => abSyncPush());
+}
+function abSyncAgo() {
+  const t = Number(LS.get('bpq_ab_pushed') || 0);
+  if (!t) return 'not yet sent';
+  const m = Math.round((Date.now() - t) / 60000);
+  return m < 1 ? 'just now' : m < 60 ? (m + 'm ago') : (Math.round(m / 60) + 'h ago');
+}
+function renderAbSyncLink() {
+  const el = document.getElementById('ab-sync-link');
+  if (!el) return;
+  const on = abSyncOn();
+  el.textContent = on ? ('Sync: on · ' + abSyncAgo()) : 'Sync off';
+  el.title = on ? ('This PC is device ' + abDeviceId() + ' — click to stop syncing')
+                : 'Share this address book with your other PCs through the BBS';
+  const now = document.getElementById('ab-sync-now');
+  if (now) now.style.display = on ? '' : 'none';
+}
 
 // The contact list is plain innerHTML, so a five-figure address book would
 // build a huge string on every keystroke. Cap what is painted and tell the
@@ -1464,9 +1822,11 @@ function openAddressBook() {
   abSelected.clear();
   cancelEditContact();
   renderQrzLink();
+  renderAbSyncLink();
   renderAbGroups();
   renderAddressBook();
   document.getElementById('ab-ov').classList.add('open');
+  abSyncPull();   // throttled; picks up anything another PC has written
 }
 function closeAddressBook() {
   document.getElementById('ab-ov').classList.remove('open');
@@ -2264,6 +2624,16 @@ function refreshTemplatePicker() {
     list.map(t => `<option value="${escAttr(t.id)}">${esc(t.name)}</option>`).join('');
   sel.value = '';
 }
+// Collapsed by default — the template row is clutter for the P/B senders
+// who never use it. Left open once a user reveals it, for this compose
+// window's lifetime.
+function toggleTemplateSection() {
+  const row = document.getElementById('cmp-tpl-row');
+  const link = document.getElementById('cmp-tpl-toggle');
+  const show = row.style.display === 'none';
+  row.style.display = show ? '' : 'none';
+  link.textContent = show ? 'Hide template' : 'Use a template';
+}
 function applyTemplateFromPicker(sel) {
   const id = sel.value;
   sel.value = '';
@@ -3038,11 +3408,13 @@ function conditionMatches(cond, msg) {
   }
 }
 
-// Return { starred: bool, labels: string[] } for a message
+// Return { starred: bool, labels: string[] } for a message.
+// A bulletin in a favourited TO category counts as starred, so favouriting a
+// topic and starring a message feed the same ★ filter in the list header.
 function evalRules(msg) {
   const matched = allRules().filter(r => ruleMatches(r, msg));
   return {
-    starred: matched.length > 0,
+    starred: matched.length > 0 || (isBullMsg(msg) && isBullFav(msg.to)),
     labels:  matched.map(r=>r.label).filter(Boolean),
   };
 }
@@ -3310,17 +3682,64 @@ function unsubscribeBull(to) {
   if (!key) return;
   bullUnsub.add(key);
   saveBullUnsub();
+  if (bullFav.delete(key)) saveBullFav();
   // Don't leave the list sitting on a filter that is now hidden.
   if (bullFilter === to || bullFilter === key) bullFilter = 'ALL';
   afterBullSubChange(`Unsubscribed from ${to} — hidden from Bulletins`);
 }
+// ═══════════════════════════════════════════════════
+//  BULLETIN FAVOURITES
+//
+//  The positive counterpart to unsubscribe (asked for by N3MEL): rather than
+//  hiding the thirty-eight categories you do not want, star the two you do.
+//  A favourited TO pins to the top of the tree under its own ★ Favorites
+//  roll-up, and every message in it reads as starred — so the ★ filter that
+//  already exists in the list header shows exactly those, with no second
+//  filtering concept to learn. Stored in bpq_bull_fav.
+//
+//  Favourite and unsubscribe are contradictory, so setting either clears the
+//  other rather than leaving a topic that is both starred and hidden.
+// ═══════════════════════════════════════════════════
+const BULL_FAV = '★FAV';   // sentinel filter key — no real TO can collide
+let bullFav = new Set((LS.getJ('bpq_bull_fav') || []).map(v => String(v).toUpperCase()));
+function saveBullFav() { LS.setJ('bpq_bull_fav', [...bullFav]); }
+function isBullFav(to) { return bullFav.has(String(to || '').toUpperCase()); }
+function isBullMsg(m) { return !!m && (m.type || '').toUpperCase().startsWith('B'); }
+function favoriteBull(to) {
+  const key = String(to || '').toUpperCase();
+  if (!key || key === BULL_FAV) return;
+  bullFav.add(key);
+  saveBullFav();
+  const wasOff = bullUnsub.delete(key);
+  if (wasOff) saveBullUnsub();
+  afterBullSubChange(`★ ${to} added to favorites${wasOff ? ' and resubscribed' : ''}`);
+}
+function unfavoriteBull(to) {
+  const key = String(to || '').toUpperCase();
+  bullFav.delete(key);
+  saveBullFav();
+  // Don't leave the list sitting on a roll-up that no longer has members.
+  if (bullFilter === BULL_FAV && !bullFav.size) bullFilter = 'ALL';
+  afterBullSubChange(`${to} removed from favorites`);
+}
+function toggleBullFav(e, to) {
+  e.stopPropagation();
+  if (isBullFav(to)) unfavoriteBull(to); else favoriteBull(to);
+}
+// Title for a Bulletins filter key — the sentinel needs a readable name.
+function bullLabel(f) {
+  return f === 'ALL' ? 'Bulletins'
+       : f === BULL_FAV ? 'Bulletins · ★ Favorites'
+       : `Bulletins · ${f}`;
+}
+
 function afterBullSubChange(msg) {
   if (activeFolder === 'Bulls') {
     buildBullFilters(allMsgs);
     const f = getFiltered();
     renderList(f);
     updateListCount(f);
-    document.getElementById('list-title').textContent = bullFilter === 'ALL' ? 'Bulletins' : `Bulletins · ${bullFilter}`;
+    document.getElementById('list-title').textContent = bullLabel(bullFilter);
     if (activeNum && !f.some(m => m.num === activeNum)) {
       activeNum = null;
       showEmpty(true);
@@ -3331,9 +3750,12 @@ function afterBullSubChange(msg) {
 }
 // Right-click target: a TO entry in the Bulletins tree.
 function bullFilterCtx(e, to) {
-  if (to === 'ALL') { hideCtxMenu(); return; }
+  if (to === 'ALL' || to === BULL_FAV) { hideCtxMenu(); return; }
   const off = isBullUnsub(to);
   showCtxMenu(e, `Bulletin · ${to}`, [
+    isBullFav(to)
+      ? { label: `☆ Remove ${to} from favorites`, fn: () => unfavoriteBull(to) }
+      : { label: `★ Favorite ${to}`, cls: 'good', fn: () => favoriteBull(to) },
     off ? { label: `✓ Resubscribe to ${to}`, cls: 'good', fn: () => subscribeBull(to) }
         : { label: `⊘ Unsubscribe from ${to}`, cls: 'danger', fn: () => unsubscribeBull(to) },
     { sep: true },
@@ -3349,6 +3771,9 @@ function msgRowCtx(e, num) {
   const call = contactKeyFromAddress(replyAddr(m));
   const items = [];
   if (isBull && to) {
+    items.push(isBullFav(to)
+      ? { label: `☆ Remove ${to} from favorites`, fn: () => unfavoriteBull(to) }
+      : { label: `★ Favorite ${to}`, cls: 'good', fn: () => favoriteBull(to) });
     items.push(isBullUnsub(to)
       ? { label: `✓ Resubscribe to ${to}`, cls: 'good', fn: () => subscribeBull(to) }
       : { label: `⊘ Unsubscribe from ${to}`, cls: 'danger', fn: () => unsubscribeBull(to) });
@@ -3413,7 +3838,8 @@ let themeIdx = Math.max(0, THEMES.findIndex(t => t.key === (LS.get('bpq_theme')|
 
 function applyTheme() {
   const t = THEMES[themeIdx];
-  document.body.className = t.key;
+  THEMES.forEach(th => document.body.classList.remove(th.key));
+  document.body.classList.add(t.key);
   const btn = document.getElementById('theme-btn');
   if (btn) { btn.textContent = t.icon; btn.title = `Theme: ${t.label} — click to cycle`; }
   LS.set('bpq_theme', t.key);
@@ -3454,6 +3880,22 @@ function applyLineSpacing() {
 function cycleLineSpacing() {
   lineSpacingIdx = (lineSpacingIdx + 1) % LINE_SPACINGS.length;
   applyLineSpacing();
+}
+
+// ═══════════════════════════════════════════════════
+//  BOLD TEXT / BOLD BORDERS
+// ═══════════════════════════════════════════════════
+let boldMode = LS.get('bpq_bold') === '1';
+function applyBold() {
+  document.body.classList.toggle('bold-mode', boldMode);
+  const btn = document.getElementById('bold-btn');
+  if (btn) btn.title = 'Bold text & borders: ' + (boldMode ? 'ON' : 'OFF') + ' — click to toggle';
+  LS.set('bpq_bold', boldMode ? '1' : '0');
+}
+function toggleBold() {
+  boldMode = !boldMode;
+  applyBold();
+  toast('Bold text & borders: ' + (boldMode ? 'on' : 'off'), 'info');
 }
 
 // ═══════════════════════════════════════════════════
@@ -3503,6 +3945,7 @@ function toggleSettings() {
       '<button class="tbtn" onclick="adjustFont(1)">A+</button>' +
       '<button class="tbtn" onclick="resetFont()">Reset Font</button>' +
       '<button class="tbtn" onclick="cycleLineSpacing()">↕ Spacing</button>' +
+      '<button class="tbtn" onclick="toggleBold()"><b>B</b> Bold</button>' +
       '<button class="tbtn" onclick="toggleSettings();openRules()">★ Rules</button>' +
       '<button class="tbtn" onclick="toggleSettings();openAddressBook()">📇 Address Book</button>';
 
@@ -3908,7 +4351,9 @@ function looksLikeCallOrKeyword(s) {
   return s && /^[A-Z0-9#\/]+$/i.test(s) && s.length <= 12;
 }
 
-function parseList(html) {
+// keepSync: the address-book sync needs to see its own carrier messages;
+// everything else in the UI must not, or the inbox fills up with machine mail.
+function parseList(html, keepSync) {
   const doc=new DOMParser().parseFromString(html,'text/html');
   const pre=doc.querySelector('pre');
   if (!pre) return [];
@@ -3958,6 +4403,7 @@ function parseList(html) {
 
     if(killedSet.has(num)) return;
     if(type&&type.toUpperCase().endsWith('K')) return;
+    if(!keepSync && subject.startsWith(AB_SYNC_TAG)) return;
     msgs.push({num,date,type,size,to,via,from,subject,body:null});
   });
   return msgs;
@@ -4143,23 +4589,46 @@ function buildBullFilters(msgs) {
     if (!readSet.has(m.num)) unreads[k] = (unreads[k] || 0) + 1;
   }
   const keys = Object.keys(counts).sort();
-  const on  = keys.filter(k => !isBullUnsub(k));
+  const fav = keys.filter(k => !isBullUnsub(k) &&  isBullFav(k));
+  const on  = keys.filter(k => !isBullUnsub(k) && !isBullFav(k));
   const off = keys.filter(k =>  isBullUnsub(k));
   let allCount = 0, allUnread = 0;
-  for (const k of on) { allCount += counts[k]; allUnread += (unreads[k] || 0); }
+  for (const k of fav.concat(on)) { allCount += counts[k]; allUnread += (unreads[k] || 0); }
+  let favCount = 0, favUnread = 0;
+  for (const k of fav) { favCount += counts[k]; favUnread += (unreads[k] || 0); }
 
-  const row = (k, cnt, unr, muted) => `
-    <div class="sf${bullFilter === k ? ' active' : ''}${muted ? ' muted' : ''}"
+  // ALL and the ★ Favorites roll-up are not themselves topics: no ★ toggle and
+  // no context menu, just an invisible placeholder so every label lines up.
+  const row = (k, cnt, unr, muted) => {
+    const topic = k !== 'ALL' && k !== BULL_FAV;
+    const starred = topic && isBullFav(k);
+    const name = k === BULL_FAV ? '★ Favorites' : k;
+    const tip = k === 'ALL'      ? 'All subscribed bulletins'
+              : k === BULL_FAV   ? 'Every topic you have starred'
+              : muted            ? 'Unsubscribed — right-click to resubscribe'
+              :                    'Right-click to unsubscribe · ★ to favorite';
+    const star = topic
+      ? `<button class="sf-star${starred ? ' on' : ''}" onclick="toggleBullFav(event,'${escAttr(k)}')" title="${starred ? 'Remove from favorites' : 'Favorite this topic'}">★</button>`
+      : `<span class="sf-star ph">★</span>`;
+    return `
+    <div class="sf sfb${bullFilter === k ? ' active' : ''}${muted ? ' muted' : ''}${starred ? ' fav' : ''}"
          data-bull="${escAttr(k)}" onclick="setBullFilter('${escAttr(k)}')"
-         ${k === 'ALL' ? '' : `oncontextmenu="bullFilterCtx(event,'${escAttr(k)}')"`}
-         title="${k === 'ALL' ? 'All subscribed bulletins' : (muted ? 'Unsubscribed — right-click to resubscribe' : 'Right-click to unsubscribe')}">
-      <span class="sf-lbl">${esc(k)}</span>
+         ${topic ? `oncontextmenu="bullFilterCtx(event,'${escAttr(k)}')"` : ''}
+         title="${tip}">
+      ${star}
+      <span class="sf-lbl">${esc(name)}</span>
       <span class="sf-count">(${cnt})</span>
       <span class="sf-unread${unr > 0 ? ' on' : ''}"></span>
     </div>`;
+  };
 
-  let html = row('ALL', allCount, allUnread, false) +
-             on.map(k => row(k, counts[k], unreads[k] || 0, false)).join('');
+  let html = row('ALL', allCount, allUnread, false);
+  if (fav.length) {
+    html += row(BULL_FAV, favCount, favUnread, false) +
+            fav.map(k => row(k, counts[k], unreads[k] || 0, false)).join('') +
+            (on.length ? `<div class="ab-rail-sep"></div>` : '');
+  }
+  html += on.map(k => row(k, counts[k], unreads[k] || 0, false)).join('');
   if (off.length) {
     html += `<div class="ab-rail-sep" title="Unsubscribed — right-click to resubscribe"></div>` +
             off.map(k => row(k, counts[k], unreads[k] || 0, true)).join('');
@@ -4218,8 +4687,7 @@ function setPersFilter(f) {
 function setBullFilter(f) {
   bullFilter=f;
   buildBullFilters(allMsgs);
-  const label = f==='ALL' ? 'Bulletins' : `Bulletins · ${f}`;
-  document.getElementById('list-title').textContent=label;
+  document.getElementById('list-title').textContent = bullLabel(f);
   const filtered=getFiltered();
   renderList(filtered);
   updateListCount(filtered);
@@ -4248,6 +4716,8 @@ function getFiltered() {
   if(activeFolder==='Personal'&&persFilter!=='ALL') msgs=msgs.filter(m=>persFromKey(m)===persFilter);
   if(activeFolder==='Bulls') msgs = bullFilter==='ALL'
     ? msgs.filter(m=>!isBullUnsub(m.to))   // All = everything still subscribed
+    : bullFilter===BULL_FAV
+    ? msgs.filter(m=>isBullFav(m.to))      // ★ Favorites = starred topics only
     : msgs.filter(m=>m.to===bullFilter);   // an explicit pick always shows, even if unsubscribed
   if(activeFolder==='NTS') {
     if(ntsFilter==='ALL')           msgs=msgs.filter(m=>!deliveredSet.has(m.num));
@@ -5684,10 +6154,16 @@ function pkGenerate() {
 //  will be shown as part of the message to those reading messages on the BBS,
 //  but binary attachment will not be accessible" -- so an attachment buys a
 //  BBS reader nothing this body does not already give them. Second, whether
-//  EMSave accepts a file part is undetermined: BPQ's compose page sits behind
-//  the session key and the WebMail docs do not describe an upload field. If it
-//  turns out to be supported, adding the XML is small: build it from the same
-//  fields and append a file part to the form in sendOne().
+//  EMSave accepts a file part was undetermined -- now answered (2026-09-22)
+//  by an end-to-end round trip: it does. BPQ's own compose page
+//  (/WebMail/NewMsg?<key>) is
+//  enctype=multipart/form-data with three file inputs -- myFile[] (multiple),
+//  myFile2[] and myFile3[] -- all posting to the same EMSave endpoint this app
+//  uses. So adding the XML is small: build it from the same fields and append
+//  a myFile[] part to the form in sendOne(). A 121-byte JSON file sent that
+//  way came back inside the message text as "Attachment <name>" followed by
+//  the file verbatim -- so the reader gets it for free, no download endpoint
+//  needed. The first reason above still stands, which is why we have not.
 //
 //  Goes on the air as wire type P. The Type dropdown has no plain-T/P form
 //  entry, so icsReview() carries the wire type in forcedType (see the comment
@@ -5749,7 +6225,7 @@ function icsLoadWinlinkWednesday() {
 function icsGenerate() {
   const v = id => (document.getElementById(id).value || '').trim();
   const L = [];
-  L.push('General Message (ICS 213)');
+  L.push('GENERAL MESSAGE (ICS 213)');
   L.push('');
   L.push(`1. Incident Name: ${v('ics-incident')}`);
   L.push(`2. To (Name/Position): ${v('ics-to-name')}`);
@@ -5925,6 +6401,7 @@ async function silentRefresh(manual=false){
     lastRefresh=new Date(); updateRefreshLbl();
     if(added.length) toast(`${added.length} new message${added.length>1?'s':''}`, 'info');
     updateFolderBadges();
+    abSyncPull();   // the address book rides the same poll (throttled, silent)
   }catch(e){
     if(manual) toast('Refresh failed: '+e.message,'err');
   }
@@ -6127,6 +6604,7 @@ async function init(){
   applyTheme();
   applyFont();
   applyLineSpacing();
+  applyBold();
   refreshAbDatalist();
   refreshTemplatePicker();
   if (sortOldestFirst) {

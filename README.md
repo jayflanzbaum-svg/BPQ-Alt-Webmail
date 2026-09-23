@@ -30,6 +30,7 @@ The same single HTML file automatically adapts to phones and tablets — no sepa
 - **Unread badges** — My Received, Bulletins, and NTS Traffic show unread message counts in the sidebar, updated on every auto-refresh
 - **My Received subfilters** — filter by sender callsign; SYSTEM pinned at top
 - **Bulletin subfilters** — filter by TO category (SITREP, TECHNI, ARISS, etc.)
+- **★ Favorite a bulletin topic** — the positive counterpart to unsubscribing. Click the ★ beside any TO entry in the Bulletins tree (or right-click / long-press it, or right-click a bulletin in the message list) and that topic pins to the top of the tree under a **★ Favorites** roll-up, which shows just the categories you starred. Every message in a favorited topic also counts as starred, so the ★ filter in the list header shows exactly those — the same star you already use on individual messages. Favoriting an unsubscribed topic resubscribes it; unsubscribing a favorite drops the favorite, so a topic is never both. Stored in `bpq_bull_fav`
 - **Subscribe / unsubscribe to bulletin categories** — right-click (or long-press on a phone) any TO entry in the Bulletins tree, or any bulletin in the message list, to stop seeing that category. `WX`, `PKTNET` and the like drop out of the tree's *ALL* roll-up, out of the message list and out of the folder's unread badge. This is a local view filter only — nothing is killed or rejected on the BBS (unlike **Reject**, which asks the node itself to stop accepting the traffic), so unsubscribed categories stay listed at the bottom of the tree, dimmed and marked ⊘, ready to resubscribe. Picking one explicitly still shows its mail
 - Message counts and unread indicators on every filter
 
@@ -56,6 +57,9 @@ The same single HTML file automatically adapts to phones and tablets — no sepa
 - **Compose deep links** — open a pre-filled compose window from any dashboard or bookmark via `#compose?to=CALL&subject=...` (see README-dashboard-links.md); works in already-open tabs too
 
 ### Address Book
+
+**Sync between your own PCs (optional).** Turn on **Sync** in the address-book footer and this PC keeps one hidden message to your own callsign holding its copy of the book, and reads the ones written by your other machines — so contacts and groups added on the shack PC turn up on the laptop with no export, import or file copying. It never goes on the air: a message addressed to your own callsign at your home BBS stays on your node, and the carrier messages are hidden from every folder. Turn it on once per PC. Merging is per contact, newest edit wins, and deletions stick rather than being resurrected by the other machine; the one case it cannot save you from is editing the *same* contact on two PCs before either has synced. Carrier size is capped at 60 KB, which is roughly 200 contacts with every field filled.
+
 A two-pane workspace — groups rail on the left, contact list on the right — opened from the topbar **📇 Address Book** button or the 📇 beside compose's To field. Concept: N3MEL.
 
 - **Full contact card** — callsign, full name, street, city, state, ZIP, phone, email, website, free-text notes and group membership. Opened with **+ Add Contact**, by clicking any contact, or straight off a message. Older contacts simply have the newer fields blank
@@ -100,6 +104,15 @@ A two-pane workspace — groups rail on the left, contact list on the right — 
 3. Open in your browser: `http://127.0.0.1:<your-HTTPPORT>/bpq-alt-webmail.html`
 4. On first run, enter your callsign — host and port are auto-detected from the URL
 
+> **Seeing `?` where icons should be?** The file is UTF-8, and every icon in the UI is a
+> Unicode character (↩, ✕, ⊘, 📇, etc.). If it gets copied through anything that isn't a
+> plain binary copy — opened and re-saved in a text editor without explicitly choosing
+> UTF-8, sent through a text-mode/ASCII file transfer, relayed over a packet/BBS path
+> that isn't 8-bit clean — those characters get replaced with literal `?` (two `?`s for
+> emoji, since they're a surrogate pair) and can't be recovered client-side. Re-download
+> the file fresh from the release and copy it straight into the HTML directory without
+> opening it in an editor in between.
+
 > **Upgrading? Hard-reload the page** (`Ctrl`+`Shift`+`R`, or `Cmd`+`Shift`+`R` on a Mac)
 > the first time you open it after replacing the file, or you will very likely still see
 > the old version. This is not the browser being awkward: BPQ's web server caches a
@@ -136,6 +149,10 @@ BPQ-Alt-WebMail works on LinBPQ without any changes — the web server and WebMa
 
 > **Upgrading?** Hard-reload the page (`Ctrl`+`Shift`+`R`) after replacing the file —
 > see the note in the Windows section above for why. It applies equally on LinBPQ.
+
+> **Seeing `?` where icons should be?** See the note in the Windows section above — same
+> cause (the file's Unicode characters getting mangled by a non-binary copy/transfer),
+> same fix (redownload and copy straight in, no editor in between).
 
 > **Headless Pi tip:** Most Raspberry Pi BPQ nodes run headless with no local display. Access the web interface from any browser on your network using the Pi's IP address. You can find it with `hostname -I` on the Pi.
 
@@ -214,7 +231,7 @@ GitHub: [jayflanzbaum-svg](https://github.com/jayflanzbaum-svg)
 
 BPQ32 by John Wiseman G8BPQ — [cantab.net/users/john.wiseman](https://www.cantab.net/users/john.wiseman/Documents/BPQ32%20Documents.htm)
 
-Address Book concept: N3MEL. Internet-mail reply-to and compose-cursor fixes: Chris AE7GE.
+Address Book concept: N3MEL, who also maintains a [suite of HTML packet forms](https://www.tprfn.net/html-form-suite) worth a look if you need one this app doesn't ship. Internet-mail reply-to and compose-cursor fixes: Chris AE7GE.
 
 ---
 
