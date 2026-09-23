@@ -1,9 +1,10 @@
 ---
-updated: 2026-09-22
+updated: 2026-09-23
 summary: Single-file HTML webmail client for BPQ32/LinBPQ packet-radio BBS nodes — v1.8.0 released 2026-09-18 (templates + ICS-213); since then two unreleased features sit in the working tree, both from N3MEL requests: ★ favorite bulletin topics, and address-book sync between PCs through the BBS mail store.
 ---
 
 ## Recent work
+- 2026-09-23: **Sync widened to templates, bulletin favourites/unsubscribes, signature and QTH** (v1.9.0-test2, deployed to the node). Templates merge like contacts; each bulletin topic is one stamped state (F/U/N) so it can never merge into both favourite and unsubscribed; signature/QTH newest-stamp-per-field. Payload stays v1 — older builds ignore the new sections. Usage-only saves no longer schedule a push. **Fixed the false "Sent"**: `sendOne()` now recognises BPQ's "Mail Data is not available", "Session had been lost" and login replies as failures; compose stays open with the text, and a partial group send leaves only the failed recipients in To. `.claude/dev/synctest2.py`: 37 assertions (19 original + 18 new) pass.
 - 2026-09-22: **Sync verified live** — Jason ran the app-written sync between two browsers on his own node and it worked. Work parked on branch `experimental/absync-favorites` (pushed, tag `v1.9.0-test1`); test build `test-builds/bpq-alt-webmail-test.html` deployed to the node beside the normal copy and linked for N3MEL. Also: BPQMail crashed at 13:26 (access violation) and was restarted — during the outage sends falsely reported "Sent".
 - 2026-09-22: **Address-book sync between your own PCs, through the BBS** — no manual export/import (N3MEL's request). Each PC keeps one P-type message to your own callsign, subject `[ABSYNC] <device>`, holding the book base64-encoded at 76 columns between `---BEGIN BPQ-ALT-AB v1---` markers; `parseList(html, keepSync)` hides these carriers from the whole UI. Merge is per record, newest `updated` wins, with tombstones. Pull rides the 5-minute poll (90s throttle) and the address-book open; push is debounced 45s and replaces this device's previous carrier. One footer control, off by default. 19-assertion two-device simulation passes; it caught a real bug (tombstone test used `>=`, so unstamped legacy records were all dropped — the first sync of two existing books would have moved nothing).
 - 2026-09-22: **★ Favorite a bulletin topic** (N3MEL's request) — the positive counterpart to unsubscribe. A favourited TO pins to the top of the Bulletins tree under a ★ Favorites roll-up, and `evalRules()` reports its messages as starred, so the existing ★ filter does the work rather than a second filtering concept. Favourite and unsubscribe clear each other. Stored in `bpq_bull_fav`. 19 assertions across two harnesses.
@@ -13,7 +14,6 @@ summary: Single-file HTML webmail client for BPQ32/LinBPQ packet-radio BBS nodes
 
 ## Open issues
 - [ ] **WHERE WE LEFT OFF.** Experimental work is on branch `experimental/absync-favorites` (not `main`), tagged `v1.9.0-test1`, deployed to the node as `bpq-alt-webmail-test.html` and sent to N3MEL for testing. Two-browser sync confirmed working. Still to do: the ~30 KB size probe (`.claude/dev/sync-size-probe.ps1`) to settle the 60 KB `AB_SYNC_MAX` guard, N3MEL's feedback, then merge to `main` and cut v1.9.0.
-- [ ] **`sendOne()` reports success on any reply page** — while BPQMail was down, EMSave returned "Mail Data is not available" and the app still said "Sent", closed compose and cleared the draft. Check the reply body and keep compose open on failure.
 - [ ] **The working tree also holds another session's uncommitted work** — a bold text/borders accessibility toggle (`bpq_bold`, topbar `B` button, mobile settings entry) and a collapsible compose template row (`toggleTemplateSection`), plus README notes about icons arriving as `?` and an N3MEL forms-suite credit link. Sort out ownership before staging anything; do not sweep it into a commit.
 - [ ] Address-book sync is verified across two browsers on one node, but not yet across two physical PCs.
 - [ ] `ANNOUNCEMENT-DRAFT.md` holds a combined v1.7.0 + v1.8.0 post for the bpq32 group (v1.7.0 was never announced) and a reply to N3MEL about both new features. Neither has been sent. The reply says the features aren't released yet — re-check that line before sending.
@@ -28,6 +28,7 @@ summary: Single-file HTML webmail client for BPQ32/LinBPQ packet-radio BBS nodes
 - [ ] Live-browser check of the stale-key retry fix; the `div#main` HTML-body fallback in `parseBody()`; compose-draft autosave; the `WMNDel` NTS Delivered endpoint — all still unverified against a live node/browser.
 
 ## Future ideas
+- [ ] **Sync star rules too** (part 2) — needs a stable id on each rule first; rules are a plain list today.
 - [ ] **Compress the sync carrier** with `CompressionStream('gzip')` where available, flagged in the payload so a browser without it can skip rather than corrupt. Would take 250 fully-filled contacts from ~75 KB to roughly 15 KB and lift the practical ceiling well past the current ~200.
 - [ ] **A read-only shared roster** from a JSON file in the BPQ HTML directory — works today (reading is fine, only writing is impossible) and suits a club list the sysop maintains. Needs a `?t=` cache-buster because of the stale-`Last-Modified` bug.
 - [ ] **Export the address book as JSON.** Templates got Export/Import in v1.8.0; contacts still only import. Useful independently of sync, and it is the same payload format.

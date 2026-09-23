@@ -676,7 +676,7 @@ body.bold-mode * { border-width:2px !important }
 <!-- TOPBAR -->
 <div class="topbar">
   <div class="logo">BPQ-ALT-WEBMAIL</div>
-  <span style="font-family:var(--mono);font-size:0.69rem;color:var(--text3);margin-left:-6px">v1.9.0-test1</span>
+  <span style="font-family:var(--mono);font-size:0.69rem;color:var(--text3);margin-left:-6px">v1.9.0-test2</span>
   <div class="top-call" id="top-call">—</div>
   <span class="top-node" id="top-node">—</span>
   <div class="tspc"></div>
@@ -745,7 +745,7 @@ body.bold-mode * { border-width:2px !important }
     </div>
 
     <div class="sidebar-footer">
-      <div id="si-ver">v1.9.0-test1</div>
+      <div id="si-ver">v1.9.0-test2</div>
       <div>Node <span id="si-node">—</span></div>
       <div>User <span id="si-user">—</span></div>
       <div style="display:none">Msgs: <span id="si-count">—</span></div>
@@ -1421,6 +1421,7 @@ function saveCFG() {
   LS.set('bpq_proto', CFG.protocol);
   LS.set('bpq_key',   CFG.key);
   LS.set('bpq_call',  CFG.callsign);
+  abStampProfile();   // before the writes: it compares against what is stored
   LS.set('bpq_sig',   CFG.signature);
   LS.set('bpq_user',  CFG.username);
   LS.set('bpq_qth',   CFG.qth);
@@ -1448,7 +1449,7 @@ function loadContacts() { return LS.getJ('bpq_contacts') || []; }
 // for the BBS sync (see ADDRESS BOOK SYNC): without a stamp two PCs cannot
 // tell whose copy of a contact is newer, and without a tombstone a partner
 // that still holds a deleted contact simply puts it back on the next merge.
-function saveContacts(list) { LS.setJ('bpq_contacts', abStamp('bpq_contacts', list, 'call', 'bpq_ab_ctomb')); abSyncTouch(); }
+function saveContacts(list) { abSaveStamped('bpq_contacts', list, 'call', 'bpq_ab_ctomb'); }
 
 // -- Groups --
 // A group is { name, members:[CALL,...] }. Groups reference contacts by
@@ -1458,7 +1459,7 @@ function saveContacts(list) { LS.setJ('bpq_contacts', abStamp('bpq_contacts', li
 // Deleting a contact prunes it from every group; deleting a group never
 // deletes contacts.
 function loadGroups() { return LS.getJ('bpq_groups') || []; }
-function saveGroups(list) { LS.setJ('bpq_groups', abStamp('bpq_groups', list, 'name', 'bpq_ab_gtomb')); abSyncTouch(); }
+function saveGroups(list) { abSaveStamped('bpq_groups', list, 'name', 'bpq_ab_gtomb'); }
 function findGroup(name) { return loadGroups().find(g => g.name === name); }
 function groupsFor(call) { return loadGroups().filter(g => (g.members || []).includes(call)).map(g => g.name); }
 function sortedGroups() { return loadGroups().slice().sort((a, b) => a.name.localeCompare(b.name)); }
@@ -1493,6 +1494,16 @@ function sortedGroups() { return loadGroups().slice().sort((a, b) => a.name.loca
 //  useCount/lastUsed are deliberately NOT synced: they are per-machine habits,
 //  and syncing them would push a new carrier after every send.
 //
+//  The same carrier also holds the rest of what describes *you* rather than
+//  the machine: message templates (records, merged exactly like contacts),
+//  bulletin favourites/unsubscribes (one stamped state per topic, so a topic
+//  can never merge into both), and signature + QTH (newest stamp per field).
+//  Host, port, protocol and session key are per machine by nature, and the
+//  BBS and QRZ passwords must never sit in readable mail — none of those are
+//  sent. Display preferences stay local on purpose: a phone and the shack PC
+//  want different ones. An older build reading this carrier ignores the extra
+//  sections, which is why the payload is still v1.
+//
 //  What this does not solve: the same contact edited on two PCs before either
 //  syncs. The newer stamp wins and the other edit is lost. No mail store can
 //  do better without real revision history.
@@ -1504,6 +1515,7 @@ const AB_SYNC_MAX   = 60000;              // refuse to post a carrier bigger tha
 const AB_TOMB_MS    = 90 * 864e5;         // forget a deletion after 90 days
 const AB_PULL_MS    = 90e3;               // don't re-read carriers more often than this
 const AB_PUSH_DELAY = 45e3;               // coalesce a burst of edits into one push
+const AB_SYNC_COVERS = 'contacts, groups, templates, bulletin favourites/unsubscribes, signature and QTH';
 const AB_SYNC_NOTE  =
   'Address book sync for BPQ-Alt-WebMail. This message is written and read\n' +
   'automatically by the webmail app, and is not meant to be read by a human.\n' +
@@ -1523,24 +1535,78 @@ function abDeviceId() {
 }
 
 // ── Stamping and tombstones ──
-// Called from saveContacts/saveGroups, the only writers of either key.
+// Called from saveContacts/saveGroups/saveTemplates, the only writers of those
+// keys. Returns the stamped list and whether anything really changed — a save
+// that only moved a usage counter must not schedule a push.
 function abStamp(key, list, idField, tombKey) {
-  if (abMerging) return list;                 // merge results carry their own stamps
+  if (abMerging) return { out: list, dirty: false };   // merge results carry their own stamps
   const now = Date.now();
   const prev = LS.getJ(key) || [];
   const prevById = new Map(prev.map(r => [abRecId(r, idField), r]));
+  let dirty = false;
   const out = list.map(r => {
     const id = abRecId(r, idField);
     const was = prevById.get(id);
     prevById.delete(id);
-    return (was && abRecEq(was, r)) ? { ...r, updated: was.updated || 0 } : { ...r, updated: now };
+    if (was && abRecEq(was, r)) return { ...r, updated: was.updated || 0 };
+    dirty = true;
+    return { ...r, updated: now };
   });
   if (prevById.size) {
+    dirty = true;
     const tombs = LS.getJ(tombKey) || {};
     for (const id of prevById.keys()) tombs[id] = now;
     LS.setJ(tombKey, abPruneTombs(tombs));
   }
+  return { out, dirty };
+}
+function abSaveStamped(key, list, idField, tombKey) {
+  const { out, dirty } = abStamp(key, list, idField, tombKey);
+  LS.setJ(key, out);
+  if (dirty) abSyncTouch();
+}
+
+// Bulletin topics: favourite / unsubscribed / normal is ONE state per topic,
+// stamped in bpq_ab_bts whenever it changes. Called from saveBullFav and
+// saveBullUnsub *before* they write, so what is stored is the previous state
+// and the in-memory sets are the new one.
+function abBullState(fav, unsub, k) { return fav.has(k) ? 'F' : unsub.has(k) ? 'U' : 'N'; }
+function abStampBulls() {
+  if (abMerging) return;
+  const pf = new Set(LS.getJ('bpq_bull_fav') || []), pu = new Set(LS.getJ('bpq_bull_unsub') || []);
+  const ts = LS.getJ('bpq_ab_bts') || {};
+  const now = Date.now();
+  let dirty = false;
+  for (const k of new Set([...pf, ...pu, ...bullFav, ...bullUnsub])) {
+    if (abBullState(pf, pu, k) !== abBullState(bullFav, bullUnsub, k)) { ts[k] = now; dirty = true; }
+  }
+  if (!dirty) return;
+  LS.setJ('bpq_ab_bts', abPruneBullTs(ts));
+  abSyncTouch();
+}
+// A stamp for a topic back at "normal" is only a tombstone; forget it after the
+// same 90 days as any other.
+function abPruneBullTs(ts) {
+  const cut = Date.now() - AB_TOMB_MS, out = {};
+  for (const [k, v] of Object.entries(ts || {})) {
+    if (v > cut || bullFav.has(k) || bullUnsub.has(k)) out[k] = v;
+  }
   return out;
+}
+
+// Signature and QTH: newest stamp per field, in bpq_ab_pts. Called from
+// saveCFG before it writes, for the same reason as abStampBulls.
+const AB_PROFILE = { sig: ['bpq_sig', 'signature'], qth: ['bpq_qth', 'qth'] };
+function abStampProfile() {
+  if (abMerging) return;
+  const ts = LS.getJ('bpq_ab_pts') || {};
+  let dirty = false;
+  for (const [f, [lsKey, cfgKey]] of Object.entries(AB_PROFILE)) {
+    if ((LS.get(lsKey) || '') !== (CFG[cfgKey] || '')) { ts[f] = Date.now(); dirty = true; }
+  }
+  if (!dirty) return;
+  LS.setJ('bpq_ab_pts', ts);
+  abSyncTouch();
 }
 function abRecId(r, idField) { return String((r && r[idField]) || '').toUpperCase(); }
 // Compare two records ignoring the stamp and the per-machine usage counters, so
@@ -1569,12 +1635,27 @@ function abBuildPayload() {
     for (const k of Object.keys(o)) if (o[k] === '' || o[k] === null || o[k] === undefined) delete o[k];
     return o;
   };
+  // Topics favourited or unsubscribed before stamping existed have no stamp;
+  // send them at 1 so they still reach a PC that has never heard of them,
+  // while any real change anywhere outranks them.
+  const bts = LS.getJ('bpq_ab_bts') || {}, bulls = {};
+  for (const k of new Set([...Object.keys(bts), ...bullFav, ...bullUnsub])) {
+    bulls[k] = [abBullState(bullFav, bullUnsub, k), bts[k] || 1];
+  }
+  const pts = LS.getJ('bpq_ab_pts') || {}, prof = {};
+  for (const [f, [, cfgKey]] of Object.entries(AB_PROFILE)) prof[f] = [CFG[cfgKey] || '', pts[f] || 0];
   return {
     v: 1, dev: abDeviceId(), ts: Date.now(),
-    contacts: loadContacts().map(lean),
-    groups:   loadGroups(),
-    ctomb:    LS.getJ('bpq_ab_ctomb') || {},
-    gtomb:    LS.getJ('bpq_ab_gtomb') || {},
+    contacts:  loadContacts().map(lean),
+    groups:    loadGroups(),
+    ctomb:     LS.getJ('bpq_ab_ctomb') || {},
+    gtomb:     LS.getJ('bpq_ab_gtomb') || {},
+    // Not lean(): the template editor assigns these fields straight into
+    // inputs, where a dropped '' would come back as the text "undefined".
+    templates: loadTemplates().map(({ useCount, lastUsed, ...t }) => t),
+    ttomb:     LS.getJ('bpq_ab_ttomb') || {},
+    bulls,
+    prof,
   };
 }
 function abEncode(obj) {
@@ -1609,59 +1690,103 @@ function abFillBlanks(mine, other) {
   }
   return filled ? out : null;
 }
-function abMergePayload(rem) {
-  if (!rem || rem.v !== 1) return { changed: false };
-  const ctomb = abPruneTombs(LS.getJ('bpq_ab_ctomb') || {});
-  const gtomb = abPruneTombs(LS.getJ('bpq_ab_gtomb') || {});
-  for (const [k, v] of Object.entries(rem.ctomb || {})) if ((ctomb[k] || 0) < v) ctomb[k] = v;
-  for (const [k, v] of Object.entries(rem.gtomb || {})) if ((gtomb[k] || 0) < v) gtomb[k] = v;
-
-  let added = 0, updated = 0, removed = 0, groups = 0;
-
-  const byCall = new Map(loadContacts().map(c => [abRecId(c, 'call'), c]));
-  for (const r of (rem.contacts || [])) {
-    const id = abRecId(r, 'call');
+// One list's worth of merging, shared by contacts, groups and templates.
+// `keep` names the per-machine fields a remote win must not carry away;
+// `fill` lets two records that both predate stamping fill each other's blanks
+// (contacts only — the CSV importer's rule).
+function abMergeList(local, remote, idField, tombs, keep, fill) {
+  const by = new Map(local.map(r => [abRecId(r, idField), r]));
+  let added = 0, updated = 0, removed = 0;
+  for (const r of (remote || [])) {
+    const id = abRecId(r, idField);
     if (!id) continue;
-    const tomb = ctomb[id] || 0;
+    const tomb = tombs[id] || 0;
     if (tomb && tomb >= (r.updated || 0)) continue;          // deleted after the remote wrote it
-    const mine = byCall.get(id);
-    if (!mine) { byCall.set(id, { ...r }); added++; continue; }
+    const mine = by.get(id);
+    if (!mine) { by.set(id, { ...r }); added++; continue; }
     const L = mine.updated || 0, R = r.updated || 0;
     if (R > L) {
-      // A remote win must not carry away this machine's usage counters.
-      byCall.set(id, { ...r, useCount: mine.useCount, lastUsed: mine.lastUsed });
+      const won = { ...r };
+      for (const k of keep) if (mine[k] !== undefined) won[k] = mine[k];
+      by.set(id, won);
       updated++;
-    } else if (!R && !L) {
+    } else if (fill && !R && !L) {
       const merged = abFillBlanks(mine, r);
-      if (merged) { byCall.set(id, merged); updated++; }
+      if (merged) { by.set(id, merged); updated++; }
     }
   }
-  for (const [id, c] of [...byCall]) {
-    if ((ctomb[id] || 0) > (c.updated || 0)) { byCall.delete(id); removed++; }
+  for (const [id, rec] of [...by]) {
+    if ((tombs[id] || 0) > (rec.updated || 0)) { by.delete(id); removed++; }
+  }
+  return { list: [...by.values()], added, updated, removed, changed: !!(added || updated || removed) };
+}
+function abMergeTombs(key, remote) {
+  const t = abPruneTombs(LS.getJ(key) || {});
+  for (const [k, v] of Object.entries(remote || {})) if ((t[k] || 0) < v) t[k] = v;
+  return t;
+}
+function abMergePayload(rem) {
+  if (!rem || rem.v !== 1) return { changed: false };
+  const ctomb = abMergeTombs('bpq_ab_ctomb', rem.ctomb);
+  const gtomb = abMergeTombs('bpq_ab_gtomb', rem.gtomb);
+  const ttomb = abMergeTombs('bpq_ab_ttomb', rem.ttomb);
+
+  const C = abMergeList(loadContacts(), rem.contacts, 'call', ctomb, ['useCount', 'lastUsed'], true);
+  const G = abMergeList(loadGroups(), rem.groups, 'name', gtomb, [], false);
+  // A carrier from a build before template sync has no `templates` at all —
+  // that means "no news", not "has none", and merging [] costs nothing.
+  const T = abMergeList(loadTemplates(), rem.templates, 'id', ttomb, ['useCount', 'lastUsed'], false);
+
+  // Bulletin topics: the newer stamp's state wins outright.
+  const bts = LS.getJ('bpq_ab_bts') || {};
+  let topics = 0;
+  for (const [k, pair] of Object.entries(rem.bulls || {})) {
+    const [st, rts] = Array.isArray(pair) ? pair : [];
+    if (!['F', 'U', 'N'].includes(st) || !(rts > 0)) continue;
+    const lts = bts[k] || (abBullState(bullFav, bullUnsub, k) === 'N' ? 0 : 1);
+    if (rts <= lts) continue;
+    bts[k] = rts;
+    if (abBullState(bullFav, bullUnsub, k) === st) continue;
+    bullFav.delete(k); bullUnsub.delete(k);
+    if (st === 'F') bullFav.add(k);
+    if (st === 'U') bullUnsub.add(k);
+    topics++;
   }
 
-  const byName = new Map(loadGroups().map(g => [abRecId(g, 'name'), g]));
-  for (const r of (rem.groups || [])) {
-    const id = abRecId(r, 'name');
-    if (!id) continue;
-    const gt = gtomb[id] || 0;
-    if (gt && gt >= (r.updated || 0)) continue;
-    const mine = byName.get(id);
-    if (!mine) { byName.set(id, { ...r }); groups++; }
-    else if ((r.updated || 0) > (mine.updated || 0)) { byName.set(id, { ...r }); groups++; }
-  }
-  for (const [id, g] of [...byName]) {
-    if ((gtomb[id] || 0) > (g.updated || 0)) { byName.delete(id); groups++; }
+  // Signature / QTH: newer stamp wins; with no stamps on either side, a blank
+  // is filled but a value is never overwritten.
+  const pts = LS.getJ('bpq_ab_pts') || {};
+  let settings = 0;
+  for (const [f, [, cfgKey]] of Object.entries(AB_PROFILE)) {
+    const [val, rts] = Array.isArray((rem.prof || {})[f]) ? rem.prof[f] : [];
+    if (typeof val !== 'string') continue;
+    const lts = pts[f] || 0, mine = CFG[cfgKey] || '';
+    const take = rts > lts || (!rts && !lts && !mine && val);
+    if (!take) continue;
+    if (rts) pts[f] = rts;
+    if (mine !== val) { CFG[cfgKey] = val; settings++; }
   }
 
-  const changed = !!(added || updated || removed || groups);
+  const changed = C.changed || G.changed || T.changed || !!topics || !!settings;
   abMerging = true;
   try {
     LS.setJ('bpq_ab_ctomb', ctomb);
     LS.setJ('bpq_ab_gtomb', gtomb);
-    if (changed) { saveContacts([...byCall.values()]); saveGroups([...byName.values()]); }
+    LS.setJ('bpq_ab_ttomb', ttomb);
+    LS.setJ('bpq_ab_bts', abPruneBullTs(bts));
+    LS.setJ('bpq_ab_pts', pts);
+    if (C.changed) saveContacts(C.list);
+    if (G.changed) saveGroups(G.list);
+    if (T.changed) saveTemplates(T.list);
+    if (topics)   { saveBullFav(); saveBullUnsub(); }
+    if (settings)  saveCFG();
   } finally { abMerging = false; }
-  return { changed, added, updated, removed, groups };
+  return {
+    changed, added: C.added, updated: C.updated, removed: C.removed,
+    groups: G.added + G.updated + G.removed,
+    templates: T.added + T.updated + T.removed,
+    topics, settings,
+  };
 }
 
 // ── Carriers on the node ──
@@ -1712,6 +1837,7 @@ async function abSyncPull(force) {
   if (!force && Date.now() - abSyncLastPull < AB_PULL_MS) return false;
   abSyncBusy = true;
   let changed = false;
+  const what = { templates: 0, topics: 0, settings: 0 };
   try {
     abSyncLastPull = Date.now();
     const rows = (await abSyncList())
@@ -1723,12 +1849,16 @@ async function abSyncPull(force) {
       catch (e) { console.warn('[BPQ] unreadable sync carrier #' + m.num, e); continue; }
       if (res && res.changed) {
         changed = true;
+        for (const k in what) what[k] += res[k] || 0;
         const bits = [];
         if (res.added)   bits.push(res.added + ' new');
         if (res.updated) bits.push(res.updated + ' updated');
         if (res.removed) bits.push(res.removed + ' removed');
         if (res.groups)  bits.push(res.groups + ' group' + (res.groups === 1 ? '' : 's'));
-        toast('Address book synced — ' + bits.join(', '), 'ok');
+        if (res.templates) bits.push(res.templates + ' template' + (res.templates === 1 ? '' : 's'));
+        if (res.topics)  bits.push(res.topics + ' bulletin topic' + (res.topics === 1 ? '' : 's'));
+        if (res.settings) bits.push('signature/QTH');
+        toast('Synced from your other PC — ' + bits.join(', '), 'ok');
       }
     }
     LS.setJ('bpq_ab_seen', [...abSyncSeen].slice(-200));
@@ -1737,6 +1867,7 @@ async function abSyncPull(force) {
         renderAbGroups(); renderAddressBook();
       }
       refreshAbDatalist();
+      abSyncRefreshViews(what);
       abSyncSchedulePush(3000);   // pass the merged book on to the other PCs
     }
     renderAbSyncLink();
@@ -1746,20 +1877,42 @@ async function abSyncPull(force) {
   return changed;
 }
 
+// A merge can change templates, bulletin topics and the signature/QTH under
+// an open screen; repaint whatever shows them.
+// Only what changed is repainted: syncTopbar() in particular rewrites every
+// settings field, which would clobber anything half-typed there.
+function abSyncRefreshViews(what) {
+  if (what.templates) {
+    refreshTemplatePicker();
+    if (document.getElementById('tpl-ov').classList.contains('open')) renderTemplateList();
+  }
+  if (what.topics) {
+    if (activeFolder === 'Bulls') {
+      if (bullFilter === BULL_FAV && !bullFav.size) bullFilter = 'ALL';
+      buildBullFilters(allMsgs);
+      document.getElementById('list-title').textContent = bullLabel(bullFilter);
+    }
+    if (allMsgs.length) { const f = getFiltered(); renderList(f); updateListCount(f); }  // ★ follows favourites
+  }
+  if (what.settings) syncTopbar();
+}
+
 // ── The one control, in the address-book footer ──
 function abSyncToggle() {
   if (abSyncOn()) {
     LS.set('bpq_ab_sync', '0');
     clearTimeout(abPushTimer);
     renderAbSyncLink();
-    toast('Address book sync off — the carrier messages are left alone', 'info');
+    toast('Sync off — the carrier messages are left alone', 'info');
     return;
   }
   const call = (CFG.callsign || '').toUpperCase();
   if (!call) { toast('Set your callsign in Settings first', 'err'); return; }
   if (!confirm(
-    'Sync your address book between your own PCs, through this BBS?\n\n' +
-    'Each PC keeps one message to ' + call + ' holding its copy of the book, and reads the ' +
+    'Sync to your other PCs, through this BBS?\n\n' +
+    'Covers: ' + AB_SYNC_COVERS + '.\n' +
+    'Not synced: connection settings, passwords and display preferences.\n\n' +
+    'Each PC keeps one message to ' + call + ' holding its copy, and reads the ' +
     'ones written by your other machines. It stays on your own node and is never forwarded ' +
     'on the air, and the messages are hidden from your folders.\n\n' +
     'Turn this on for every PC you want in sync.')) return;
@@ -1769,7 +1922,7 @@ function abSyncToggle() {
 }
 function abSyncNow() {
   if (!abSyncOn()) { toast('Turn sync on first', 'info'); return; }
-  toast('Syncing address book…', 'info');
+  toast('Syncing…', 'info');
   abSyncPull(true).then(() => abSyncPush());
 }
 function abSyncAgo() {
@@ -1782,9 +1935,9 @@ function renderAbSyncLink() {
   const el = document.getElementById('ab-sync-link');
   if (!el) return;
   const on = abSyncOn();
-  el.textContent = on ? ('Sync: on · ' + abSyncAgo()) : 'Sync off';
-  el.title = on ? ('This PC is device ' + abDeviceId() + ' — click to stop syncing')
-                : 'Share this address book with your other PCs through the BBS';
+  el.textContent = on ? ('Sync to my other PCs: on · ' + abSyncAgo()) : 'Sync to my other PCs: off';
+  el.title = on ? ('This PC is device ' + abDeviceId() + '. Syncs ' + AB_SYNC_COVERS + ' — click to stop syncing')
+                : 'Share ' + AB_SYNC_COVERS + ' with your other PCs through the BBS';
   const now = document.getElementById('ab-sync-now');
   if (now) now.style.display = on ? '' : 'none';
 }
@@ -2557,7 +2710,9 @@ function refreshAbDatalist() {
 //  is mandated, whereas a template is free text the operator owns.
 // ═══════════════════════════════════════════════════
 function loadTemplates() { return LS.getJ('bpq_templates') || []; }
-function saveTemplates(list) { LS.setJ('bpq_templates', list); }
+// Stamped and tombstoned like contacts, so templates ride the BBS sync too
+// (see ADDRESS BOOK SYNC).
+function saveTemplates(list) { abSaveStamped('bpq_templates', list, 'id', 'bpq_ab_ttomb'); }
 function findTemplate(id) { return loadTemplates().find(t => t.id === id); }
 function sortedTemplates() {
   return loadTemplates().slice().sort((a, b) => a.name.localeCompare(b.name));
@@ -3670,7 +3825,7 @@ document.addEventListener('contextmenu', e => { if (!e.defaultPrevented) hideCtx
 //  node itself to stop accepting that traffic.
 // ═══════════════════════════════════════════════════
 let bullUnsub = new Set((LS.getJ('bpq_bull_unsub') || []).map(v => String(v).toUpperCase()));
-function saveBullUnsub() { LS.setJ('bpq_bull_unsub', [...bullUnsub]); }
+function saveBullUnsub() { abStampBulls(); LS.setJ('bpq_bull_unsub', [...bullUnsub]); }
 function isBullUnsub(to) { return bullUnsub.has(String(to || '').toUpperCase()); }
 function subscribeBull(to) {
   bullUnsub.delete(String(to || '').toUpperCase());
@@ -3702,7 +3857,7 @@ function unsubscribeBull(to) {
 // ═══════════════════════════════════════════════════
 const BULL_FAV = '★FAV';   // sentinel filter key — no real TO can collide
 let bullFav = new Set((LS.getJ('bpq_bull_fav') || []).map(v => String(v).toUpperCase()));
-function saveBullFav() { LS.setJ('bpq_bull_fav', [...bullFav]); }
+function saveBullFav() { abStampBulls(); LS.setJ('bpq_bull_fav', [...bullFav]); }
 function isBullFav(to) { return bullFav.has(String(to || '').toUpperCase()); }
 function isBullMsg(m) { return !!m && (m.type || '').toUpperCase().startsWith('B'); }
 function favoriteBull(to) {
@@ -3931,7 +4086,7 @@ function toggleSettings() {
     // Info row: version, callsign, status
     const info = document.createElement('div');
     info.className = 'm-cfg-info';
-    info.innerHTML = '<span>v1.9.0-test1</span>' +
+    info.innerHTML = '<span>v1.9.0-test2</span>' +
       '<span style="color:var(--accent);background:var(--accent-bg);border:1px solid var(--accent-border);padding:2px 7px;border-radius:4px">' + (callEl ? callEl.textContent : '—') + '</span>' +
       '<span id="m-status-pill" class="' + (statusPill ? statusPill.className : '') + '">' + (statusPill ? statusPill.textContent : '') + '</span>';
 
@@ -5544,10 +5699,31 @@ function sendOne(to, subj, type, msg) {
     document.body.appendChild(f);
     let done = false;
     const finish = (ok, note) => { if (done) return; done = true; try { f.remove(); } catch (_) {} resolve({ ok, note: note || '' }); };
-    ifr.onload = () => finish(true, bpqReplyNotice(ifr));
+    ifr.onload = () => {
+      const fail = bpqSendFailure(ifr);
+      finish(!fail, fail || bpqReplyNotice(ifr));
+    };
     f.submit();
-    setTimeout(() => finish(false), 15000);
+    // A slow node may still store it after this, so the note warns against a
+    // blind resend.
+    setTimeout(() => finish(false, 'no reply from the node within 15 s — check My Sent before sending again'), 15000);
   });
+}
+
+// A frame that loaded is not a message that was stored. With BPQMail not
+// running, BPQ's web server still answers EMSave — with a bare "Mail Data is
+// not available" page — and treating that load as success (as this once did)
+// told the user "Sent", closed compose and threw the text away. Recognise the
+// known failure replies; anything unreadable is given the benefit of the doubt,
+// as before, since a real send's reply page is not documented.
+function bpqSendFailure(ifr) {
+  let html = '';
+  try { html = (ifr.contentDocument && ifr.contentDocument.documentElement.innerHTML) || ''; }
+  catch (_) { return ''; }
+  if (/Mail Data is not available/i.test(html)) return 'BPQ mail is not running on the node (BPQMail stopped?)';
+  if (/Session had been lost/i.test(html))      return 'mail session expired — reload the page and try again';
+  if (isLoginPage(html))                        return 'the node asked for a login — check the BBS login in Settings';
+  return '';
 }
 
 // Recover the text BPQ would have shown in its own alert(), so suppressing the
@@ -5588,15 +5764,25 @@ async function doSend(){
   const sendBtn=document.getElementById('cmp-send');
   sendBtn.disabled=true;
   let sent=0;
-  const notices=[];
+  const notices=[], failed=[];
+  let failNote='';
   for(let i=0;i<recips.length;i++){
     st.textContent = recips.length>1 ? `Sending ${i+1} of ${recips.length} — ${recips[i]}…` : 'Sending…';
     const r = await sendOne(recips[i],subj,type,msg);
-    if(r.ok) sent++;
-    if(r.note) notices.push(`${recips[i]}: ${r.note}`);
-    bumpContactUsage(recips[i]);
+    if(r.ok) { sent++; bumpContactUsage(recips[i]); if(r.note) notices.push(`${recips[i]}: ${r.note}`); }
+    else { failed.push(recips[i]); failNote = failNote || r.note || 'no reply from the node'; }
   }
   if (notices.length) console.info('[BPQ] node notices from this send:\n' + notices.join('\n'));
+
+  // Nothing went: keep the window, the text and any form state exactly as they
+  // are, so the user can fix the node and press Send again.
+  if (!sent) {
+    sendBtn.disabled=false;
+    st.style.color='var(--red)';
+    st.textContent=`Not sent — ${failNote}. Your message is still here.`;
+    toast('Send failed — nothing was sent','err');
+    return;
+  }
 
   // Radiogram-originated send: bump the persisted "last sent" msg
   // # and clear the per-message radiogram fields. Section 1 (Station
@@ -5630,6 +5816,16 @@ async function doSend(){
       const el = document.getElementById(id);
       if (el) el.value = '';
     });
+  }
+  // Some went, some did not: leave only the failures in To so a second Send
+  // retries just those instead of duplicating the ones that arrived.
+  if (failed.length) {
+    document.getElementById('cmp-to').value = failed.join(', ');
+    sendBtn.disabled=false;
+    st.style.color='var(--red)';
+    st.textContent=`Sent ${sent} of ${recips.length}. Not sent to ${failed.join(', ')} — ${failNote}. Press Send to retry those.`;
+    toast(`Sent ${sent} of ${recips.length} — ${failed.length} failed`,'err');
+    return;
   }
   closeCompose();
   sendBtn.disabled=false;
