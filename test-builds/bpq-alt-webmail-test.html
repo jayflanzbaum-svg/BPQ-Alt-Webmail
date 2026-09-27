@@ -676,7 +676,7 @@ body.bold-mode * { border-width:2px !important }
 <!-- TOPBAR -->
 <div class="topbar">
   <div class="logo">BPQ-ALT-WEBMAIL</div>
-  <span style="font-family:var(--mono);font-size:0.69rem;color:var(--text3);margin-left:-6px">v1.9.0-test2</span>
+  <span style="font-family:var(--mono);font-size:0.69rem;color:var(--text3);margin-left:-6px">v1.9.0-test3</span>
   <div class="top-call" id="top-call">—</div>
   <span class="top-node" id="top-node">—</span>
   <div class="tspc"></div>
@@ -740,12 +740,13 @@ body.bold-mode * { border-width:2px !important }
     <div class="sf-wrap" id="sf-nts-wrap"></div>
     <div class="fldr" id="fldr-Mine"   onclick="loadFolder('Mine','Mine')"><span class="fldr-ico">◎</span><span class="fldr-lbl">Mine</span></div>
     <div class="fldr" id="fldr-MySent" onclick="loadFolder('MySent','My Sent')"><span class="fldr-ico">▲</span><span class="fldr-lbl">My Sent</span></div>
+    <div class="fldr" id="fldr-Sync" onclick="loadFolder('Sync','Sync')" style="display:none" title="Address-book sync messages between your PCs — kept out of every other folder"><span class="fldr-ico">◇</span><span class="fldr-lbl">Sync</span></div>
     <div class="fldr" id="fldr-ALL" onclick="loadFolder('ALL','All Messages')">
       <span class="fldr-ico">◈</span><span class="fldr-lbl">All Messages</span>
     </div>
 
     <div class="sidebar-footer">
-      <div id="si-ver">v1.9.0-test2</div>
+      <div id="si-ver">v1.9.0-test3</div>
       <div>Node <span id="si-node">—</span></div>
       <div>User <span id="si-user">—</span></div>
       <div style="display:none">Msgs: <span id="si-count">—</span></div>
@@ -1940,6 +1941,9 @@ function renderAbSyncLink() {
                 : 'Share ' + AB_SYNC_COVERS + ' with your other PCs through the BBS';
   const now = document.getElementById('ab-sync-now');
   if (now) now.style.display = on ? '' : 'none';
+  const fld = document.getElementById('fldr-Sync');
+  if (fld) fld.style.display = on ? '' : 'none';
+  if (!on && activeFolder === 'Sync') loadFolder('Personal', 'My Received');
 }
 
 // The contact list is plain innerHTML, so a five-figure address book would
@@ -4086,7 +4090,7 @@ function toggleSettings() {
     // Info row: version, callsign, status
     const info = document.createElement('div');
     info.className = 'm-cfg-info';
-    info.innerHTML = '<span>v1.9.0-test2</span>' +
+    info.innerHTML = '<span>v1.9.0-test3</span>' +
       '<span style="color:var(--accent);background:var(--accent-bg);border:1px solid var(--accent-border);padding:2px 7px;border-radius:4px">' + (callEl ? callEl.textContent : '—') + '</span>' +
       '<span id="m-status-pill" class="' + (statusPill ? statusPill.className : '') + '">' + (statusPill ? statusPill.textContent : '') + '</span>';
 
@@ -4251,6 +4255,7 @@ const FOLDER_PATHS = {
   NTS:      k=>`/WebMail/WMT?${k}`,
   Mine:     k=>`/WebMail/WMMine?${k}`,
   MySent:   k=>`/WebMail/WMfromMe?${k}`,
+  Sync:     k=>`/WebMail/WMMine?${k}`,    // address-book sync carriers only
 };
 function base() {
   // Resolve protocol: explicit config → infer from port → fallback to page protocol
@@ -4506,8 +4511,11 @@ function looksLikeCallOrKeyword(s) {
   return s && /^[A-Z0-9#\/]+$/i.test(s) && s.length <= 12;
 }
 
-// keepSync: the address-book sync needs to see its own carrier messages;
-// everything else in the UI must not, or the inbox fills up with machine mail.
+// keepSync: the address-book sync (and the Sync folder) need to see the carrier
+// messages; everything else in the UI must not, or the inbox fills up with
+// machine mail. The tag is matched anywhere in the raw row, not just at the
+// start of the parsed subject: the column heuristics below can shift the first
+// subject word into `from`, and a carrier must never leak into My Received.
 function parseList(html, keepSync) {
   const doc=new DOMParser().parseFromString(html,'text/html');
   const pre=doc.querySelector('pre');
@@ -4522,6 +4530,7 @@ function parseList(html, keepSync) {
     while(node&&node.nodeType===3){raw+=node.textContent;node=node.nextSibling;}
     const trimmed=raw.trim();
     if(!trimmed) return;
+    const sync=trimmed.toUpperCase().includes(AB_SYNC_TAG);
     const p=trimmed.split(/\s+/);
     // Skip echoed message number if present
     const off = /^\d+$/.test(p[0]) ? 1 : 0;
@@ -4558,8 +4567,8 @@ function parseList(html, keepSync) {
 
     if(killedSet.has(num)) return;
     if(type&&type.toUpperCase().endsWith('K')) return;
-    if(!keepSync && subject.startsWith(AB_SYNC_TAG)) return;
-    msgs.push({num,date,type,size,to,via,from,subject,body:null});
+    if(!keepSync && sync) return;
+    msgs.push({num,date,type,size,to,via,from,subject,sync,body:null});
   });
   return msgs;
 }
@@ -4964,6 +4973,11 @@ function activateNts() {
   loadFolder('NTS','NTS Traffic');
 }
 
+// The Sync folder is the one place carriers are shown; every other folder hides them.
+function listFor(folder, html) {
+  return folder==='Sync' ? parseList(html, true).filter(m=>m.sync) : parseList(html);
+}
+
 async function loadFolder(folder, label) {
   activeFolder=folder; activeNum=null;
   document.querySelectorAll('.fldr').forEach(f=>f.classList.remove('active'));
@@ -4990,7 +5004,7 @@ async function loadFolder(folder, label) {
       if(k&&k!==CFG.key){ CFG.key=k; saveCFG(); document.getElementById('cfg-key').value=k; toast('Session key refreshed','info'); }
       html=await bpqGet(base()+FOLDER_PATHS[folder](CFG.key));
     }
-    let msgs=parseList(html);
+    let msgs=listFor(folder, html);
 
     if(folder==='Personal') {
       msgs=sortPersonal(filterPersonal(msgs));
@@ -6576,7 +6590,7 @@ async function silentRefresh(manual=false){
   try {
     const k=await autoDetectKey();
     if(k&&k!==CFG.key){CFG.key=k;saveCFG();document.getElementById('cfg-key').value=k;toast('Session key refreshed','info');}
-    let fresh=parseList(await bpqGet(base()+FOLDER_PATHS[activeFolder](CFG.key)));
+    let fresh=listFor(activeFolder, await bpqGet(base()+FOLDER_PATHS[activeFolder](CFG.key)));
     if(activeFolder==='Personal') fresh=sortPersonal(filterPersonal(fresh));
     const oldNums=new Set(allMsgs.map(m=>m.num));
     const freshNums=new Set(fresh.map(m=>m.num));
@@ -6764,6 +6778,7 @@ async function connectAndLoad(){
       return;
     }
   }
+  renderAbSyncLink();   // shows the Sync folder when sync is on
   await loadFolder('Personal','My Received');
   lastRefresh=new Date();
   document.getElementById('refresh-lbl').textContent='just refreshed';
