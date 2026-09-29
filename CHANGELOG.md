@@ -1,5 +1,62 @@
 # Changelog
 
+## v1.9.0 — 2026-09-28
+
+Your address book, templates and bulletin choices follow you between your own PCs, and
+you can favourite bulletin topics. Both were N3MEL's requests.
+
+### Added
+- **Sync to my other PCs** (optional, off by default; toggle in the Address Book footer).
+  Syncs **contacts, groups, message templates, bulletin favourites/unsubscribes, signature
+  and QTH** through the BBS itself. No export, import or file copying. BPQ's web server
+  accepts no uploads, so the mail store is the only place a browser can write to. Each PC
+  keeps one P-type message to your own callsign, subject `[ABSYNC] <device>`, holding its
+  copy base64-encoded between markers, and reads and merges the other PCs' copies. It is
+  addressed to your own call at your home BBS, so it is never forwarded and never goes on
+  the air.
+  - Merge is **per item, newest edit wins**, with tombstones so a deletion sticks instead
+    of being brought back by the other PC. Older contacts that predate stamping merge
+    field by field, filling blanks only.
+  - A change is pushed about 45 s after your last edit. Other PCs pick it up on the
+    regular mail poll (at most every 90 s) or when the Address Book opens. **sync now**
+    skips the wait.
+  - Host, port, session key, BBS/QRZ passwords and display preferences are **not**
+    synced. The first three are per machine, passwords must never sit in readable mail,
+    and a phone and a desktop want different display settings.
+- **Sync folder.** Sync messages have their own ◇ Sync folder under Mailbox, shown while
+  sync is on, and are kept out of My Received, My Sent, All Messages and every unread
+  badge.
+- **★ Favourite a bulletin topic**, the positive counterpart to unsubscribe. A starred TO
+  pins to the top of the Bulletins tree under a ★ Favorites roll-up, and its messages count
+  as starred, so the existing ★ filter shows exactly your favourite topics. Favourite and
+  unsubscribe cancel each other out.
+- **Bold text & borders** toggle (topbar **B**, also in mobile settings) for readability.
+
+### Changed
+- The compose window's template row is tucked behind a **Use a template** link, so it
+  stays out of the way until you need it.
+- README: a note on icons arriving as `?` after a non-binary copy, and a credit link to
+  N3MEL's HTML packet forms suite.
+
+### Fixed
+- **A failed send no longer reports "Sent".** With BPQMail down, or the session lost,
+  BPQ's reply page was taken as success: compose closed and the text was discarded. BPQ's
+  "Mail Data is not available", "Session had been lost" and login replies now count as
+  failures. Compose stays open with your text, and a partial group send leaves only the
+  failed recipients in To for a retry.
+
+### Limitations
+- Every PC must use the same BBS and callsign. Each browser, and each address you open the
+  app at, counts as a separate PC.
+- Editing the *same* contact or template on two PCs before either has synced: the newer
+  edit wins and the other is lost.
+- The sync message is capped at 60 KB, roughly 200 contacts with every field filled.
+- Deletions are remembered for 90 days. A PC that has been offline longer than that can
+  bring a deleted contact back.
+- Star rules are not synced yet.
+- Older versions of this app, and BPQ's own WebMail, show the sync messages as ordinary
+  mail. Use v1.9.0 on every PC you sync.
+
 ## v1.8.0 — 2026-09-18
 
 Message templates, and an ICS-213 General Message form.
