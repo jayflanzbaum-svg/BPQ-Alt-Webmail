@@ -13,7 +13,7 @@ summary: Single-file HTML webmail client for BPQ32/LinBPQ packet-radio BBS nodes
 ## Open issues
 - [ ] **WHERE WE LEFT OFF (2026-09-28).** v1.9.0 released from `main` and deployed to the node as `bpq-alt-webmail.html`. Next: (1) send N3MEL the test note (section 3 of `ANNOUNCEMENT-DRAFT.md`; now that v1.9.0 is out, point him at the release instead of the test build) and post the groups.io announcement (section 4); (2) confirm sync across two physical PCs; (3) part 2 — sync star rules (needs a stable rule id); (4) run `.claude/dev/sync-size-probe.ps1` to settle the 60 KB cap. Tests: `python .claude/dev/synctest2.py && node %TEMP%/claude/synctest2.js` (37 assertions).
 - [ ] Address-book sync is verified across two browsers on one node, but not yet across two physical PCs.
-- [ ] `ANNOUNCEMENT-DRAFT.md` holds a combined v1.7.0 + v1.8.0 post for the bpq32 group (v1.7.0 was never announced) and a reply to N3MEL about both new features. Neither has been sent. The reply says the features aren't released yet — re-check that line before sending.
+- [ ] `ANNOUNCEMENT-DRAFT.md`: section 1 (v1.7.0 + v1.8.0 post) is done — Jason announced both himself. Still unsent: the v1.9.0 groups.io post (section 4) and the N3MEL notes (sections 2 and 3; 2 is superseded by 3, which should point at the release, not the test build).
 - [ ] Test message **4082** (`ATTACH TEST 2026-09-20`) is still in N4SFL's mailbox.
 - [ ] Send Report 2 (stale `Last-Modified`) in `UPSTREAM-REPORT-G8BPQ.md` to John G8BPQ — send-ready; confirming it on LinBPQ first would strengthen it.
 - [ ] The release asset is the bare HTML file, but the app also wants `fonts/` beside it — ship a zip, inline the fonts as base64 (~130 KB), or document it.
