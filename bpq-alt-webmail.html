@@ -2643,11 +2643,11 @@ function abUseContact(call) {
 // Reduce whatever address is on screen to the key the address book uses: the
 // bare callsign. A routing or home-BBS suffix ("K1ABC@KE4MOB.#CFL.FL.USA.NOAM")
 // is dropped, because the same operator should be one contact however the mail
-// happened to route. An "SMTP:" internet address has no callsign to key on, so
-// it is rejected rather than mangled.
+// happened to route. An "SMTP:"/"RMS:" internet address has no callsign to key
+// on, so it is rejected rather than mangled.
 function contactKeyFromAddress(addr) {
   const raw = (addr || '').trim();
-  if (!raw || /^smtp:/i.test(raw)) return '';
+  if (!raw || /^(smtp|rms):/i.test(raw)) return '';
   return raw.split(',')[0].split('@')[0].trim().toUpperCase();
 }
 
@@ -3085,7 +3085,7 @@ function looksLikeCallsign(t) {
 }
 // Normalise one token to the key the address book uses.
 function normCall(t) {
-  return String(t || '').trim().toUpperCase().split('@')[0].replace(/^SMTP:/, '').trim();
+  return String(t || '').trim().toUpperCase().split('@')[0].replace(/^(SMTP|RMS):/, '').trim();
 }
 
 // Split a CSV line, honouring "quoted, fields".
@@ -4547,11 +4547,12 @@ function parseList(html, keepSync) {
     // Reliable signal: via is a known system sender OR from doesn't look
     // like a callsign (callsigns are all-caps alphanumeric, 3-7 chars).
     const looksLikeCallsign = s => /^[A-Z0-9]{3,7}(-\d{1,2})?$/.test(s);
-    // Internet-mail rows put "SMTP:user@domain" in the via column instead of
-    // a callsign — that colon/dot content fails the plain callsign pattern,
+    // Internet-mail rows put "SMTP:user@domain" (or "RMS:..." for mail that
+    // came through the Winlink gateway) in the via column instead of a
+    // callsign — that colon/dot content fails the plain callsign pattern,
     // so without this the heuristic below never fires and the first subject
     // word gets misread as the from field (dropped from the subject).
-    const looksLikeSender   = s => (/^[A-Z0-9@]{2,12}$/i.test(s) || /^smtp:/i.test(s)) && !s.includes(' ');
+    const looksLikeSender   = s => (/^[A-Z0-9@]{2,12}$/i.test(s) || INET_PREFIX.test(s)) && !s.includes(' ');
 
     if (via && !via.startsWith('@') && looksLikeSender(via) && !looksLikeCallsign(from)) {
       // via is actually the FROM field, from is the first subject word
@@ -4677,7 +4678,7 @@ async function fetchMsgHeader(msg) {
     if (!r.ok) return;
     const html = await r.text();
     const body = parseBody(html);
-    const rawFrom = body ? extractHdrFrom(body) : null;
+    const rawFrom = body ? gatewayFrom(extractHdrFrom(body), msg, body) : null;
     msg.hdrFromFull = rawFrom || null;
     msg.hdrFrom = rawFrom ? baseCall(rawFrom) : baseCall(msg.from);
   } catch(_) {
@@ -4716,16 +4717,38 @@ async function lazyFetchPersonalHeaders(msgs) {
   }
 }
 
+// Internet-mail addresses carry a gateway prefix instead of a callsign:
+// "SMTP:user@domain" (the node's own ISP/SMTP interface) or "RMS:user@domain"
+// (the Winlink gateway). Returns the address with the prefix upper-cased and
+// the rest case-intact, or null if s is not one.
+const INET_PREFIX = /^(smtp|rms):/i;
+function inetAddr(s) {
+  const m = String(s || '').trim().match(INET_PREFIX);
+  return m ? m[1].toUpperCase() + ':' + String(s).trim().slice(m[0].length).trim() : null;
+}
+
 // Extract clean base callsign — strips @domain suffix.
-// Internet-mail headers use "SMTP:user@domain" instead of a callsign —
-// that @ is part of the address, not a BBS routing suffix, so it must
-// be preserved whole (including case) for replies to route back out.
+// Internet-mail addresses ("SMTP:user@domain", "RMS:user@domain") have no
+// callsign — that @ is part of the address, not a BBS routing suffix, so it
+// must be preserved whole (including case) for replies to route back out.
 function baseCall(s) {
   if (!s) return '?';
   const trimmed = s.trim();
-  const smtp = trimmed.match(/^smtp:/i);
-  if (smtp) return 'SMTP:' + trimmed.slice(smtp[0].length).trim();
+  const inet = inetAddr(trimmed);
+  if (inet) return inet;
   return (trimmed.split('@')[0].trim().toUpperCase()) || '?';
+}
+
+// BPQ shows mail that came in through the Winlink gateway with an
+// "SMTP:user@domain" From header, but the list row and the body's closing
+// "[End of Message #n from RMS:]" line both say RMS:. Replying to the SMTP:
+// form sends the answer out the node's own SMTP helper; the RMS: form sends it
+// back through Winlink, so the sender sees the recipient's CALL@winlink.org.
+function gatewayFrom(rawFrom, msg, body) {
+  if (!rawFrom || !/^smtp:/i.test(rawFrom.trim())) return rawFrom;
+  const viaRms = /^rms:/i.test((msg.from || '').trim())
+    || /\[End of Message #\d+ from RMS:/i.test(body || '');
+  return viaRms ? 'RMS:' + rawFrom.trim().slice(5).trim() : rawFrom;
 }
 
 // Use hdrFrom (from body) when available, else fall back to list row from.
@@ -5167,7 +5190,7 @@ async function openMsg(num) {
         cacheBody(msg,body);
         // Backfill hdrFrom for free — we now have the real header
         if(msg.hdrFrom===undefined) {
-          const hf=extractHdrFrom(body);
+          const hf=gatewayFrom(extractHdrFrom(body),msg,body);
           if(hf) {
             msg.hdrFromFull=hf;
             msg.hdrFrom=baseCall(hf);
@@ -5539,12 +5562,12 @@ async function doPrev() {
 // no longer tells BPQ to hand the reply to the Winlink gateway (it now looks
 // like a plain local/BBS callsign), and the same goes for a hierarchical
 // home-BBS suffix such as "@KE4MOB.#CFL.FL.USA.NOAM". So keep the whole
-// address whenever the message header gave us one. "SMTP:user@domain" is
-// already carried through intact (and case-intact) by baseCall(), so those
-// keep going down the persFromKey() path untouched.
+// address whenever the message header gave us one. "SMTP:" / "RMS:" internet
+// addresses are already carried through intact (and case-intact) by
+// baseCall(), so those keep going down the persFromKey() path untouched.
 function replyAddr(m) {
   const full = (m.hdrFromFull || '').trim();
-  if (full && !/^smtp:/i.test(full)) {
+  if (full && !INET_PREFIX.test(full)) {
     const at = full.indexOf('@');
     if (at > 0 && at < full.length - 1) return full.toUpperCase();
   }
@@ -5688,7 +5711,7 @@ function doForward(){
 // comma/semicolon list is a UI convenience, not something the node understands.
 function splitRecipients(raw) {
   return String(raw || '').split(/[,;]+/).map(t => t.trim()).filter(Boolean)
-    .map(t => /^smtp:/i.test(t) ? ('SMTP:' + t.slice(5).trim()) : t.toUpperCase())
+    .map(t => inetAddr(t) || t.toUpperCase())
     .filter((t, i, a) => a.indexOf(t) === i);
 }
 
