@@ -1,5 +1,22 @@
 # Changelog
 
+## v1.9.1 — 2026-10-24
+
+A fix for mail that comes in through the Winlink (RMS) gateway, reported by Chris on
+groups.io.
+
+### Fixed
+- **First word of the subject shown as the sender.** BPQ lists gateway mail with an
+  `RMS:` sender instead of a callsign, and the list parser only knew the `SMTP:` form, so
+  the columns shifted: the first subject word became the From and went missing from the
+  subject. `RMS:` senders are now recognised everywhere `SMTP:` ones are.
+- **Gateway mail showed, and replied to, an `SMTP:` address.** BPQ writes the internet
+  sender as `SMTP:user@domain` in the header even when the message came through Winlink.
+  When the list row or the `[End of Message #n from RMS:]` footer says it arrived via RMS,
+  the sender is now shown as `RMS:user@domain` and **Reply** addresses it that way, so the
+  answer goes back out through Winlink and the other person sees your
+  `CALL@winlink.org` address rather than the node's SMTP helper.
+
 ## v1.9.0 — 2026-09-28
 
 Your address book, templates and bulletin choices follow you between your own PCs, and
